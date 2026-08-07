@@ -1,8 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, GlassCard } from "@/components/app/AppShell";
 import { LogoMark } from "@/components/brand/Logo";
+import { requireAuth } from "@/lib/require-auth";
 
 export const Route = createFileRoute("/merch")({
+  beforeLoad: () => {
+    requireAuth();
+  },
   head: () => ({
     meta: [
       { title: "Brand & merch — the AFTERCUT mark" },
@@ -72,7 +76,7 @@ function Merch() {
           <h2 className="text-sm font-semibold">Type</h2>
           <p className="mt-4 text-2xl font-semibold tracking-tight">Geist — everything</p>
           <p className="mt-3 text-2xl" style={{ fontFamily: "'Silkscreen', cursive" }}>
-            42,500+ — Silkscreen for numerals
+            Day 0 — Silkscreen for numerals
           </p>
           <p className="mt-4 text-xs text-muted-foreground">
             Wordmark is always lowercase. Never stretch, never outline, never rotate the mark.

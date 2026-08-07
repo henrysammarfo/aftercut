@@ -1,8 +1,15 @@
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, GlassCard, PrimaryButton } from "@/components/app/AppShell";
-import { Check, Ban, Quote } from "lucide-react";
+import { emptyBrandKit, type BrandKit } from "@/lib/aftercut-data";
+import { useAuth } from "@/lib/auth";
+import { requireAuth } from "@/lib/require-auth";
+import { Ban, Quote, Check } from "lucide-react";
 
 export const Route = createFileRoute("/brand-kit")({
+  beforeLoad: () => {
+    requireAuth();
+  },
   head: () => ({
     meta: [
       { title: "Brand kit — teach your Mind the DNA" },
@@ -18,18 +25,51 @@ export const Route = createFileRoute("/brand-kit")({
       },
     ],
   }),
-  component: BrandKit,
+  component: BrandKitPage,
 });
 
 const field =
   "w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm outline-none placeholder:text-muted-foreground focus:border-white/25";
 
-function BrandKit() {
+function BrandKitPage() {
+  const { tenant, saveBrandKit } = useAuth();
+  const [kit, setKit] = useState<BrandKit>(emptyBrandKit());
+  const [bannedInput, setBannedInput] = useState("");
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (tenant?.brandKit) {
+      const bk = tenant.brandKit;
+      setKit({
+        ...emptyBrandKit(),
+        ...bk,
+        examples:
+          bk.examples.length >= 3
+            ? bk.examples.slice(0, 3)
+            : [...bk.examples, "", "", ""].slice(0, 3),
+      });
+    }
+  }, [tenant?.brandKit]);
+
+  const update = (patch: Partial<BrandKit>) => {
+    setKit((k) => ({ ...k, ...patch }));
+    setSaved(false);
+  };
+
   return (
     <AppShell
       title="Brand kit"
       subtitle="Day 0. Everything here is written into the Mind Soul — it survives every session."
-      actions={<PrimaryButton>Save to Soul</PrimaryButton>}
+      actions={
+        <PrimaryButton
+          onClick={() => {
+            saveBrandKit(kit);
+            setSaved(true);
+          }}
+        >
+          {saved ? "Saved to Soul" : "Save to Soul"}
+        </PrimaryButton>
+      }
     >
       <div className="grid gap-4 lg:grid-cols-3">
         <GlassCard className="lg:col-span-2">
@@ -37,25 +77,46 @@ function BrandKit() {
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <label className="flex flex-col gap-2 text-xs text-muted-foreground">
               Creator / brand name
-              <input className={field} defaultValue="Stratify" />
+              <input
+                className={field}
+                value={kit.name}
+                onChange={(e) => update({ name: e.target.value })}
+                placeholder="Your brand"
+              />
             </label>
             <label className="flex flex-col gap-2 text-xs text-muted-foreground">
               Primary platform
-              <input className={field} defaultValue="YouTube long-form" />
+              <input
+                className={field}
+                value={kit.primaryPlatform ?? ""}
+                onChange={(e) => update({ primaryPlatform: e.target.value })}
+                placeholder="YouTube long-form"
+              />
             </label>
             <label className="sm:col-span-2 flex flex-col gap-2 text-xs text-muted-foreground">
               Tone description
               <textarea
                 rows={3}
                 className={field}
-                defaultValue="Blunt operator voice. Short sentences. Concrete numbers. No hype adjectives, no emoji stacking."
+                value={kit.tone}
+                onChange={(e) => update({ tone: e.target.value })}
+                placeholder="Blunt operator voice. Short sentences. Concrete numbers."
               />
             </label>
             <label className="sm:col-span-2 flex flex-col gap-2 text-xs text-muted-foreground">
-              Standard CTAs
+              Standard CTAs (comma-separated)
               <input
                 className={field}
-                defaultValue="Full breakdown in the newsletter · Watch the 90-min build"
+                value={kit.ctas.join(" · ")}
+                onChange={(e) =>
+                  update({
+                    ctas: e.target.value
+                      .split(/[·,]/)
+                      .map((s) => s.trim())
+                      .filter(Boolean),
+                  })
+                }
+                placeholder="Full breakdown in the newsletter · Watch the build"
               />
             </label>
           </div>
@@ -66,35 +127,66 @@ function BrandKit() {
             <Ban className="h-4 w-4" /> Do-not-say
           </h2>
           <div className="mt-4 flex flex-wrap gap-2">
-            {["game-changer", "unlock", "revolutionary", "🚀", "in today's fast-paced world"].map(
-              (w) => (
-                <span
+            {kit.doNotSay.length === 0 ? (
+              <p className="text-xs text-muted-foreground">None yet — add banned phrases.</p>
+            ) : (
+              kit.doNotSay.map((w) => (
+                <button
                   key={w}
-                  className="rounded-full bg-white/10 px-3 py-1.5 text-xs text-muted-foreground"
+                  type="button"
+                  onClick={() => update({ doNotSay: kit.doNotSay.filter((x) => x !== w) })}
+                  className="rounded-full bg-white/10 px-3 py-1.5 text-xs text-muted-foreground hover:bg-white/15"
+                  title="Remove"
                 >
                   {w}
-                </span>
-              ),
+                </button>
+              ))
             )}
           </div>
-          <input className={`${field} mt-4`} placeholder="Add a banned phrase" />
+          <form
+            className="mt-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const phrase = bannedInput.trim();
+              if (!phrase) return;
+              if (!kit.doNotSay.includes(phrase)) {
+                update({ doNotSay: [...kit.doNotSay, phrase] });
+              }
+              setBannedInput("");
+            }}
+          >
+            <input
+              className={field}
+              value={bannedInput}
+              onChange={(e) => setBannedInput(e.target.value)}
+              placeholder="Add a banned phrase"
+            />
+          </form>
         </GlassCard>
       </div>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-3">
-        {[
-          "Nobody is coming to repurpose this for you. Here is the 6-cut system.",
-          "We shipped 14 assets from one stream. Zero new briefs. Here is the ledger.",
-          "Your best take is buried at minute 41. That is the whole problem.",
-        ].map((ex, i) => (
-          <GlassCard key={ex}>
+        {[0, 1, 2].map((i) => (
+          <GlassCard key={i}>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Quote className="h-3.5 w-3.5" /> Example post {i + 1}
             </div>
-            <p className="mt-3 text-sm leading-relaxed">{ex}</p>
-            <p className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Check className="h-3.5 w-3.5" /> learned by HOOKsmith
-            </p>
+            <textarea
+              rows={4}
+              className={`${field} mt-3`}
+              value={kit.examples[i] ?? ""}
+              onChange={(e) => {
+                const examples = [...kit.examples];
+                examples[i] = e.target.value;
+                update({ examples });
+              }}
+              placeholder="Paste a post that sounds like you…"
+            />
+            {kit.examples[i]?.trim() ? (
+              <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Check className="h-3.5 w-3.5" /> ready for HOOKsmith
+              </p>
+            ) : null}
           </GlassCard>
         ))}
       </div>

@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
+import { useEffect, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   Palette,
@@ -8,8 +8,10 @@ import {
   History,
   Sparkles,
   Shirt,
+  LogOut,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
+import { useAuth } from "@/lib/auth";
 
 const nav = [
   { to: "/dashboard" as const, label: "Dashboard", icon: LayoutDashboard },
@@ -32,6 +34,14 @@ export function AppShell({
   actions?: ReactNode;
   children: ReactNode;
 }) {
+  const { session, tenant, signOut, setCognitionNote } = useAuth();
+  const navigate = useNavigate();
+  const [note, setNote] = useState(tenant?.cognitionNote ?? "");
+
+  useEffect(() => {
+    setNote(tenant?.cognitionNote ?? "");
+  }, [tenant?.cognitionNote]);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="mx-auto flex max-w-[1500px] flex-col lg:flex-row">
@@ -53,19 +63,57 @@ export function AppShell({
               </Link>
             ))}
           </nav>
-          <div className="mt-8 hidden rounded-2xl bg-white/[0.06] p-4 backdrop-blur-lg lg:block">
-            <p className="text-xs text-muted-foreground">Cognition credits</p>
-            <p className="mt-1 font-mono text-2xl tracking-tight">68%</p>
-            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-              <div className="h-full w-[68%] rounded-full bg-foreground/70" />
+
+          <div className="mt-8 hidden space-y-4 lg:block">
+            <div className="rounded-2xl bg-white/[0.06] p-4 backdrop-blur-lg">
+              <p className="text-xs text-muted-foreground">Signed in</p>
+              <p className="mt-1 truncate text-sm font-medium">
+                {session?.name || session?.email || "Creator"}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  signOut();
+                  void navigate({ to: "/" });
+                }}
+                className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <LogOut className="h-3.5 w-3.5" /> Sign out
+              </button>
             </div>
-            <p className="mt-3 text-xs text-muted-foreground">
-              Boost requested for AFTERCUT Director.
-            </p>
+
+            <div className="rounded-2xl bg-white/[0.06] p-4 backdrop-blur-lg">
+              <p className="text-xs text-muted-foreground">Director note</p>
+              <textarea
+                rows={3}
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                onBlur={() => {
+                  if (note !== (tenant?.cognitionNote ?? "")) setCognitionNote(note);
+                }}
+                placeholder="Optional note for cognition / boost reminders…"
+                className="mt-2 w-full resize-none rounded-xl border border-white/10 bg-transparent px-3 py-2 text-xs outline-none placeholder:text-muted-foreground focus:border-white/25"
+              />
+            </div>
           </div>
         </aside>
 
         <main className="min-w-0 flex-1 px-5 py-8 sm:px-8 lg:px-12 lg:py-12">
+          <div className="mb-6 flex items-center justify-between gap-3 lg:hidden">
+            <p className="truncate text-sm text-muted-foreground">
+              {session?.name || session?.email}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                signOut();
+                void navigate({ to: "/" });
+              }}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground"
+            >
+              <LogOut className="h-3.5 w-3.5" /> Sign out
+            </button>
+          </div>
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
@@ -101,15 +149,15 @@ export function GlassCard({
 export function PrimaryButton({
   children,
   className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
+  type = "button",
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & { children: ReactNode }) {
   return (
     <button
-      type="button"
-      className={`rounded-full px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 ${className ?? ""}`}
+      type={type}
+      className={`rounded-full px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-40 ${className ?? ""}`}
       style={{ background: "linear-gradient(to bottom, #2B2B2B, #101010)" }}
+      {...props}
     >
       {children}
     </button>

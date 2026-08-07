@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
+import { useAuth } from "@/lib/auth";
 
 const links = [
-  { label: "Studio", to: "/studio" as const },
-  { label: "Brand kit", to: "/brand-kit" as const },
-  { label: "Ingest", to: "/ingest" as const, chevron: true },
-  { label: "Memory", to: "/timeline" as const },
+  { label: "How it works", href: "/#how" },
+  { label: "Publish leash", href: "/#leash" },
+  { label: "Pitch", to: "/pitch" as const },
 ];
 
 export function SiteNav({ tone = "responsive" }: { tone?: "responsive" | "light" }) {
   const [open, setOpen] = useState(false);
+  const { session, ready } = useAuth();
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -21,9 +22,11 @@ export function SiteNav({ tone = "responsive" }: { tone?: "responsive" | "light"
   }, [open]);
 
   const brandTone =
-    tone === "light"
-      ? "text-white"
-      : "text-[#010101] lg:text-white";
+    tone === "light" ? "text-white" : "text-[#010101] lg:text-white";
+
+  const cta = ready && session
+    ? { label: "Dashboard", to: "/dashboard" as const }
+    : { label: "Get started", to: "/signup" as const };
 
   return (
     <header className="flex items-center justify-between px-5 py-5 sm:px-8 sm:py-6 lg:px-12">
@@ -33,23 +36,40 @@ export function SiteNav({ tone = "responsive" }: { tone?: "responsive" | "light"
 
       <nav className="hidden items-stretch gap-3 md:flex">
         <div className="flex items-center gap-1 rounded-full bg-white/10 px-1.5 py-1.5 backdrop-blur-lg">
-          {links.map((l) => (
+          {links.map((l) =>
+            "href" in l && l.href ? (
+              <a
+                key={l.label}
+                href={l.href}
+                className="flex items-center gap-1 rounded-full px-4 py-1.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                {l.label}
+              </a>
+            ) : (
+              <Link
+                key={l.label}
+                to={l.to!}
+                className="flex items-center gap-1 rounded-full px-4 py-1.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                {l.label}
+              </Link>
+            ),
+          )}
+          {!session ? (
             <Link
-              key={l.label}
-              to={l.to}
+              to="/login"
               className="flex items-center gap-1 rounded-full px-4 py-1.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
             >
-              {l.label}
-              {l.chevron ? <ChevronDown className="h-3.5 w-3.5" /> : null}
+              Sign in
             </Link>
-          ))}
+          ) : null}
         </div>
         <Link
-          to="/pitch"
+          to={cta.to}
           className="flex items-center self-stretch rounded-full px-5 text-sm font-medium text-white transition-opacity hover:opacity-90"
           style={{ background: "linear-gradient(to bottom, #2B2B2B, #101010)" }}
         >
-          Get started
+          {cta.label}
         </Link>
       </nav>
 
@@ -84,26 +104,52 @@ export function SiteNav({ tone = "responsive" }: { tone?: "responsive" | "light"
         }`}
       >
         <div className="flex flex-col gap-2 px-6 pt-24">
-          {links.map((l, i) => (
+          {links.map((l, i) => {
+            const className =
+              "flex items-center justify-between rounded-xl px-4 py-3.5 text-base font-medium text-white/80 transition-all hover:bg-white/10 hover:text-white";
+            const style = {
+              opacity: open ? 1 : 0,
+              transform: open ? "translateX(0)" : "translateX(24px)",
+              transitionDelay: `${(i + 1) * 60}ms`,
+            };
+            if ("href" in l && l.href) {
+              return (
+                <a
+                  key={l.label}
+                  href={l.href}
+                  onClick={() => setOpen(false)}
+                  className={className}
+                  style={style}
+                >
+                  {l.label}
+                </a>
+              );
+            }
+            return (
+              <Link
+                key={l.label}
+                to={l.to!}
+                onClick={() => setOpen(false)}
+                className={className}
+                style={style}
+              >
+                {l.label}
+              </Link>
+            );
+          })}
+          {!session ? (
             <Link
-              key={l.label}
-              to={l.to}
+              to="/login"
               onClick={() => setOpen(false)}
-              className="flex items-center justify-between rounded-xl px-4 py-3.5 text-base font-medium text-white/80 transition-all hover:bg-white/10 hover:text-white"
-              style={{
-                opacity: open ? 1 : 0,
-                transform: open ? "translateX(0)" : "translateX(24px)",
-                transitionDelay: `${(i + 1) * 60}ms`,
-              }}
+              className="rounded-xl px-4 py-3.5 text-base font-medium text-white/80 hover:bg-white/10 hover:text-white"
             >
-              {l.label}
-              {l.chevron ? <ChevronDown className="h-4 w-4" /> : null}
+              Sign in
             </Link>
-          ))}
+          ) : null}
         </div>
         <div className="mt-auto px-6 pb-10">
           <Link
-            to="/pitch"
+            to={cta.to}
             onClick={() => setOpen(false)}
             className="block w-full rounded-full px-6 py-3 text-center text-sm font-medium text-white transition-all duration-[400ms]"
             style={{
@@ -113,7 +159,7 @@ export function SiteNav({ tone = "responsive" }: { tone?: "responsive" | "light"
               transitionDelay: "300ms",
             }}
           >
-            Get started
+            {cta.label}
           </Link>
         </div>
       </div>

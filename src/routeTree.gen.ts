@@ -13,8 +13,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as BrandKitRouteImport } from './routes/brand-kit'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IngestRouteImport } from './routes/ingest'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as MerchRouteImport } from './routes/merch'
 import { Route as PitchRouteImport } from './routes/pitch'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as StudioRouteImport } from './routes/studio'
 import { Route as TimelineRouteImport } from './routes/timeline'
 
@@ -38,6 +40,11 @@ const IngestRoute = IngestRouteImport.update({
   path: '/ingest',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MerchRoute = MerchRouteImport.update({
   id: '/merch',
   path: '/merch',
@@ -46,6 +53,11 @@ const MerchRoute = MerchRouteImport.update({
 const PitchRoute = PitchRouteImport.update({
   id: '/pitch',
   path: '/pitch',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StudioRoute = StudioRouteImport.update({
@@ -64,8 +76,10 @@ export interface FileRoutesByFullPath {
   '/brand-kit': typeof BrandKitRoute
   '/dashboard': typeof DashboardRoute
   '/ingest': typeof IngestRoute
+  '/login': typeof LoginRoute
   '/merch': typeof MerchRoute
   '/pitch': typeof PitchRoute
+  '/signup': typeof SignupRoute
   '/studio': typeof StudioRoute
   '/timeline': typeof TimelineRoute
 }
@@ -74,8 +88,10 @@ export interface FileRoutesByTo {
   '/brand-kit': typeof BrandKitRoute
   '/dashboard': typeof DashboardRoute
   '/ingest': typeof IngestRoute
+  '/login': typeof LoginRoute
   '/merch': typeof MerchRoute
   '/pitch': typeof PitchRoute
+  '/signup': typeof SignupRoute
   '/studio': typeof StudioRoute
   '/timeline': typeof TimelineRoute
 }
@@ -85,8 +101,10 @@ export interface FileRoutesById {
   '/brand-kit': typeof BrandKitRoute
   '/dashboard': typeof DashboardRoute
   '/ingest': typeof IngestRoute
+  '/login': typeof LoginRoute
   '/merch': typeof MerchRoute
   '/pitch': typeof PitchRoute
+  '/signup': typeof SignupRoute
   '/studio': typeof StudioRoute
   '/timeline': typeof TimelineRoute
 }
@@ -97,8 +115,10 @@ export interface FileRouteTypes {
     | '/brand-kit'
     | '/dashboard'
     | '/ingest'
+    | '/login'
     | '/merch'
     | '/pitch'
+    | '/signup'
     | '/studio'
     | '/timeline'
   fileRoutesByTo: FileRoutesByTo
@@ -107,8 +127,10 @@ export interface FileRouteTypes {
     | '/brand-kit'
     | '/dashboard'
     | '/ingest'
+    | '/login'
     | '/merch'
     | '/pitch'
+    | '/signup'
     | '/studio'
     | '/timeline'
   id:
@@ -117,8 +139,10 @@ export interface FileRouteTypes {
     | '/brand-kit'
     | '/dashboard'
     | '/ingest'
+    | '/login'
     | '/merch'
     | '/pitch'
+    | '/signup'
     | '/studio'
     | '/timeline'
   fileRoutesById: FileRoutesById
@@ -128,8 +152,10 @@ export interface RootRouteChildren {
   BrandKitRoute: typeof BrandKitRoute
   DashboardRoute: typeof DashboardRoute
   IngestRoute: typeof IngestRoute
+  LoginRoute: typeof LoginRoute
   MerchRoute: typeof MerchRoute
   PitchRoute: typeof PitchRoute
+  SignupRoute: typeof SignupRoute
   StudioRoute: typeof StudioRoute
   TimelineRoute: typeof TimelineRoute
 }
@@ -164,6 +190,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IngestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/merch': {
       id: '/merch'
       path: '/merch'
@@ -176,6 +209,13 @@ declare module '@tanstack/react-router' {
       path: '/pitch'
       fullPath: '/pitch'
       preLoaderRoute: typeof PitchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/studio': {
@@ -200,11 +240,23 @@ const rootRouteChildren: RootRouteChildren = {
   BrandKitRoute: BrandKitRoute,
   DashboardRoute: DashboardRoute,
   IngestRoute: IngestRoute,
+  LoginRoute: LoginRoute,
   MerchRoute: MerchRoute,
   PitchRoute: PitchRoute,
+  SignupRoute: SignupRoute,
   StudioRoute: StudioRoute,
   TimelineRoute: TimelineRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
