@@ -10,33 +10,128 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BrandKitRouteImport } from './routes/brand-kit'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as IngestRouteImport } from './routes/ingest'
+import { Route as MerchRouteImport } from './routes/merch'
+import { Route as PitchRouteImport } from './routes/pitch'
+import { Route as StudioRouteImport } from './routes/studio'
+import { Route as TimelineRouteImport } from './routes/timeline'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BrandKitRoute = BrandKitRouteImport.update({
+  id: '/brand-kit',
+  path: '/brand-kit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IngestRoute = IngestRouteImport.update({
+  id: '/ingest',
+  path: '/ingest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MerchRoute = MerchRouteImport.update({
+  id: '/merch',
+  path: '/merch',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PitchRoute = PitchRouteImport.update({
+  id: '/pitch',
+  path: '/pitch',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudioRoute = StudioRouteImport.update({
+  id: '/studio',
+  path: '/studio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TimelineRoute = TimelineRouteImport.update({
+  id: '/timeline',
+  path: '/timeline',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/brand-kit': typeof BrandKitRoute
+  '/dashboard': typeof DashboardRoute
+  '/ingest': typeof IngestRoute
+  '/merch': typeof MerchRoute
+  '/pitch': typeof PitchRoute
+  '/studio': typeof StudioRoute
+  '/timeline': typeof TimelineRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/brand-kit': typeof BrandKitRoute
+  '/dashboard': typeof DashboardRoute
+  '/ingest': typeof IngestRoute
+  '/merch': typeof MerchRoute
+  '/pitch': typeof PitchRoute
+  '/studio': typeof StudioRoute
+  '/timeline': typeof TimelineRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/brand-kit': typeof BrandKitRoute
+  '/dashboard': typeof DashboardRoute
+  '/ingest': typeof IngestRoute
+  '/merch': typeof MerchRoute
+  '/pitch': typeof PitchRoute
+  '/studio': typeof StudioRoute
+  '/timeline': typeof TimelineRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/brand-kit'
+    | '/dashboard'
+    | '/ingest'
+    | '/merch'
+    | '/pitch'
+    | '/studio'
+    | '/timeline'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/brand-kit'
+    | '/dashboard'
+    | '/ingest'
+    | '/merch'
+    | '/pitch'
+    | '/studio'
+    | '/timeline'
+  id:
+    | '__root__'
+    | '/'
+    | '/brand-kit'
+    | '/dashboard'
+    | '/ingest'
+    | '/merch'
+    | '/pitch'
+    | '/studio'
+    | '/timeline'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BrandKitRoute: typeof BrandKitRoute
+  DashboardRoute: typeof DashboardRoute
+  IngestRoute: typeof IngestRoute
+  MerchRoute: typeof MerchRoute
+  PitchRoute: typeof PitchRoute
+  StudioRoute: typeof StudioRoute
+  TimelineRoute: typeof TimelineRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,22 +143,68 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/brand-kit': {
+      id: '/brand-kit'
+      path: '/brand-kit'
+      fullPath: '/brand-kit'
+      preLoaderRoute: typeof BrandKitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ingest': {
+      id: '/ingest'
+      path: '/ingest'
+      fullPath: '/ingest'
+      preLoaderRoute: typeof IngestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/merch': {
+      id: '/merch'
+      path: '/merch'
+      fullPath: '/merch'
+      preLoaderRoute: typeof MerchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pitch': {
+      id: '/pitch'
+      path: '/pitch'
+      fullPath: '/pitch'
+      preLoaderRoute: typeof PitchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/studio': {
+      id: '/studio'
+      path: '/studio'
+      fullPath: '/studio'
+      preLoaderRoute: typeof StudioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/timeline': {
+      id: '/timeline'
+      path: '/timeline'
+      fullPath: '/timeline'
+      preLoaderRoute: typeof TimelineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BrandKitRoute: BrandKitRoute,
+  DashboardRoute: DashboardRoute,
+  IngestRoute: IngestRoute,
+  MerchRoute: MerchRoute,
+  PitchRoute: PitchRoute,
+  StudioRoute: StudioRoute,
+  TimelineRoute: TimelineRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
