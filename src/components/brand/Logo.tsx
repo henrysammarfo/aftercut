@@ -1,6 +1,6 @@
 type LogoProps = {
-  className?: string;
-  size?: number;
+  className?: string | undefined;
+  size?: number | undefined;
 };
 
 /**
