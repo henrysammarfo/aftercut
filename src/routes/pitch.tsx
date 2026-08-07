@@ -83,18 +83,20 @@ function Pitch() {
       <GlassCard className="mt-4">
         <div className="flex flex-wrap items-center gap-4">
           <p className="text-sm">Walk the product in order:</p>
-          {[
-            ["Brand kit", "/brand-kit"],
-            ["Ingest", "/ingest"],
-            ["Studio", "/studio"],
-            ["Memory", "/timeline"],
-          ].map(([label, to]) => (
+          {(
+            [
+              { label: "Brand kit", to: "/brand-kit" },
+              { label: "Ingest", to: "/ingest" },
+              { label: "Studio", to: "/studio" },
+              { label: "Memory", to: "/timeline" },
+            ] as const
+          ).map((l) => (
             <Link
-              key={to}
-              to={to}
+              key={l.to}
+              to={l.to}
               className="flex items-center gap-1 rounded-full bg-white/10 px-3.5 py-1.5 text-xs hover:bg-white/20"
             >
-              {label} <ArrowUpRight className="h-3 w-3" />
+              {l.label} <ArrowUpRight className="h-3 w-3" />
             </Link>
           ))}
         </div>
