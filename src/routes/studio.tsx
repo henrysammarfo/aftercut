@@ -20,7 +20,7 @@ export const Route = createFileRoute("/studio")({
       },
     ],
   }),
-  component: Studio;
+  component: Studio,
 });
 
 function Studio() {
