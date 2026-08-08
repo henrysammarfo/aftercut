@@ -26,6 +26,7 @@ Source of truth: [`docs/AFTERCUT_BIBLE.md`](docs/AFTERCUT_BIBLE.md).
 | `/ingest` | Day 1 long-form dump + atomize (auth) |
 | `/studio` | Kanban + approve / reject / ship (auth) |
 | `/timeline` | Continuity receipts + Day 2 simulate (auth) |
+| `/circle` | Mind Circle — Director / HOOKsmith / PLATFORMFIT / QC |
 | `/merch` | Cut-mark, palette, hoodie placements (auth) |
 | `/pitch` | Demon Mode pitch (public) |
 
@@ -50,8 +51,13 @@ npm run build
 2. **Day 0** — save brand kit to Soul  
 3. **Day 1** — paste transcript → queue → atomize  
 4. Studio — approve / reject behind the publish leash  
-5. Try **Post everything now** → `PUBLISH DENIED`  
+5. Try **Post everything now** → `PUBLISH DENIED` banner + Memory receipt  
 6. **Simulate Day 2 reopen** — proactive rewrite from *your* kit + ingest  
+7. **Circle** — show four Minds and Soul receipts  
+
+Open Campus / Animoca Minds: join community Telegram; awaken AFTERCUT Director on hellominds — Studio is the filmable control surface for the jam video.
+
+Tech: [`docs/TECH.md`](docs/TECH.md) · Bible: [`docs/AFTERCUT_BIBLE.md`](docs/AFTERCUT_BIBLE.md).  
 
 ## Brand
 

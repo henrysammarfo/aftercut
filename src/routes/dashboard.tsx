@@ -3,8 +3,8 @@ import { AppShell, GlassCard, PrimaryButton } from "@/components/app/AppShell";
 import { circle, platformLabel } from "@/lib/aftercut-data";
 import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
-import { ArrowUpRight, ShieldAlert, Radio, Brain } from "lucide-react";
-import { useState } from "react";
+import { ArrowUpRight, ShieldAlert, Brain, HardDrive } from "lucide-react";
+import { useRef, useState } from "react";
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: () => {
@@ -12,15 +12,16 @@ export const Route = createFileRoute("/dashboard")({
   },
   head: () => ({
     meta: [
-      { title: "Dashboard — AFTERCUT Studio" },
+      { title: "Dashboard — AFTERCUT Studio (offline)" },
       {
         name: "description",
-        content: "Queue health, Mind Circle status, publish leash and ship ledger at a glance.",
+        content:
+          "Queue health, offline Circle status, publish leash and ship ledger — browser tenant only.",
       },
       { property: "og:title", content: "AFTERCUT Dashboard" },
       {
         property: "og:description",
-        content: "Queue health, Mind Circle status and the shipped ledger in one view.",
+        content: "Offline Studio overview: queue, leash, ledger, backup export.",
       },
     ],
   }),
@@ -30,10 +31,15 @@ export const Route = createFileRoute("/dashboard")({
 function Dashboard() {
   const {
     tenant,
+    health,
     denyPublishAll,
     simulateDay2Followup,
+    exportTenant,
+    importTenant,
   } = useAuth();
   const [msg, setMsg] = useState<string | null>(null);
+  const [isErr, setIsErr] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const drafts = tenant?.drafts ?? [];
   const timeline = tenant?.timeline ?? [];
@@ -43,28 +49,36 @@ function Dashboard() {
   const proactive = timeline.filter((t) => t.kind === "proactive").length;
   const denied = [...timeline].reverse().find((t) => t.kind === "denied");
 
+  const flash = (text: string, error = false) => {
+    setMsg(text);
+    setIsErr(error);
+  };
+
   return (
     <AppShell
       title="Studio overview"
       subtitle={
         drafts.length === 0
-          ? "Empty tenant. Save a brand kit, ingest long-form, then atomize — Day 2 needs your data."
-          : "Your Director works from the kit and drafts you taught it — nothing is seeded."
+          ? "Empty offline tenant. Save brand kit → ingest → atomize. No network Mind."
+          : "Offline Studio — kit, drafts, and ledger live in this browser only."
       }
       actions={
         <div className="flex flex-wrap gap-2">
           <PrimaryButton
             onClick={() => {
               const res = simulateDay2Followup();
-              setMsg(res.ok ? "Day 2 follow-up written to memory." : res.error || "Failed");
+              flash(
+                res.ok ? "Day 2 follow-up written to memory." : res.error,
+                !res.ok,
+              );
             }}
           >
             Simulate Day 2 reopen
           </PrimaryButton>
           <PrimaryButton
             onClick={() => {
-              denyPublishAll();
-              setMsg("Publish leash fired — PUBLISH DENIED logged.");
+              const res = denyPublishAll();
+              flash(res.detail);
             }}
           >
             Post everything now
@@ -73,17 +87,39 @@ function Dashboard() {
       }
     >
       {msg ? (
-        <p className="mb-4 rounded-xl bg-white/10 px-4 py-2 text-xs text-muted-foreground">
+        <p
+          className={`mb-4 rounded-xl px-4 py-2 text-xs ${
+            isErr
+              ? "border border-red-500/25 bg-red-500/10 text-red-200/90"
+              : "bg-white/10 text-muted-foreground"
+          }`}
+        >
           {msg}
         </p>
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: "In queue", value: String(drafts.length), sub: "across platforms" },
-          { label: "Needs approve", value: String(needsApprove.length), sub: "publish leash held" },
-          { label: "Shipped", value: String(shipped.length), sub: "hashed in ledger" },
-          { label: "Proactive acts", value: String(proactive), sub: "from your timeline" },
+          {
+            label: "In queue",
+            value: String(drafts.length),
+            sub: "drafts offline",
+          },
+          {
+            label: "Needs approve",
+            value: String(needsApprove.length),
+            sub: "publish leash held",
+          },
+          {
+            label: "Shipped",
+            value: String(health?.shipped ?? shipped.length),
+            sub: "hashed in ledger",
+          },
+          {
+            label: "Proactive acts",
+            value: String(proactive),
+            sub: "from your timeline",
+          },
         ].map((s) => (
           <GlassCard key={s.label}>
             <p className="text-xs text-muted-foreground">{s.label}</p>
@@ -148,24 +184,87 @@ function Dashboard() {
               </>
             ) : (
               <p className="mt-3 text-xs text-muted-foreground">
-                Armed. Try &ldquo;Post everything now&rdquo; — the leash denies blast-publish.
+                Armed offline. Try &ldquo;Post everything now&rdquo; — blast-publish is denied.
               </p>
             )}
           </GlassCard>
 
           <GlassCard>
             <div className="flex items-center gap-2 text-sm font-semibold">
-              <Brain className="h-4 w-4" /> Mind Circle
+              <Brain className="h-4 w-4" /> Circle (offline)
             </div>
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              Role labels · receipt counts from your timeline — not live hellominds.
+            </p>
             <div className="mt-3 flex flex-col gap-2">
-              {circle.map((c) => (
-                <div key={c.name} className="flex items-center justify-between text-xs">
-                  <span>{c.name}</span>
-                  <span className="flex items-center gap-1 text-muted-foreground">
-                    <Radio className="h-3 w-3" /> ready
-                  </span>
-                </div>
-              ))}
+              {circle.map((c) => {
+                const n = tenant?.timeline.filter((t) => t.agent === c.name).length ?? 0;
+                return (
+                  <div key={c.name} className="flex items-center justify-between text-xs">
+                    <span>{c.name.replace("AFTERCUT ", "")}</span>
+                    <span className="text-muted-foreground">
+                      {n === 0 ? "idle" : `${n} receipt${n === 1 ? "" : "s"}`}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </GlassCard>
+
+          <GlassCard>
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <HardDrive className="h-4 w-4" /> Tenant backup
+            </div>
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              Export / import JSON for demo continuity. Stays offline.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="rounded-full bg-white/10 px-3 py-1.5 text-xs hover:bg-white/15"
+                onClick={() => {
+                  const json = exportTenant();
+                  if (!json) {
+                    flash("Nothing to export.", true);
+                    return;
+                  }
+                  const blob = new Blob([json], { type: "application/json" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `aftercut-tenant-${new Date().toISOString().slice(0, 10)}.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  flash("Tenant JSON downloaded.");
+                }}
+              >
+                Export JSON
+              </button>
+              <button
+                type="button"
+                className="rounded-full bg-white/10 px-3 py-1.5 text-xs hover:bg-white/15"
+                onClick={() => fileRef.current?.click()}
+              >
+                Import JSON
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="application/json,.json"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (!file) return;
+                  try {
+                    const text = await file.text();
+                    const res = importTenant(text);
+                    flash(res.ok ? "Tenant restored from JSON." : res.error, !res.ok);
+                  } catch {
+                    flash("Could not read file.", true);
+                  }
+                }}
+              />
             </div>
           </GlassCard>
         </div>
@@ -177,7 +276,7 @@ function Dashboard() {
           <div className="mt-4 flex flex-col gap-3">
             {shipLedger.length === 0 ? (
               <p className="text-xs text-muted-foreground">
-                Empty until you move a draft to shipped in Studio.
+                Empty until you mark a scheduled draft shipped in Studio.
               </p>
             ) : (
               shipLedger.map((s) => (
@@ -199,14 +298,17 @@ function Dashboard() {
                 No receipts yet — save the brand kit to open Day 0.
               </p>
             ) : (
-              timeline.slice(-3).reverse().map((t) => (
-                <div key={t.id} className="text-xs">
-                  <p className="text-muted-foreground">
-                    {t.day} · {t.time} · {t.agent}
-                  </p>
-                  <p className="mt-1 text-sm">{t.title}</p>
-                </div>
-              ))
+              timeline
+                .slice(-3)
+                .reverse()
+                .map((t) => (
+                  <div key={t.id} className="text-xs">
+                    <p className="text-muted-foreground">
+                      {t.day} · {t.time} · {t.agent}
+                    </p>
+                    <p className="mt-1 text-sm">{t.title}</p>
+                  </div>
+                ))
             )}
           </div>
           <Link

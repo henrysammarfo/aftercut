@@ -19,21 +19,28 @@ import {
   approveDraft as storeApproveDraft,
   atomizeIngest as storeAtomizeIngest,
   denyPublishAll as storeDenyPublishAll,
+  exportTenantJson as storeExport,
+  importTenantJson as storeImport,
   loadTenant,
   rejectDraft as storeRejectDraft,
   saveBrandKit as storeSaveBrandKit,
   setCognitionNote as storeSetCognitionNote,
   setDraftStage as storeSetDraftStage,
   simulateDay2Followup as storeSimulateDay2,
-  appendTimeline as storeAppendTimeline,
+  tenantHealth,
   type TenantState,
 } from "./tenant-store";
-import type { BrandKit, MemoryEvent, Stage } from "./aftercut-data";
+import type { BrandKit, Stage } from "./aftercut-data";
+
+type OpOk = { ok: true };
+type OpFail = { ok: false; error: string };
 
 type AuthContextValue = {
   ready: boolean;
   session: Session | null;
   tenant: TenantState | null;
+  productMode: "offline";
+  health: ReturnType<typeof tenantHealth> | null;
   signIn: (email: string, password: string) => { ok: boolean; error?: string };
   signUp: (input: {
     email: string;
@@ -42,18 +49,21 @@ type AuthContextValue = {
   }) => { ok: boolean; error?: string };
   signOut: () => void;
   refreshTenant: () => void;
-  saveBrandKit: (kit: BrandKit) => void;
+  saveBrandKit: (kit: BrandKit) => OpOk | OpFail;
   setCognitionNote: (note: string) => void;
-  addIngest: (input: { title?: string; text: string; source?: string }) => void;
-  atomizeIngest: (ingestId?: string) => void;
-  setDraftStage: (draftId: string, stage: Stage) => void;
+  addIngest: (input: {
+    title?: string;
+    text: string;
+    source?: string;
+  }) => OpOk | OpFail;
+  atomizeIngest: (ingestId?: string) => OpOk | OpFail;
+  setDraftStage: (draftId: string, stage: Stage) => OpOk | OpFail;
   approveDraft: (draftId: string) => void;
   rejectDraft: (draftId: string) => void;
-  denyPublishAll: () => void;
-  appendTimeline: (
-    partial: Omit<MemoryEvent, "id" | "time"> & { time?: string },
-  ) => void;
-  simulateDay2Followup: () => { ok: boolean; error?: string };
+  denyPublishAll: () => { detail: string };
+  simulateDay2Followup: () => OpOk | OpFail;
+  exportTenant: () => string | null;
+  importTenant: (json: string) => OpOk | OpFail;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -78,19 +88,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setTenant(loadTenant(session.userId));
   }, [session]);
 
-  const withUser = useCallback(
-    (fn: (userId: string) => TenantState) => {
-      if (!session) return;
-      setTenant(fn(session.userId));
-    },
-    [session],
-  );
-
   const value = useMemo<AuthContextValue>(
     () => ({
       ready,
       session,
       tenant,
+      productMode: "offline",
+      health: tenant ? tenantHealth(tenant) : null,
       signIn: (email, password) => {
         const res = storeSignIn({ email, password });
         if (!res.ok) return { ok: false, error: res.error };
@@ -111,31 +115,72 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setTenant(null);
       },
       refreshTenant,
-      saveBrandKit: (kit) => withUser((id) => storeSaveBrandKit(id, kit)),
-      setCognitionNote: (note) => withUser((id) => storeSetCognitionNote(id, note)),
-      addIngest: (input) => withUser((id) => storeAddIngest(id, input)),
-      atomizeIngest: (ingestId) => withUser((id) => storeAtomizeIngest(id, ingestId)),
-      setDraftStage: (draftId, stage) =>
-        withUser((id) => storeSetDraftStage(id, draftId, stage)),
-      approveDraft: (draftId) => withUser((id) => storeApproveDraft(id, draftId)),
-      rejectDraft: (draftId) => withUser((id) => storeRejectDraft(id, draftId)),
-      denyPublishAll: () => withUser((id) => storeDenyPublishAll(id)),
-      appendTimeline: (partial) => withUser((id) => storeAppendTimeline(id, partial)),
+      saveBrandKit: (kit) => {
+        if (!session) return { ok: false, error: "Sign in first." };
+        const res = storeSaveBrandKit(session.userId, kit);
+        if (!res.ok) return { ok: false, error: res.message };
+        setTenant(res.state);
+        return { ok: true };
+      },
+      setCognitionNote: (note) => {
+        if (!session) return;
+        setTenant(storeSetCognitionNote(session.userId, note));
+      },
+      addIngest: (input) => {
+        if (!session) return { ok: false, error: "Sign in first." };
+        const res = storeAddIngest(session.userId, input);
+        if (!res.ok) return { ok: false, error: res.message };
+        setTenant(res.state);
+        return { ok: true };
+      },
+      atomizeIngest: (ingestId) => {
+        if (!session) return { ok: false, error: "Sign in first." };
+        const res = storeAtomizeIngest(session.userId, ingestId);
+        setTenant(res.state);
+        if (!res.ok) return { ok: false, error: res.message };
+        return { ok: true };
+      },
+      setDraftStage: (draftId, stage) => {
+        if (!session) return { ok: false, error: "Sign in first." };
+        const res = storeSetDraftStage(session.userId, draftId, stage);
+        setTenant(res.state);
+        if (!res.ok) return { ok: false, error: res.error };
+        return { ok: true };
+      },
+      approveDraft: (draftId) => {
+        if (!session) return;
+        setTenant(storeApproveDraft(session.userId, draftId));
+      },
+      rejectDraft: (draftId) => {
+        if (!session) return;
+        setTenant(storeRejectDraft(session.userId, draftId));
+      },
+      denyPublishAll: () => {
+        if (!session) return { detail: "Sign in first." };
+        const { state, detail } = storeDenyPublishAll(session.userId);
+        setTenant(state);
+        return { detail };
+      },
       simulateDay2Followup: () => {
-        if (!session || !tenant) return { ok: false, error: "Sign in first." };
-        const hasKit = Boolean(tenant.brandKit.name.trim() || tenant.brandKit.tone.trim());
-        const hasIngest = tenant.ingests.length > 0;
-        if (!hasKit || !hasIngest) {
-          return {
-            ok: false,
-            error: "Save a brand kit and add an ingest first — Day 2 needs your data.",
-          };
-        }
-        setTenant(storeSimulateDay2(session.userId));
+        if (!session) return { ok: false, error: "Sign in first." };
+        const res = storeSimulateDay2(session.userId);
+        setTenant(res.state);
+        if (!res.ok) return { ok: false, error: res.message };
+        return { ok: true };
+      },
+      exportTenant: () => {
+        if (!session) return null;
+        return storeExport(session.userId);
+      },
+      importTenant: (json) => {
+        if (!session) return { ok: false, error: "Sign in first." };
+        const res = storeImport(session.userId, json);
+        if (!res.ok) return { ok: false, error: res.message };
+        setTenant(res.state);
         return { ok: true };
       },
     }),
-    [ready, session, tenant, refreshTenant, withUser],
+    [ready, session, tenant, refreshTenant],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

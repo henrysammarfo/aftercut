@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BrandKitRouteImport } from './routes/brand-kit'
+import { Route as CircleRouteImport } from './routes/circle'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IngestRouteImport } from './routes/ingest'
 import { Route as LoginRouteImport } from './routes/login'
@@ -28,6 +29,11 @@ const IndexRoute = IndexRouteImport.update({
 const BrandKitRoute = BrandKitRouteImport.update({
   id: '/brand-kit',
   path: '/brand-kit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CircleRoute = CircleRouteImport.update({
+  id: '/circle',
+  path: '/circle',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -74,6 +80,7 @@ const TimelineRoute = TimelineRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/brand-kit': typeof BrandKitRoute
+  '/circle': typeof CircleRoute
   '/dashboard': typeof DashboardRoute
   '/ingest': typeof IngestRoute
   '/login': typeof LoginRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/brand-kit': typeof BrandKitRoute
+  '/circle': typeof CircleRoute
   '/dashboard': typeof DashboardRoute
   '/ingest': typeof IngestRoute
   '/login': typeof LoginRoute
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/brand-kit': typeof BrandKitRoute
+  '/circle': typeof CircleRoute
   '/dashboard': typeof DashboardRoute
   '/ingest': typeof IngestRoute
   '/login': typeof LoginRoute
@@ -113,6 +122,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/brand-kit'
+    | '/circle'
     | '/dashboard'
     | '/ingest'
     | '/login'
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/brand-kit'
+    | '/circle'
     | '/dashboard'
     | '/ingest'
     | '/login'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/brand-kit'
+    | '/circle'
     | '/dashboard'
     | '/ingest'
     | '/login'
@@ -150,6 +162,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BrandKitRoute: typeof BrandKitRoute
+  CircleRoute: typeof CircleRoute
   DashboardRoute: typeof DashboardRoute
   IngestRoute: typeof IngestRoute
   LoginRoute: typeof LoginRoute
@@ -174,6 +187,13 @@ declare module '@tanstack/react-router' {
       path: '/brand-kit'
       fullPath: '/brand-kit'
       preLoaderRoute: typeof BrandKitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/circle': {
+      id: '/circle'
+      path: '/circle'
+      fullPath: '/circle'
+      preLoaderRoute: typeof CircleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -238,6 +258,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BrandKitRoute: BrandKitRoute,
+  CircleRoute: CircleRoute,
   DashboardRoute: DashboardRoute,
   IngestRoute: IngestRoute,
   LoginRoute: LoginRoute,

@@ -1,19 +1,29 @@
+/**
+ * Offline Studio tenant — creator data only (localStorage).
+ * No network. No seeded P&L/drafts. Hellominds live bridge is out of band.
+ */
+
 import {
   emptyBrandKit,
   emptyDrafts,
   emptyIngests,
   emptyShipLedger,
   emptyTimeline,
-  platforms,
   platformLabel,
   type BrandKit,
   type Draft,
   type IngestRecord,
   type MemoryEvent,
-  type Platform,
   type ShipEntry,
   type Stage,
 } from "./aftercut-data";
+import {
+  atomizeText,
+  kitIsReady,
+  normalizeCaption,
+  proactiveRewriteHook,
+  type AtomizeError,
+} from "./atomize";
 
 export type TenantState = {
   userId: string;
@@ -22,17 +32,16 @@ export type TenantState = {
   timeline: MemoryEvent[];
   shipLedger: ShipEntry[];
   ingests: IngestRecord[];
-  /** User-editable note shown in AppShell (no fake %). */
   cognitionNote: string;
+  updatedAt: string;
 };
 
 function key(userId: string) {
-  return `aftercut_tenant_${userId}`;
+  return `aftercut_tenant_v2_${userId}`;
 }
 
 function nowTime(): string {
-  const d = new Date();
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+  return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 
 function nowTs(): string {
@@ -45,9 +54,12 @@ function nowTs(): string {
 }
 
 function shortHash(input: string): string {
-  let h = 0;
-  for (let i = 0; i < input.length; i++) h = (h * 31 + input.charCodeAt(i)) >>> 0;
-  const hex = h.toString(16).padStart(8, "0");
+  let h = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    h ^= input.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  const hex = (h >>> 0).toString(16).padStart(8, "0");
   return `${hex.slice(0, 4)}…${hex.slice(-4)}`;
 }
 
@@ -60,24 +72,33 @@ function empty(userId: string): TenantState {
     shipLedger: emptyShipLedger(),
     ingests: emptyIngests(),
     cognitionNote: "",
+    updatedAt: new Date().toISOString(),
   };
 }
 
 export function loadTenant(userId: string): TenantState {
   if (typeof window === "undefined") return empty(userId);
   try {
-    const raw = localStorage.getItem(key(userId));
+    // migrate v1 key once
+    const v2 = localStorage.getItem(key(userId));
+    const v1 = localStorage.getItem(`aftercut_tenant_${userId}`);
+    const raw = v2 || v1;
     if (!raw) return empty(userId);
-    const parsed = JSON.parse(raw) as TenantState;
-    return {
+    const parsed = JSON.parse(raw) as Partial<TenantState>;
+    const state: TenantState = {
       ...empty(userId),
       ...parsed,
+      userId,
       brandKit: { ...emptyBrandKit(), ...parsed.brandKit },
-      drafts: parsed.drafts ?? [],
-      timeline: parsed.timeline ?? [],
-      shipLedger: parsed.shipLedger ?? [],
-      ingests: parsed.ingests ?? [],
+      drafts: Array.isArray(parsed.drafts) ? parsed.drafts : [],
+      timeline: Array.isArray(parsed.timeline) ? parsed.timeline : [],
+      shipLedger: Array.isArray(parsed.shipLedger) ? parsed.shipLedger : [],
+      ingests: Array.isArray(parsed.ingests) ? parsed.ingests : [],
+      cognitionNote: parsed.cognitionNote ?? "",
+      updatedAt: parsed.updatedAt ?? new Date().toISOString(),
     };
+    if (!v2 && v1) saveTenant(state);
+    return state;
   } catch {
     return empty(userId);
   }
@@ -85,12 +106,14 @@ export function loadTenant(userId: string): TenantState {
 
 export function saveTenant(state: TenantState) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(key(state.userId), JSON.stringify(state));
+  const next = { ...state, updatedAt: new Date().toISOString() };
+  localStorage.setItem(key(state.userId), JSON.stringify(next));
 }
 
 function persist(state: TenantState): TenantState {
-  saveTenant(state);
-  return state;
+  const next = { ...state, updatedAt: new Date().toISOString() };
+  saveTenant(next);
+  return next;
 }
 
 function event(
@@ -111,78 +134,69 @@ function event(
   };
 }
 
-/** Split long-form into beats from the user's own text (client-side). */
-function splitBeats(text: string): string[] {
-  const cleaned = text.replace(/\r\n/g, "\n").trim();
-  if (!cleaned) return [];
+export type SaveKitResult =
+  | { ok: true; state: TenantState }
+  | { ok: false; message: string };
 
-  const byPara = cleaned
-    .split(/\n{2,}/)
-    .map((p) => p.replace(/\s+/g, " ").trim())
-    .filter((p) => p.length >= 40);
-
-  if (byPara.length >= 2) return byPara.slice(0, 8);
-
-  const bySentence = cleaned
-    .split(/(?<=[.!?])\s+/)
-    .map((s) => s.trim())
-    .filter((s) => s.length >= 24);
-
-  if (bySentence.length >= 2) {
-    const chunks: string[] = [];
-    for (let i = 0; i < bySentence.length && chunks.length < 8; i += 2) {
-      chunks.push(bySentence.slice(i, i + 2).join(" "));
-    }
-    return chunks;
+export function saveBrandKit(userId: string, kit: BrandKit): SaveKitResult {
+  if (!kit.name.trim() || kit.name.trim().length < 2) {
+    return { ok: false, message: "Brand name needs at least 2 characters." };
+  }
+  if (!kit.tone.trim() || kit.tone.trim().length < 3) {
+    return { ok: false, message: "Tone needs at least 3 characters (Day 0 Soul requirement)." };
   }
 
-  return [cleaned.slice(0, 280)];
-}
-
-function agentForPlatform(platform: Platform): string {
-  if (platform === "shorts" || platform === "x") return "HOOKsmith";
-  if (platform === "newsletter") return "QC";
-  return "PLATFORMFIT";
-}
-
-export function saveBrandKit(userId: string, kit: BrandKit): TenantState {
   const state = loadTenant(userId);
-  const next: TenantState = {
+  const examples = kit.examples.map((e) => e.trim());
+  while (examples.length < 3) examples.push("");
+
+  const cleaned: BrandKit = {
+    name: kit.name.trim(),
+    tone: kit.tone.trim(),
+    examples: examples.slice(0, 3),
+    ctas: kit.ctas.map((c) => c.trim()).filter(Boolean).slice(0, 8),
+    doNotSay: kit.doNotSay.map((d) => d.trim()).filter(Boolean).slice(0, 16),
+    primaryPlatform: kit.primaryPlatform?.trim() || "",
+  };
+
+  const next = persist({
     ...state,
-    brandKit: {
-      ...kit,
-      examples: kit.examples.filter((e) => e.trim()).length
-        ? kit.examples.map((e) => e.trim())
-        : ["", "", ""],
-      ctas: kit.ctas.map((c) => c.trim()).filter(Boolean),
-      doNotSay: kit.doNotSay.map((d) => d.trim()).filter(Boolean),
-    },
+    brandKit: cleaned,
     timeline: [
       ...state.timeline,
       event(
         "Day 0",
         "AFTERCUT Director",
         "Soul awakened",
-        `Brand kit stored for ${kit.name || "untitled"}: tone, examples, CTAs, do-not-say.`,
+        `Offline Soul stored for ${cleaned.name}: tone, examples, CTAs, do-not-say.`,
         "memory",
       ),
     ],
-  };
-  return persist(next);
+  });
+  return { ok: true, state: next };
 }
 
 export function setCognitionNote(userId: string, note: string): TenantState {
   const state = loadTenant(userId);
-  return persist({ ...state, cognitionNote: note });
+  return persist({ ...state, cognitionNote: note.trim().slice(0, 500) });
 }
+
+export type AddIngestResult =
+  | { ok: true; state: TenantState; ingestId: string }
+  | { ok: false; message: string };
 
 export function addIngest(
   userId: string,
   input: { title?: string; text: string; source?: string },
-): TenantState {
+): AddIngestResult {
   const state = loadTenant(userId);
   const text = input.text.trim();
-  if (!text) return state;
+  if (text.length < 48) {
+    return { ok: false, message: "Paste at least ~48 characters of long-form." };
+  }
+  if (text.length > 80_000) {
+    return { ok: false, message: "Ingest too large (80k char cap offline)." };
+  }
 
   const title =
     input.title?.trim() ||
@@ -197,164 +211,230 @@ export function addIngest(
     beatCount: 0,
   };
 
-  const next: TenantState = {
+  const next = persist({
     ...state,
-    ingests: [ingest, ...state.ingests],
+    ingests: [ingest, ...state.ingests].slice(0, 40),
     timeline: [
       ...state.timeline,
       event(
         "Day 1",
         "Ingest",
         "Long-form dump received",
-        `${ingest.source}: "${ingest.title}" queued for the Circle.`,
+        `${ingest.source}: "${ingest.title}" queued (${text.length} chars).`,
         "action",
       ),
     ],
-  };
-  return persist(next);
+  });
+  return { ok: true, state: next, ingestId: ingest.id };
 }
 
-export function atomizeIngest(userId: string, ingestId?: string): TenantState {
+export type AtomizeOpResult =
+  | { ok: true; state: TenantState; beatCount: number; draftCount: number }
+  | { ok: false; error: AtomizeError | "NO_INGEST"; message: string; state: TenantState };
+
+export function atomizeIngest(userId: string, ingestId?: string): AtomizeOpResult {
   const state = loadTenant(userId);
   const target =
     (ingestId ? state.ingests.find((i) => i.id === ingestId) : null) ??
     state.ingests.find((i) => i.status === "queued") ??
     state.ingests[0];
 
-  if (!target) return state;
+  if (!target) {
+    return {
+      ok: false,
+      error: "NO_INGEST",
+      message: "Queue an ingest before atomizing.",
+      state,
+    };
+  }
 
-  const beats = splitBeats(target.text);
-  const toneHint = state.brandKit.tone.trim();
-  const cta = state.brandKit.ctas[0] ?? "";
-  const newDrafts: Draft[] = [];
-
-  beats.forEach((beat, i) => {
-    const platform = platforms[i % platforms.length]!;
-    const hookBase = beat.slice(0, 120).trim();
-    const hook =
-      toneHint && !hookBase.toLowerCase().includes(toneHint.slice(0, 12).toLowerCase())
-        ? hookBase
-        : hookBase;
-    const stage: Stage = i % 3 === 0 ? "needs-approve" : "drafting";
-    newDrafts.push({
-      id: `dft_${crypto.randomUUID().slice(0, 8)}`,
-      title: `${platformLabel[platform]} cut ${i + 1}`,
-      platform,
-      stage,
-      source: target.title,
-      hook: cta ? `${hook}${hook.endsWith(".") ? "" : "."} ${cta}` : hook,
-      agent: agentForPlatform(platform),
-    });
-  });
-
-  // Also leave a source card in ingested
-  newDrafts.unshift({
-    id: `dft_${crypto.randomUUID().slice(0, 8)}`,
+  const result = atomizeText({
+    text: target.text,
     title: target.title,
-    platform: "shorts",
-    stage: "ingested",
     source: target.source,
-    hook: beats[0]?.slice(0, 100) || "Raw long-form waiting for cuts.",
-    agent: "AFTERCUT Director",
+    kit: state.brandKit,
   });
+
+  if (!result.ok) {
+    return { ok: false, error: result.error, message: result.message, state };
+  }
 
   const ingests = state.ingests.map((i) =>
     i.id === target.id
-      ? { ...i, status: "atomized" as const, beatCount: beats.length }
+      ? { ...i, status: "atomized" as const, beatCount: result.beatCount }
       : i,
   );
 
-  const next: TenantState = {
+  const next = persist({
     ...state,
     ingests,
-    drafts: [...newDrafts, ...state.drafts],
+    drafts: [...result.drafts, ...state.drafts].slice(0, 200),
     timeline: [
       ...state.timeline,
       event(
         "Day 1",
         "PLATFORMFIT",
         "Platform variants drafted",
-        `${beats.length} beat(s) → ${newDrafts.length - 1} platform draft(s) from your content.`,
+        `${result.beatCount} beat(s) → ${result.drafts.length - 1} platform draft(s) · offline atomizer · kit “${state.brandKit.name}”.`,
+        "action",
+      ),
+      event(
+        "Day 1",
+        "HOOKsmith",
+        "Hooks adapted",
+        "Per-platform length + CTA/do-not-say scrub applied.",
         "action",
       ),
     ],
+  });
+
+  return {
+    ok: true,
+    state: next,
+    beatCount: result.beatCount,
+    draftCount: result.drafts.length,
   };
-  return persist(next);
 }
 
-export function setDraftStage(userId: string, draftId: string, stage: Stage): TenantState {
+export type StageOpResult =
+  | { ok: true; state: TenantState }
+  | { ok: false; error: string; state: TenantState };
+
+export function setDraftStage(
+  userId: string,
+  draftId: string,
+  stage: Stage,
+): StageOpResult {
   const state = loadTenant(userId);
+  const draft = state.drafts.find((d) => d.id === draftId);
+  if (!draft) return { ok: false, error: "Draft not found.", state };
+
+  if (stage === "shipped") {
+    if (draft.stage !== "scheduled") {
+      return {
+        ok: false,
+        error: "Ship only after approve (scheduled). Publish leash.",
+        state,
+      };
+    }
+    const cap = normalizeCaption(draft.hook);
+    const hit = state.shipLedger.find(
+      (s) =>
+        s.platform === platformLabel[draft.platform] &&
+        normalizeCaption(s.caption) === cap,
+    );
+    if (hit) {
+      const blocked = persist({
+        ...state,
+        timeline: [
+          ...state.timeline,
+          event(
+            "Day 2",
+            "QC",
+            "Duplicate ship blocked",
+            `Near-match ${hit.hash} already on ${hit.platform}.`,
+            "denied",
+          ),
+        ],
+      });
+      return {
+        ok: false,
+        error: `QC blocked ship — matches ledger ${hit.hash}.`,
+        state: blocked,
+      };
+    }
+  }
+
+  if (stage === "scheduled" && draft.stage === "ingested") {
+    return { ok: false, error: "Advance through drafting first.", state };
+  }
+
   const drafts = state.drafts.map((d) => (d.id === draftId ? { ...d, stage } : d));
   let shipLedger = state.shipLedger;
   let timeline = state.timeline;
 
-  const draft = state.drafts.find((d) => d.id === draftId);
-  if (draft && stage === "shipped") {
+  if (stage === "shipped") {
     const caption = draft.hook;
     const entry: ShipEntry = {
-      hash: shortHash(`${draft.platform}|${caption}|${Date.now()}`),
+      hash: shortHash(`${draft.platform}|${normalizeCaption(caption)}|${Date.now()}`),
       platform: platformLabel[draft.platform],
       caption: caption.slice(0, 40) + (caption.length > 40 ? "…" : ""),
       ts: nowTs(),
     };
-    shipLedger = [entry, ...shipLedger];
+    shipLedger = [entry, ...shipLedger].slice(0, 100);
     timeline = [
       ...timeline,
       event(
         "Day 2",
         "QC",
         "Shipped to ledger",
-        `${entry.platform} · ${entry.hash} remembered.`,
+        `${entry.platform} · ${entry.hash} remembered (offline ledger).`,
         "memory",
       ),
     ];
   }
 
-  return persist({ ...state, drafts, shipLedger, timeline });
+  if (stage === "scheduled") {
+    timeline = [
+      ...timeline,
+      event(
+        "Day 2",
+        "AFTERCUT Director",
+        "Draft approved",
+        `"${draft.title}" scheduled — human approved under publish leash.`,
+        "action",
+      ),
+    ];
+  }
+
+  return { ok: true, state: persist({ ...state, drafts, shipLedger, timeline }) };
 }
 
 export function approveDraft(userId: string, draftId: string): TenantState {
-  return setDraftStage(userId, draftId, "scheduled");
+  const res = setDraftStage(userId, draftId, "scheduled");
+  return res.state;
 }
 
 export function rejectDraft(userId: string, draftId: string): TenantState {
   const state = loadTenant(userId);
   const draft = state.drafts.find((d) => d.id === draftId);
-  const next = setDraftStage(userId, draftId, "drafting");
-  if (!draft) return next;
+  const res = setDraftStage(userId, draftId, "drafting");
+  if (!draft) return res.state;
+  if (!res.ok) return res.state;
   return persist({
-    ...next,
+    ...res.state,
     timeline: [
-      ...next.timeline,
+      ...res.state.timeline,
       event(
         "Day 2",
         "AFTERCUT Director",
         "Draft rejected",
-        `"${draft.title}" sent back to drafting.`,
+        `"${draft.title}" returned to drafting.`,
         "action",
       ),
     ],
   });
 }
 
-export function denyPublishAll(userId: string): TenantState {
+export function denyPublishAll(userId: string): { state: TenantState; detail: string } {
   const state = loadTenant(userId);
   const pending = state.drafts.filter(
     (d) => d.stage === "needs-approve" || d.stage === "drafting" || d.stage === "ingested",
   ).length;
-  return persist({
+  const scheduled = state.drafts.filter((d) => d.stage === "scheduled").length;
+  const detail =
+    pending + scheduled === 0
+      ? "PUBLISH DENIED — queue empty; nothing to blast."
+      : `"Post everything now" rejected — ${pending} unapproved · ${scheduled} scheduled still need explicit ship. Offline leash.`;
+
+  const next = persist({
     ...state,
     timeline: [
       ...state.timeline,
-      event(
-        "Day 2",
-        "Publish leash",
-        "PUBLISH DENIED",
-        `"Post everything now" rejected — ${pending} item(s) lack creator approval.`,
-        "denied",
-      ),
+      event("Day 2", "Publish leash", "PUBLISH DENIED", detail, "denied"),
     ],
   });
+  return { state: next, detail };
 }
 
 export function appendTimeline(
@@ -371,26 +451,34 @@ export function appendTimeline(
     detail: partial.detail,
     kind: partial.kind,
   };
-  return persist({ ...state, timeline: [...state.timeline, evt] });
+  return persist({ ...state, timeline: [...state.timeline, evt].slice(-300) });
 }
 
-/** Only runs when brand kit + at least one ingest exist — proactive event from THEIR data. */
-export function simulateDay2Followup(userId: string): TenantState {
+export function simulateDay2Followup(
+  userId: string,
+): { ok: true; state: TenantState } | { ok: false; message: string; state: TenantState } {
   const state = loadTenant(userId);
-  const hasKit = Boolean(state.brandKit.name.trim() || state.brandKit.tone.trim());
-  const hasIngest = state.ingests.length > 0;
-  if (!hasKit || !hasIngest) return state;
+  if (!kitIsReady(state.brandKit)) {
+    return {
+      ok: false,
+      message: "Save a complete brand kit (name + tone) first.",
+      state,
+    };
+  }
+  if (state.ingests.length === 0) {
+    return { ok: false, message: "Add at least one ingest before Day 2.", state };
+  }
 
   const draft =
     state.drafts.find((d) => d.stage === "needs-approve" || d.stage === "drafting") ??
+    state.drafts.find((d) => d.stage !== "ingested") ??
     state.drafts[0];
-  const label = draft?.title ?? state.ingests[0]!.title;
-  const rewriteHook = draft
-    ? `${draft.hook.replace(/\.$/, "")} — harder open, still in your voice.`
-    : `Harder hook for ${label}, still matching ${state.brandKit.name || "your kit"}.`;
 
+  const label = draft?.title ?? state.ingests[0]!.title;
   let drafts = state.drafts;
+
   if (draft) {
+    const rewriteHook = proactiveRewriteHook(draft.hook, state.brandKit);
     drafts = state.drafts.map((d) =>
       d.id === draft.id
         ? {
@@ -402,9 +490,24 @@ export function simulateDay2Followup(userId: string): TenantState {
           }
         : d,
     );
+  } else {
+    // create proactive draft from kit + last ingest
+    const ing = state.ingests[0]!;
+    drafts = [
+      {
+        id: `dft_${crypto.randomUUID().slice(0, 8)}`,
+        title: `${label} — proactive cut`,
+        platform: "x",
+        stage: "needs-approve",
+        source: ing.title,
+        hook: proactiveRewriteHook(ing.text.slice(0, 120), state.brandKit),
+        agent: "AFTERCUT Director",
+      },
+      ...drafts,
+    ];
   }
 
-  return persist({
+  const next = persist({
     ...state,
     drafts,
     timeline: [
@@ -413,9 +516,54 @@ export function simulateDay2Followup(userId: string): TenantState {
         "Day 2",
         "AFTERCUT Director",
         "Proactive follow-up sent",
-        `"${label}" needs a harder hook — I rewrote it from your ${state.brandKit.name || "brand"} kit. Approve or I hold it.`,
+        `"${label}" needs a harder hook — rewritten from kit “${state.brandKit.name}” (offline). Approve or hold.`,
         "proactive",
       ),
     ],
   });
+
+  return { ok: true, state: next };
+}
+
+/** Export tenant JSON for backup / demo continuity. */
+export function exportTenantJson(userId: string): string {
+  return JSON.stringify(loadTenant(userId), null, 2);
+}
+
+export function importTenantJson(
+  userId: string,
+  json: string,
+): { ok: true; state: TenantState } | { ok: false; message: string } {
+  try {
+    const parsed = JSON.parse(json) as TenantState;
+    if (!parsed || typeof parsed !== "object") {
+      return { ok: false, message: "Invalid JSON." };
+    }
+    const state = persist({
+      ...empty(userId),
+      ...parsed,
+      userId,
+      brandKit: { ...emptyBrandKit(), ...parsed.brandKit },
+      drafts: Array.isArray(parsed.drafts) ? parsed.drafts : [],
+      timeline: Array.isArray(parsed.timeline) ? parsed.timeline : [],
+      shipLedger: Array.isArray(parsed.shipLedger) ? parsed.shipLedger : [],
+      ingests: Array.isArray(parsed.ingests) ? parsed.ingests : [],
+    });
+    return { ok: true, state };
+  } catch {
+    return { ok: false, message: "Could not parse tenant JSON." };
+  }
+}
+
+export function tenantHealth(state: TenantState) {
+  return {
+    kitReady: kitIsReady(state.brandKit),
+    ingestCount: state.ingests.length,
+    draftCount: state.drafts.length,
+    needsApprove: state.drafts.filter((d) => d.stage === "needs-approve").length,
+    shipped: state.shipLedger.length,
+    denials: state.timeline.filter((t) => t.kind === "denied").length,
+    proactive: state.timeline.filter((t) => t.kind === "proactive").length,
+    mode: "offline" as const,
+  };
 }

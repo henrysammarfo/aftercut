@@ -43,12 +43,12 @@ function Timeline() {
   return (
     <AppShell
       title="Continuity timeline"
-      subtitle="Close the tab, come back tomorrow. The Mind picks up exactly where it left off."
+      subtitle="Offline receipts in this browser tenant. Close tab → reopen — loadTenant restores state."
       actions={
         <PrimaryButton
           onClick={() => {
             const res = simulateDay2Followup();
-            setMsg(res.ok ? "Day 2 proactive receipt added." : res.error || "Failed");
+            setMsg(res.ok ? "Day 2 proactive receipt added." : res.error);
           }}
         >
           Simulate Day 2 reopen

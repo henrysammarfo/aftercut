@@ -1,0 +1,24 @@
+---
+description: No hallucinations — Tavily + TinyFish; read docs/memory; AFTERCUT after SCOUT
+alwaysApply: true
+---
+
+# Research + memory (AFTERCUT)
+
+## Facts
+
+- Do not invent jam deadlines, prizes, or Minds API behavior.
+- Fact-check with **Tavily** + **TinyFish** (`X-API-Key`) using keys from `scoutbot/agent/.env` when needed.
+- Unverified → say so.
+
+## Memory
+
+- `docs/memory/SESSION_STATE.md` · `docs/memory/ROADMAP.md`
+- `docs/AFTERCUT_BIBLE.md`
+- Portfolio roadmap also in `scoutbot/docs/memory/ROADMAP.md`
+
+## Sequence
+
+SCOUT trades Aug 10–24 → **AFTERCUT submit Aug 28** → China wait / next brief.
+
+Update memory MDs when status changes. Ask before git push. No Lovable history rewrites.

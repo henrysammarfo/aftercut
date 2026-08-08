@@ -12,16 +12,16 @@ export const Route = createFileRoute("/brand-kit")({
   },
   head: () => ({
     meta: [
-      { title: "Brand kit — teach your Mind the DNA" },
+      { title: "Brand kit — Day 0 Soul (offline)" },
       {
         name: "description",
         content:
-          "Tone, example posts, CTAs and a do-not-say list stored in the Mind Soul so you never re-brief.",
+          "Tone, example posts, CTAs and do-not-say — stored in offline Soul so Studio never re-briefs.",
       },
       { property: "og:title", content: "AFTERCUT Brand kit" },
       {
         property: "og:description",
-        content: "Store tone, examples, CTAs and forbidden phrases once — the Mind remembers.",
+        content: "Store tone, examples, CTAs and forbidden phrases once in offline tenant storage.",
       },
     ],
   }),
@@ -36,6 +36,7 @@ function BrandKitPage() {
   const [kit, setKit] = useState<BrandKit>(emptyBrandKit());
   const [bannedInput, setBannedInput] = useState("");
   const [saved, setSaved] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
     if (tenant?.brandKit) {
@@ -54,16 +55,23 @@ function BrandKitPage() {
   const update = (patch: Partial<BrandKit>) => {
     setKit((k) => ({ ...k, ...patch }));
     setSaved(false);
+    setErr(null);
   };
 
   return (
     <AppShell
       title="Brand kit"
-      subtitle="Day 0. Everything here is written into the Mind Soul — it survives every session."
+      subtitle="Day 0 · offline Soul. Name + tone required before atomize. Stored only in this browser tenant."
       actions={
         <PrimaryButton
           onClick={() => {
-            saveBrandKit(kit);
+            const res = saveBrandKit(kit);
+            if (!res.ok) {
+              setErr(res.error);
+              setSaved(false);
+              return;
+            }
+            setErr(null);
             setSaved(true);
           }}
         >
@@ -71,6 +79,12 @@ function BrandKitPage() {
         </PrimaryButton>
       }
     >
+      {err ? (
+        <p className="mb-4 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-2 text-xs text-red-200/90">
+          {err}
+        </p>
+      ) : null}
+
       <div className="grid gap-4 lg:grid-cols-3">
         <GlassCard className="lg:col-span-2">
           <h2 className="text-sm font-semibold">Voice</h2>
@@ -184,7 +198,7 @@ function BrandKitPage() {
             />
             {kit.examples[i]?.trim() ? (
               <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Check className="h-3.5 w-3.5" /> ready for HOOKsmith
+                <Check className="h-3.5 w-3.5" /> cadence sample saved
               </p>
             ) : null}
           </GlassCard>

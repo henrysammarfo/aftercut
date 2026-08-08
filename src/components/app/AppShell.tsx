@@ -9,6 +9,7 @@ import {
   Sparkles,
   Shirt,
   LogOut,
+  Users,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/lib/auth";
@@ -19,6 +20,7 @@ const nav = [
   { to: "/ingest" as const, label: "Ingest", icon: Inbox },
   { to: "/studio" as const, label: "Studio", icon: KanbanSquare },
   { to: "/timeline" as const, label: "Memory", icon: History },
+  { to: "/circle" as const, label: "Circle", icon: Users },
   { to: "/merch" as const, label: "Brand & merch", icon: Shirt },
   { to: "/pitch" as const, label: "Pitch", icon: Sparkles },
 ];
@@ -34,7 +36,7 @@ export function AppShell({
   actions?: ReactNode;
   children: ReactNode;
 }) {
-  const { session, tenant, signOut, setCognitionNote } = useAuth();
+  const { session, tenant, signOut, setCognitionNote, productMode, health } = useAuth();
   const navigate = useNavigate();
   const [note, setNote] = useState(tenant?.cognitionNote ?? "");
 
@@ -49,6 +51,10 @@ export function AppShell({
           <Link to="/" className="text-foreground">
             <Logo />
           </Link>
+          <p className="mt-3 inline-flex items-center rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+            {productMode}
+            {health?.kitReady ? " · kit ready" : " · kit incomplete"}
+          </p>
           <nav className="mt-6 flex gap-1 overflow-x-auto lg:mt-10 lg:flex-col lg:overflow-visible">
             {nav.map(({ to, label, icon: Icon }) => (
               <Link

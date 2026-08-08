@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { AppShell, GlassCard, PrimaryButton } from "@/components/app/AppShell";
 import { stages, platformLabel, type Stage } from "@/lib/aftercut-data";
 import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
-import { Check, X, Sparkles } from "lucide-react";
+import { Check, X, Sparkles, ShieldAlert } from "lucide-react";
 
 export const Route = createFileRoute("/studio")({
   beforeLoad: () => {
@@ -29,18 +30,57 @@ export const Route = createFileRoute("/studio")({
 
 function Studio() {
   const { tenant, setDraftStage, approveDraft, rejectDraft, denyPublishAll } = useAuth();
+  const [denied, setDenied] = useState<string | null>(null);
+  const [shipNote, setShipNote] = useState<string | null>(null);
   const items = tenant?.drafts ?? [];
 
-  const move = (id: string, stage: Stage) => setDraftStage(id, stage);
+  const move = (id: string, stage: Stage) => {
+    const res = setDraftStage(id, stage);
+    if (!res.ok) {
+      setShipNote(res.error);
+      return;
+    }
+    setShipNote(null);
+  };
 
   return (
     <AppShell
       title="Studio"
-      subtitle="Every card carries the source it came from and the Circle agent that wrote it."
+      subtitle="Offline kanban. Source + agent on every card. Ship only after human schedule."
       actions={
-        <PrimaryButton onClick={() => denyPublishAll()}>Post everything now</PrimaryButton>
+        <PrimaryButton
+          onClick={() => {
+            const res = denyPublishAll();
+            setDenied(res.detail);
+          }}
+        >
+          Post everything now
+        </PrimaryButton>
       }
     >
+      {denied ? (
+        <div className="mb-4 flex items-start gap-3 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3">
+          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
+          <div>
+            <p className="text-sm font-semibold text-red-200">PUBLISH DENIED</p>
+            <p className="mt-1 text-xs text-red-200/80">{denied}</p>
+            <button
+              type="button"
+              className="mt-2 text-[11px] uppercase tracking-wide text-red-200/70 underline-offset-2 hover:underline"
+              onClick={() => setDenied(null)}
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {shipNote ? (
+        <p className="mb-4 rounded-xl bg-white/10 px-4 py-2 text-xs text-muted-foreground">
+          {shipNote}
+        </p>
+      ) : null}
+
       {items.length === 0 ? (
         <GlassCard>
           <p className="text-sm font-medium">No drafts yet</p>

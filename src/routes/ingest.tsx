@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, GlassCard, PrimaryButton } from "@/components/app/AppShell";
 import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
-import { UploadCloud, Send, Link2, FileText, CheckCircle2 } from "lucide-react";
+import { UploadCloud, Send, Link2, FileText } from "lucide-react";
 
 export const Route = createFileRoute("/ingest")({
   beforeLoad: () => {
@@ -11,16 +11,16 @@ export const Route = createFileRoute("/ingest")({
   },
   head: () => ({
     meta: [
-      { title: "Ingest — dump long-form into your Mind" },
+      { title: "Ingest — offline long-form queue" },
       {
         name: "description",
         content:
-          "Drop a VOD, paste a transcript, send a YouTube URL or dump it in Telegram. The Circle atomizes it.",
+          "Paste transcript or notes. Offline atomizer splits beats into platform drafts from your brand kit.",
       },
       { property: "og:title", content: "AFTERCUT Ingest" },
       {
         property: "og:description",
-        content: "VOD upload, transcript paste, YouTube URL or Telegram dump — one pipeline.",
+        content: "Paste long-form → queue → atomize. No live Telegram or URL fetch in this build.",
       },
     ],
   }),
@@ -28,49 +28,57 @@ export const Route = createFileRoute("/ingest")({
 });
 
 const sources = [
-  { icon: Send, title: "Telegram dump", detail: "Bot bridge · paste here for demo", live: true },
-  { icon: Link2, title: "YouTube URL", detail: "Paste captions / chapters as text", live: true },
-  { icon: FileText, title: "Paste transcript", detail: "For judges and offline VODs", live: true },
-  { icon: UploadCloud, title: "Upload file", detail: "Paste transcript for now", live: false },
+  { icon: FileText, title: "Paste transcript", detail: "Production offline path — full text" },
+  { icon: Send, title: "Telegram dump", detail: "Paste bot text here (live bridge not wired)" },
+  { icon: Link2, title: "YouTube notes", detail: "Paste captions / chapters as text" },
+  { icon: UploadCloud, title: "VOD notes", detail: "Paste edited notes · no file upload API" },
 ];
 
 function Ingest() {
-  const { tenant, addIngest, atomizeIngest } = useAuth();
+  const { tenant, addIngest, atomizeIngest, health } = useAuth();
   const [text, setText] = useState("");
   const [title, setTitle] = useState("");
   const [source, setSource] = useState("Transcript paste");
   const [notice, setNotice] = useState<string | null>(null);
+  const [isErr, setIsErr] = useState(false);
 
   const ingests = tenant?.ingests ?? [];
+
+  const flash = (msg: string, error = false) => {
+    setNotice(msg);
+    setIsErr(error);
+  };
 
   return (
     <AppShell
       title="Ingest"
-      subtitle="Day 1. Dump the long-form once — the Circle turns it into platform-native beats."
+      subtitle="Day 1 · offline. Queue long-form in this browser, then atomize with the Day 0 kit. No network fetch."
       actions={
         <div className="flex flex-wrap gap-2">
           <PrimaryButton
             onClick={() => {
-              if (!text.trim()) {
-                setNotice("Paste a transcript first.");
+              const res = addIngest({ text, title: title || undefined, source });
+              if (!res.ok) {
+                flash(res.error, true);
                 return;
               }
-              addIngest({ text, title: title || undefined, source });
               setText("");
               setTitle("");
-              setNotice("Ingest queued.");
+              flash("Ingest queued in offline tenant.");
             }}
           >
             Queue ingest
           </PrimaryButton>
           <PrimaryButton
+            disabled={!health?.kitReady}
+            title={health?.kitReady ? undefined : "Save brand kit (name + tone) first"}
             onClick={() => {
-              if (ingests.length === 0) {
-                setNotice("Add an ingest before atomizing.");
+              const res = atomizeIngest();
+              if (!res.ok) {
+                flash(res.error, true);
                 return;
               }
-              atomizeIngest();
-              setNotice("Atomized into Studio drafts from your text.");
+              flash("Atomized into Studio drafts (offline atomizer).");
             }}
           >
             Run atomization
@@ -78,19 +86,31 @@ function Ingest() {
         </div>
       }
     >
+      {!health?.kitReady ? (
+        <p className="mb-4 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-2 text-xs text-amber-100/90">
+          Brand kit incomplete — open Brand kit and save name + tone before atomize.
+        </p>
+      ) : null}
+
       {notice ? (
-        <p className="mb-4 rounded-xl bg-white/10 px-4 py-2 text-xs text-muted-foreground">
+        <p
+          className={`mb-4 rounded-xl px-4 py-2 text-xs ${
+            isErr
+              ? "border border-red-500/25 bg-red-500/10 text-red-200/90"
+              : "bg-white/10 text-muted-foreground"
+          }`}
+        >
           {notice}
         </p>
       ) : null}
 
       <div className="grid gap-4 lg:grid-cols-3">
         <GlassCard className="lg:col-span-2">
-          <div className="flex h-40 flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 text-center">
+          <div className="flex h-32 flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 text-center">
             <UploadCloud className="h-7 w-7 text-muted-foreground" />
             <p className="mt-3 text-sm font-medium">Paste last night&apos;s transcript</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Real content only — no fixture seeds. The Mind already knows the kit.
+              ≥48 characters · real content only · kit-aware offline cut
             </p>
           </div>
           <input
@@ -110,16 +130,17 @@ function Ingest() {
             <option>VOD notes</option>
           </select>
           <textarea
-            rows={6}
+            rows={8}
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Paste transcript…"
             className="mt-3 w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm outline-none placeholder:text-muted-foreground focus:border-white/25"
           />
+          <p className="mt-2 text-[11px] text-muted-foreground">{text.trim().length} chars</p>
         </GlassCard>
 
         <div className="flex flex-col gap-4">
-          {sources.map(({ icon: Icon, title: t, detail, live }) => (
+          {sources.map(({ icon: Icon, title: t, detail }) => (
             <GlassCard key={t}>
               <div className="flex items-start gap-3">
                 <Icon className="mt-0.5 h-4 w-4" />
@@ -127,7 +148,6 @@ function Ingest() {
                   <p className="text-sm font-medium">{t}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
                 </div>
-                {live ? <CheckCircle2 className="ml-auto h-4 w-4 text-muted-foreground" /> : null}
               </div>
             </GlassCard>
           ))}
@@ -153,8 +173,12 @@ function Ingest() {
                 <button
                   type="button"
                   onClick={() => {
-                    atomizeIngest(r.id);
-                    setNotice(`Atomized “${r.title}”.`);
+                    const res = atomizeIngest(r.id);
+                    if (!res.ok) {
+                      flash(res.error, true);
+                      return;
+                    }
+                    flash(`Atomized “${r.title}”.`);
                   }}
                   className="rounded-full bg-white/10 px-2.5 py-0.5 hover:bg-white/15"
                 >
