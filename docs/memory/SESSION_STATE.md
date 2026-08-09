@@ -41,20 +41,22 @@ Production lock: **full live** Soul · native atoms · leash · Day-2 · ship le
 
 Code ready on **main** `acf49a5` (native prompts + live do-not-say scrub).
 
-### Cloud film (Computer Use video Artifacts) — 2026-08-09 attempt
+### Cloud film (Computer Use video Artifacts) — 2026-08-09
 
-| Path | Result |
+| Beat | Result |
 |---|---|
-| In-chat Task `environment:cloud` | **Blocked** — multi-root workspace (aftercut+scoutbot) → “exactly one known git remote” |
-| move_agent_to_root(aftercut) | **Blocked** — multi-repo cloud agent cannot pull into single-folder |
-| Cloud Agents API | Script ready: `node scripts/launch-cloud-film.mjs` — needs **`CURSOR_API_KEY`** ([dashboard integrations](https://cursor.com/dashboard/integrations)); injects Minds keys via session `envVars` |
-| cursor.com/agents browser | Requires interactive Cursor login (not signed in in agent browser) |
+| Pre-flight | `.env.local` from injected keys · `minds-smoke` ok:true · Director enabled · cog ~167 |
+| Landing → Sign up | `film+cloud1786300296@example.com` · Northline Studio kit |
+| Live atomize | **6 drafts** (prose parser fallback — Mind refuses JSON-only) |
+| Studio kanban | Advance cards · PUBLISH DENIED · **Day-2 proactive card** |
+| Timeline + Circle | Memory receipts · live cognition |
+| Artifacts | `/opt/cursor/artifacts/screenshots/beat*.png` · video `aftercut-film-demo-full-walk` |
+| Branch | `cursor/aftercut-live-film-e2e-9793` — prose parse in `parse.ts` + history scan in `live.ts` |
 
-**Unblock 100% film:** paste `CURSOR_API_KEY` into shell (or open **Cloud** under agent input in an **aftercut-only** window) → run launch script → open returned `https://cursor.com/agents/bc-…` for desktop + video.
+**Mind quirk:** Director returns conversational HTML platform cuts, not JSON. App now parses prose + scans conversation history.
 
-1. Launch Cloud film (above) — remaining  
-2. Pitch packaging polish  
-3. **Aug 10 AM first:** SCOUT mandatory go-live checklist  
+1. Pitch packaging polish  
+2. **Aug 10 AM first:** SCOUT mandatory go-live checklist  
 
 **Not in jam critical path:** full Opus-style 9:16 reframe karaoke NLE (crowded video pipeline — see COMPETITIVE_RESEARCH).  
 
