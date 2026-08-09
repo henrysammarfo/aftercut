@@ -21,6 +21,7 @@ import {
   captionFingerprint,
   kitIsReady,
   normalizeCaption,
+  scrubDoNotSay,
 } from "./atomize";
 
 export type TenantState = {
@@ -472,9 +473,10 @@ export function applyLiveAtomize(
   );
 
   const title = target?.title ?? "ingest";
+  const banned = state.brandKit.doNotSay;
   const newDrafts: Draft[] = input.drafts.map((d) => ({
     id: `dft_${crypto.randomUUID().slice(0, 8)}`,
-    title: d.title,
+    title: scrubDoNotSay(d.title, banned),
     platform: (["shorts", "x", "linkedin", "newsletter"].includes(d.platform)
       ? d.platform
       : "x") as Draft["platform"],
@@ -482,7 +484,7 @@ export function applyLiveAtomize(
       ? d.stage
       : "needs-approve") as Stage,
     source: title,
-    hook: d.hook,
+    hook: scrubDoNotSay(d.hook, banned),
     agent: d.agent || input.mindName,
     ingestId: input.ingestId,
     proactive: d.proactive,
@@ -531,13 +533,16 @@ export function applyLiveProactive(
     state.drafts.find((d) => d.stage !== "ingested");
 
   let drafts: Draft[];
+  const banned = state.brandKit.doNotSay;
+  const scrubbedTitle = scrubDoNotSay(input.title, banned);
+  const scrubbedHook = scrubDoNotSay(input.hook, banned);
   if (soft) {
     drafts = state.drafts.map((d) =>
       d.id === soft.id
         ? {
             ...d,
-            title: input.title || `${d.title} — rewritten hook`,
-            hook: input.hook,
+            title: scrubbedTitle || `${d.title} — rewritten hook`,
+            hook: scrubbedHook,
             platform,
             stage: "needs-approve" as Stage,
             agent: input.agent || input.mindName,
@@ -549,11 +554,11 @@ export function applyLiveProactive(
     drafts = [
       {
         id: `dft_${crypto.randomUUID().slice(0, 8)}`,
-        title: input.title,
+        title: scrubbedTitle || "Proactive rewrite",
         platform,
         stage: "needs-approve",
         source: state.ingests[0]?.title ?? "proactive",
-        hook: input.hook,
+        hook: scrubbedHook,
         agent: input.agent || input.mindName,
         proactive: true,
         ingestId: state.ingests[0]?.id,
@@ -571,7 +576,7 @@ export function applyLiveProactive(
         "Day 2",
         input.mindName,
         "Live proactive follow-up",
-        `Mind ${input.mindId.slice(0, 8)}… rewrote: “${input.hook.slice(0, 80)}${input.hook.length > 80 ? "…" : ""}”`,
+        `Mind ${input.mindId.slice(0, 8)}… rewrote: “${scrubbedHook.slice(0, 80)}${scrubbedHook.length > 80 ? "…" : ""}”`,
         "proactive",
       ),
     ),

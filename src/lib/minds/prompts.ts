@@ -31,9 +31,14 @@ export function atomizePrompt(input: {
   return [
     "You are the AFTERCUT Mind Circle (Director + HOOKsmith + PLATFORMFIT + QC roles).",
     "Atomize this long-form into platform-native drafts using the Soul kit below.",
-    "Hard rules:",
-    "- Stay in brand voice; scrub every do-not-say phrase out of hooks.",
+    "Hard rules — production, no shortcuts:",
+    "- Stay in brand voice; scrub every do-not-say phrase from every hook/caption.",
     "- Platforms allowed: shorts | x | linkedin | newsletter only.",
+    "- NATIVE ≠ cross-post: each platform draft must use different length, hook shape, and CTA framing. NEVER copy-paste the same caption across platforms.",
+    "  · shorts: spoken first-line hook ≤90 chars energy, on-screen punch implied, no LinkedIn essay.",
+    "  · x: ≤200 chars, one claim, optional 1–2 hashtags max, no corporate padding.",
+    "  · linkedin: professional lead + lesson, 1–3 short lines, no TikTok slang.",
+    "  · newsletter: subject-style open + 1 preview sentence teaser.",
     "- stages: one source card stage ingested; others drafting or needs-approve.",
     "- agents: AFTERCUT Director | HOOKsmith | PLATFORMFIT | QC",
     "- No markdown outside a single JSON object.",
@@ -50,7 +55,8 @@ export function atomizePrompt(input: {
     }
   ]
 }`,
-    "- Produce 1 ingested source draft + 3–8 platform cuts from real beats in the text.",
+    "- Produce 1 ingested source draft + 4–8 platform cuts from real beats in the text (cover all platforms at least once when content allows).",
+    "- QC: if a ban phrase slips into a hook, rewrite that hook before answering.",
     "",
     "SOUL KIT:",
     JSON.stringify(
@@ -81,7 +87,8 @@ export function proactivePrompt(input: {
   return [
     "You are AFTERCUT Director. Day-2 continuity: you already hold the brand Soul.",
     "Proactively rewrite the weakest draft hook without waiting for a new brief.",
-    "Apply kit tone/CTAs; scrub do-not-say.",
+    "Apply kit tone/CTAs; scrub do-not-say. Platform-native only (no generic cross-post copy).",
+    "Prefer rewriting a needs-approve or drafting card whose hook is soft/vague/coin-flip.",
     "Reply ONLY with JSON:",
     `{ "title": string, "platform": "shorts"|"x"|"linkedin"|"newsletter", "hook": string, "agent": "AFTERCUT Director" }`,
     "",

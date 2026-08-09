@@ -30,12 +30,21 @@ cognition: ~171
 npx tsx scripts/minds-smoke.ts
 ```
 
-## Open (AFTERCUT sprint)
+## Market validation (2026-08-09)
 
-1. End-to-end film path once in browser (kit → ingest → atomize → leash → day2)  
-2. DoraHacks package: film script + README submit section  
-3. Commit when Henry asks  
-4. Aug 10 morning: switch to SCOUT mandatory checklist first  
+Full lock: [`COMPETITIVE_RESEARCH.md`](./COMPETITIVE_RESEARCH.md)  
+**Verdict:** Clip SaaS + Whisper→LLM→FFmpeg OSS is crowded. Double down Mind Soul · native platform atoms · leash · Day-2. Do not rebuild Opus.
+
+## Open (AFTERCUT sprint · public bar before Aug 28)
+
+Production lock: **full live** Soul · native atoms · leash · Day-2 · ship ledger — not mock, not offline-default.
+
+1. Browser E2E film path once (kit → soul → atomize → leash → day2)  
+2. Hardened platform-native prompts + client QC scrub (do-not-say) on live drafts  
+3. Pitch packaging (`docs/FILM_DEMO.md`) + pricing/stars re-check pitch day  
+4. **Aug 10 AM first:** SCOUT mandatory go-live checklist  
+
+**Not in jam critical path:** full Opus-style 9:16 reframe karaoke NLE (crowded video pipeline — see COMPETITIVE_RESEARCH).  
 
 ## SCOUT handoff (mandatory tomorrow)
 
