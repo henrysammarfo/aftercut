@@ -5,7 +5,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import type { BrandKit } from "../aftercut-data";
-import { parseAtomizeReplyFlexible, parseProactiveReply } from "./parse";
+import { parseAtomizeReplyFlexible, parseProactiveReplyFlexible } from "./parse";
 import { atomizePrompt, proactivePrompt, publishDeniedPrompt, soulSyncPrompt } from "./prompts";
 import {
   conversationAlias,
@@ -244,7 +244,7 @@ export const proactiveLive = createServerFn({ method: "POST" }).handler(
     if (!res.ok) return { ok: false, error: res.error };
 
     try {
-      const parsed = parseProactiveReply(res.replyText);
+      const parsed = parseProactiveReplyFlexible(res.replyText);
       return {
         ok: true,
         ...parsed,
@@ -252,6 +252,30 @@ export const proactiveLive = createServerFn({ method: "POST" }).handler(
         mindId: res.mindId,
       };
     } catch (e) {
+      try {
+        const client = createLiveMindsClient();
+        const alias = conversationAlias(data.userId);
+        const hist = await client.getHistory(alias);
+        const mindTexts = hist
+          .filter((h: { senderType?: number }) => h.senderType === 0)
+          .map((h: { messageText?: string }) => String(h.messageText ?? ""))
+          .reverse();
+        for (const text of mindTexts.slice(0, 6)) {
+          try {
+            const parsed = parseProactiveReplyFlexible(text);
+            return {
+              ok: true,
+              ...parsed,
+              mindName: res.mindName,
+              mindId: res.mindId,
+            };
+          } catch {
+            /* try next */
+          }
+        }
+      } catch {
+        /* fall through */
+      }
       return {
         ok: false,
         error: `Proactive parse failed: ${e instanceof Error ? e.message : String(e)}`,

@@ -200,3 +200,38 @@ export function parseProactiveReply(replyText: string): {
     agent: String(data.agent ?? "AFTERCUT Director"),
   };
 }
+
+export function parseProactiveReplyFlexible(replyText: string): {
+  title: string;
+  hook: string;
+  platform: Platform;
+  agent: string;
+} {
+  try {
+    return parseProactiveReply(replyText);
+  } catch {
+    const text = stripHtml(replyText);
+    for (const platform of ["shorts", "x", "linkedin", "newsletter"] as const) {
+      const re = new RegExp(`${platform}[^\\n"]*"([^"]+)"`, "i");
+      const m = text.match(re);
+      if (m?.[1]) {
+        return {
+          title: "Proactive rewrite",
+          hook: m[1].trim(),
+          platform,
+          agent: "AFTERCUT Director",
+        };
+      }
+    }
+    const quoted = text.match(/"([^"]{12,})"/);
+    if (quoted?.[1]) {
+      return {
+        title: "Proactive rewrite",
+        hook: quoted[1].trim(),
+        platform: "x",
+        agent: "AFTERCUT Director",
+      };
+    }
+    throw new Error("No proactive hook found in Mind prose reply");
+  }
+}
