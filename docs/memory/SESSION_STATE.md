@@ -39,10 +39,22 @@ Full lock: [`COMPETITIVE_RESEARCH.md`](./COMPETITIVE_RESEARCH.md)
 
 Production lock: **full live** Soul · native atoms · leash · Day-2 · ship ledger — not mock, not offline-default.
 
-1. Browser E2E film path once (kit → soul → atomize → leash → day2)  
-2. Hardened platform-native prompts + client QC scrub (do-not-say) on live drafts  
-3. Pitch packaging (`docs/FILM_DEMO.md`) + pricing/stars re-check pitch day  
-4. **Aug 10 AM first:** SCOUT mandatory go-live checklist  
+Code ready on **main** `acf49a5` (native prompts + live do-not-say scrub).
+
+### Cloud film (Computer Use video Artifacts) — 2026-08-09 attempt
+
+| Path | Result |
+|---|---|
+| In-chat Task `environment:cloud` | **Blocked** — multi-root workspace (aftercut+scoutbot) → “exactly one known git remote” |
+| move_agent_to_root(aftercut) | **Blocked** — multi-repo cloud agent cannot pull into single-folder |
+| Cloud Agents API | Script ready: `node scripts/launch-cloud-film.mjs` — needs **`CURSOR_API_KEY`** ([dashboard integrations](https://cursor.com/dashboard/integrations)); injects Minds keys via session `envVars` |
+| cursor.com/agents browser | Requires interactive Cursor login (not signed in in agent browser) |
+
+**Unblock 100% film:** paste `CURSOR_API_KEY` into shell (or open **Cloud** under agent input in an **aftercut-only** window) → run launch script → open returned `https://cursor.com/agents/bc-…` for desktop + video.
+
+1. Launch Cloud film (above) — remaining  
+2. Pitch packaging polish  
+3. **Aug 10 AM first:** SCOUT mandatory go-live checklist  
 
 **Not in jam critical path:** full Opus-style 9:16 reframe karaoke NLE (crowded video pipeline — see COMPETITIVE_RESEARCH).  
 
