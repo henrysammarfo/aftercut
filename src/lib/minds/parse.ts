@@ -11,9 +11,23 @@ export type ParsedAtomize = {
   rawExcerpt: string;
 };
 
+function stripHtml(text: string): string {
+  return text
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .trim();
+}
+
 function extractJsonBlob(text: string): unknown {
-  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const candidate = (fenced?.[1] ?? text).trim();
+  const normalized = stripHtml(text);
+  const fenced = normalized.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const candidate = (fenced?.[1] ?? normalized).trim();
   // Try whole
   try {
     return JSON.parse(candidate);
@@ -48,8 +62,70 @@ function extractJsonBlob(text: string): unknown {
   return JSON.parse(slice.slice(0, end));
 }
 
-function isPlatform(p: string): p is Platform {
-  return (platforms as string[]).includes(p);
+function platformFromLabel(label: string): Platform | null {
+  const t = label.toLowerCase();
+  if (t.includes("short")) return "shorts";
+  if (t === "x" || t.startsWith("x ") || t.includes("twitter")) return "x";
+  if (t.includes("linkedin")) return "linkedin";
+  if (t.includes("newsletter")) return "newsletter";
+  return null;
+}
+
+/** Parse conversational Mind replies (HTML/prose) when JSON is refused. */
+export function parseProseAtomizeReply(
+  replyText: string,
+  meta: { title: string; source: string; ingestId?: string },
+): ParsedAtomize {
+  const text = stripHtml(replyText);
+  const drafts: Omit<Draft, "id">[] = [];
+
+  const platformBlock =
+    /(?:^|\n)\s*(Shorts|X|LinkedIn|Newsletter)\b[^\n]*\n(?:"([^"]+)"(?:\s*\(\d+\s*chars?\))?|Subject:\s*"([^"]+)"[^\n]*\nPreview:\s*"([^"]+)")/gi;
+
+  let match: RegExpExecArray | null;
+  let idx = 0;
+  while ((match = platformBlock.exec(text)) !== null) {
+    const platform = platformFromLabel(match[1] ?? "");
+    if (!platform) continue;
+    let hook = "";
+    if (match[3] && match[4]) {
+      hook = `Subject: ${match[3]} · Preview: ${match[4]}`;
+    } else {
+      hook = (match[2] ?? "").trim();
+    }
+    if (!hook) continue;
+    drafts.push({
+      title: `${platform} · cut ${idx + 1}`,
+      platform,
+      stage: idx === 0 ? "ingested" : "needs-approve",
+      source: meta.title,
+      hook,
+      agent: "AFTERCUT Director",
+      ingestId: meta.ingestId,
+    });
+    idx++;
+  }
+
+  if (drafts.length === 0) {
+    throw new Error("No platform drafts found in Mind prose reply");
+  }
+
+  return {
+    beatCount: drafts.length,
+    drafts,
+    rawExcerpt: replyText.slice(0, 280),
+  };
+}
+
+export function parseAtomizeReplyFlexible(
+  replyText: string,
+  meta: { title: string; source: string; ingestId?: string },
+): ParsedAtomize {
+  try {
+    return parseAtomizeReply(replyText, meta);
+  } catch {
+    return parseProseAtomizeReply(replyText, meta);
+  }
 }
 
 function isStage(s: string): s is Stage {

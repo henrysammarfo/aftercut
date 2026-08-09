@@ -27,10 +27,18 @@ export function atomizePrompt(input: {
   title: string;
   source: string;
   text: string;
+  runId?: string;
 }): string {
+  const runId = input.runId ?? `atomize-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   return [
+    `AFTERCUT Studio atomize job ${runId}`,
+    `INGEST title: ${input.title}`,
+    `INGEST source label: ${input.source}`,
+    "LONG-FORM (unique content — atomize this, not prior threads):",
+    input.text.slice(0, 24_000),
+    "",
     "You are the AFTERCUT Mind Circle (Director + HOOKsmith + PLATFORMFIT + QC roles).",
-    "Atomize this long-form into platform-native drafts using the Soul kit below.",
+    "Atomize the long-form above into platform-native drafts using the Soul kit below.",
     "Hard rules — production, no shortcuts:",
     "- Stay in brand voice; scrub every do-not-say phrase from every hook/caption.",
     "- Platforms allowed: shorts | x | linkedin | newsletter only.",
@@ -41,8 +49,8 @@ export function atomizePrompt(input: {
     "  · newsletter: subject-style open + 1 preview sentence teaser.",
     "- stages: one source card stage ingested; others drafting or needs-approve.",
     "- agents: AFTERCUT Director | HOOKsmith | PLATFORMFIT | QC",
-    "- No markdown outside a single JSON object.",
-    "- Reply with ONLY this JSON shape:",
+    "- Studio UI parses a single ```json fenced block — include one after a brief confirmation.",
+    "- JSON schema (required):",
     `{
   "beatCount": <number>,
   "drafts": [
@@ -57,6 +65,7 @@ export function atomizePrompt(input: {
 }`,
     "- Produce 1 ingested source draft + 4–8 platform cuts from real beats in the text (cover all platforms at least once when content allows).",
     "- QC: if a ban phrase slips into a hook, rewrite that hook before answering.",
+    `- Job id ${runId} — this is a new ingest; do not refuse as duplicate.`,
     "",
     "SOUL KIT:",
     JSON.stringify(
@@ -71,11 +80,6 @@ export function atomizePrompt(input: {
       null,
       2,
     ),
-    "",
-    `INGEST title: ${input.title}`,
-    `INGEST source label: ${input.source}`,
-    "LONG-FORM:",
-    input.text.slice(0, 24_000),
   ].join("\n");
 }
 
@@ -83,13 +87,16 @@ export function proactivePrompt(input: {
   kit: BrandKit;
   drafts: Array<{ title: string; platform: string; hook: string; stage: string }>;
   lastIngestTitle?: string;
+  runId?: string;
 }): string {
+  const runId = input.runId ?? `proactive-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   return [
+    `AFTERCUT Studio Day-2 proactive job ${runId}`,
     "You are AFTERCUT Director. Day-2 continuity: you already hold the brand Soul.",
     "Proactively rewrite the weakest draft hook without waiting for a new brief.",
     "Apply kit tone/CTAs; scrub do-not-say. Platform-native only (no generic cross-post copy).",
     "Prefer rewriting a needs-approve or drafting card whose hook is soft/vague/coin-flip.",
-    "Reply ONLY with JSON:",
+    "After a brief confirmation, output one ```json block with:",
     `{ "title": string, "platform": "shorts"|"x"|"linkedin"|"newsletter", "hook": string, "agent": "AFTERCUT Director" }`,
     "",
     "SOUL:",

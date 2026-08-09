@@ -5,9 +5,10 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import type { BrandKit } from "../aftercut-data";
-import { parseAtomizeReply, parseProactiveReply } from "./parse";
+import { parseAtomizeReplyFlexible, parseProactiveReply } from "./parse";
 import { atomizePrompt, proactivePrompt, publishDeniedPrompt, soulSyncPrompt } from "./prompts";
 import {
+  conversationAlias,
   createLiveMindsClient,
   getBuilderApiKey,
   resolveDirectorMind,
@@ -145,37 +146,68 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
         title: data.title,
         source: data.source,
         text: data.text,
+        runId: data.ingestId ? `ingest-${data.ingestId}` : undefined,
       }),
       timeoutMs: 180_000,
     });
     if (!res.ok) return { ok: false, error: res.error };
 
+    const meta = {
+      title: data.title,
+      source: data.source,
+      ingestId: data.ingestId,
+    };
+
+    let parsed: Awaited<ReturnType<typeof parseAtomizeReplyFlexible>> | undefined;
     try {
-      const parsed = parseAtomizeReply(res.replyText, {
-        title: data.title,
-        source: data.source,
-        ingestId: data.ingestId,
-      });
-      return {
-        ok: true,
-        beatCount: parsed.beatCount,
-        drafts: parsed.drafts.map((d) => ({
-          title: d.title,
-          platform: d.platform,
-          stage: d.stage,
-          hook: d.hook,
-          agent: d.agent,
-          proactive: d.proactive,
-        })),
-        mindName: res.mindName,
-        mindId: res.mindId,
-      };
-    } catch (e) {
-      return {
-        ok: false,
-        error: `Mind replied but JSON parse failed: ${e instanceof Error ? e.message : String(e)}. Excerpt: ${res.replyText.slice(0, 160)}`,
-      };
+      parsed = parseAtomizeReplyFlexible(res.replyText, meta);
+    } catch {
+      // Mind may refuse JSON and point to prose drafts in an earlier turn — scan history.
+      try {
+        const client = createLiveMindsClient();
+        const alias = conversationAlias(data.userId);
+        const hist = await client.getHistory(alias);
+        const mindTexts = hist
+          .filter((h: { senderType?: number }) => h.senderType === 0)
+          .map((h: { messageText?: string }) => String(h.messageText ?? ""))
+          .reverse();
+        let lastErr = "Mind reply not parseable";
+        for (const text of mindTexts.slice(0, 8)) {
+          try {
+            parsed = parseAtomizeReplyFlexible(text, meta);
+            break;
+          } catch (e) {
+            lastErr = e instanceof Error ? e.message : String(e);
+          }
+        }
+        if (!parsed) {
+          return {
+            ok: false,
+            error: `Mind replied but parse failed: ${lastErr}. Excerpt: ${res.replyText.slice(0, 160)}`,
+          };
+        }
+      } catch (e) {
+        return {
+          ok: false,
+          error: `Mind replied but parse failed: ${e instanceof Error ? e.message : String(e)}. Excerpt: ${res.replyText.slice(0, 160)}`,
+        };
+      }
     }
+
+    return {
+      ok: true,
+      beatCount: parsed.beatCount,
+      drafts: parsed.drafts.map((d) => ({
+        title: d.title,
+        platform: d.platform,
+        stage: d.stage,
+        hook: d.hook,
+        agent: d.agent,
+        proactive: d.proactive,
+      })),
+      mindName: res.mindName,
+      mindId: res.mindId,
+    };
   },
 );
 
