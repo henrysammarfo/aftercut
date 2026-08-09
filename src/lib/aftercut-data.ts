@@ -29,6 +29,10 @@ export type Draft = {
   source: string;
   hook: string;
   agent: string;
+  /** True when Director rewrote this card on Day 2 simulate. */
+  proactive?: boolean;
+  /** Ingest id that produced this draft (for re-atomize replace). */
+  ingestId?: string;
 };
 
 export type MemoryEvent = {
@@ -52,7 +56,10 @@ export type BrandKit = {
 
 export type ShipEntry = {
   hash: string;
+  /** Stable compare key = normalizeCaption(full hook). Prefer this over caption preview. */
+  fingerprint?: string;
   platform: string;
+  /** Short display preview only — not used for dupe match when fingerprint set. */
   caption: string;
   ts: string;
 };

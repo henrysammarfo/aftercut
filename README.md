@@ -25,12 +25,25 @@ Source of truth: [`docs/AFTERCUT_BIBLE.md`](docs/AFTERCUT_BIBLE.md).
 | `/brand-kit` | Day 0 Soul memory (auth) |
 | `/ingest` | Day 1 long-form dump + atomize (auth) |
 | `/studio` | Kanban + approve / reject / ship (auth) |
-| `/timeline` | Continuity receipts + Day 2 simulate (auth) |
-| `/circle` | Mind Circle — Director / HOOKsmith / PLATFORMFIT / QC |
+| `/timeline` | Continuity receipts + live Day-2 proactive (auth) |
+| `/circle` | Mind Circle — Director status (live cognition / Telegram) |
 | `/merch` | Cut-mark, palette, hoodie placements (auth) |
 | `/pitch` | Demon Mode pitch (public) |
 
 New accounts start **empty** — no seeded drafts or fake testimonials.
+
+## Live Minds (required for jam authenticity)
+
+```sh
+cp .env.example .env.local
+# MINDS_BUILDER_API_KEY=… from build.hellominds.ai
+# MINDS_DIRECTOR_MIND_ID=… optional pin
+
+npx tsx scripts/minds-smoke.ts   # list director + cognition (no secrets printed)
+npm run dev
+```
+
+Soul sync · atomize · Day-2 proactive · leash notify all hit **api.build.hellominds.ai** via `@animocabrands/minds-client-lib`.
 
 ## Local development
 
@@ -45,19 +58,18 @@ Build:
 npm run build
 ```
 
-## Demo flow (judges)
+## Demo flow (judges / film)
 
-1. Sign up → empty studio  
-2. **Day 0** — save brand kit to Soul  
-3. **Day 1** — paste transcript → queue → atomize  
-4. Studio — approve / reject behind the publish leash  
-5. Try **Post everything now** → `PUBLISH DENIED` banner + Memory receipt  
-6. **Simulate Day 2 reopen** — proactive rewrite from *your* kit + ingest  
-7. **Circle** — show four Minds and Soul receipts  
+1. Set `MINDS_BUILDER_API_KEY` in `.env.local` (Builder console)  
+2. Sign up → **Brand kit** → **Save + sync Soul** (live Director confirms)  
+3. Paste transcript → **Run live atomization** (waits for Mind reply JSON)  
+4. Studio — Advance / Approve / Ship · **Post everything now** → DENIED  
+5. **Live Day-2 follow-up** → Director rewrites for real  
+6. Circle shows live cognition / Telegram flag  
 
-Open Campus / Animoca Minds: join community Telegram; awaken AFTERCUT Director on hellominds — Studio is the filmable control surface for the jam video.
+Tech: [`docs/TECH.md`](docs/TECH.md) · Bible: [`docs/AFTERCUT_BIBLE.md`](docs/AFTERCUT_BIBLE.md).
 
-Tech: [`docs/TECH.md`](docs/TECH.md) · Bible: [`docs/AFTERCUT_BIBLE.md`](docs/AFTERCUT_BIBLE.md).  
+Open Campus / Animoca: awaken AFTERCUT Director + Telegram bot on [hellominds](https://www.hellominds.ai/). Studio is the filmable surface; Mind is integral via Builder API. 
 
 ## Brand
 

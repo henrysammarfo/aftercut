@@ -19,7 +19,7 @@ const field =
 
 function safeNext(next?: string) {
   if (next && next.startsWith("/") && !next.startsWith("//")) return next;
-  return "/dashboard";
+  return "/brand-kit";
 }
 
 function LoginPage() {
@@ -42,7 +42,7 @@ function LoginPage() {
         </Link>
         <h1 className="text-center text-2xl font-semibold tracking-tight">Welcome back</h1>
         <p className="mt-2 text-center text-sm text-muted-foreground">
-          Your Mind Soul stays with this account — never shared across tenants.
+          Offline Studio Soul for this account — browser tenant only.
         </p>
         <form
           className="mt-8 space-y-4"

@@ -12,16 +12,16 @@ export const Route = createFileRoute("/dashboard")({
   },
   head: () => ({
     meta: [
-      { title: "Dashboard — AFTERCUT Studio (offline)" },
+      { title: "Dashboard — AFTERCUT live Mind Studio" },
       {
         name: "description",
         content:
-          "Queue health, offline Circle status, publish leash and ship ledger — browser tenant only.",
+          "Queue health, live Mind cognition, publish leash and ship ledger.",
       },
       { property: "og:title", content: "AFTERCUT Dashboard" },
       {
         property: "og:description",
-        content: "Offline Studio overview: queue, leash, ledger, backup export.",
+        content: "Live Studio overview: queue, leash, ledger, Director Mind.",
       },
     ],
   }),
@@ -33,7 +33,8 @@ function Dashboard() {
     tenant,
     health,
     denyPublishAll,
-    simulateDay2Followup,
+    requestProactiveFollowup,
+    mindStatus,
     exportTenant,
     importTenant,
   } = useAuth();
@@ -58,26 +59,26 @@ function Dashboard() {
     <AppShell
       title="Studio overview"
       subtitle={
-        drafts.length === 0
-          ? "Empty offline tenant. Save brand kit → ingest → atomize. No network Mind."
-          : "Offline Studio — kit, drafts, and ledger live in this browser only."
+        mindStatus?.ok
+          ? `Live Director: ${mindStatus.mindName} · cognition ${mindStatus.cognition ?? "—"} · telegram ${mindStatus.hasTelegram ? "linked" : "not linked"}`
+          : mindStatus && !mindStatus.ok
+            ? `Mind offline: ${mindStatus.error}`
+            : "Connecting to AFTERCUT Director Mind…"
       }
       actions={
         <div className="flex flex-wrap gap-2">
           <PrimaryButton
-            onClick={() => {
-              const res = simulateDay2Followup();
-              flash(
-                res.ok ? "Day 2 follow-up written to memory." : res.error,
-                !res.ok,
-              );
+            onClick={async () => {
+              flash("Contacting live Director…");
+              const res = await requestProactiveFollowup();
+              flash(res.ok ? "Live Day-2 follow-up applied." : res.error, !res.ok);
             }}
           >
-            Simulate Day 2 reopen
+            Live Day-2 follow-up
           </PrimaryButton>
           <PrimaryButton
-            onClick={() => {
-              const res = denyPublishAll();
+            onClick={async () => {
+              const res = await denyPublishAll();
               flash(res.detail);
             }}
           >
@@ -103,7 +104,7 @@ function Dashboard() {
           {
             label: "In queue",
             value: String(drafts.length),
-            sub: "drafts offline",
+            sub: "live drafts",
           },
           {
             label: "Needs approve",
@@ -184,14 +185,14 @@ function Dashboard() {
               </>
             ) : (
               <p className="mt-3 text-xs text-muted-foreground">
-                Armed offline. Try &ldquo;Post everything now&rdquo; — blast-publish is denied.
+                Armed. Blast-publish denied · live Director notified when leash fires.
               </p>
             )}
           </GlassCard>
 
           <GlassCard>
             <div className="flex items-center gap-2 text-sm font-semibold">
-              <Brain className="h-4 w-4" /> Circle (offline)
+              <Brain className="h-4 w-4" /> Live Circle
             </div>
             <p className="mt-2 text-[11px] text-muted-foreground">
               Role labels · receipt counts from your timeline — not live hellominds.
@@ -216,7 +217,7 @@ function Dashboard() {
               <HardDrive className="h-4 w-4" /> Tenant backup
             </div>
             <p className="mt-2 text-[11px] text-muted-foreground">
-              Export / import JSON for demo continuity. Stays offline.
+              Export / import JSON backup of tenant state (studio ledger alongside live Mind).
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <button

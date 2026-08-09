@@ -1,10 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell, GlassCard, PrimaryButton } from "@/components/app/AppShell";
 import { stages, platformLabel, type Stage } from "@/lib/aftercut-data";
 import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
-import { Check, X, Sparkles, ShieldAlert } from "lucide-react";
+import { Check, X, Sparkles, ShieldAlert, Bell } from "lucide-react";
 
 export const Route = createFileRoute("/studio")({
   beforeLoad: () => {
@@ -29,9 +29,17 @@ export const Route = createFileRoute("/studio")({
 });
 
 function Studio() {
-  const { tenant, setDraftStage, approveDraft, rejectDraft, denyPublishAll } = useAuth();
+  const {
+    tenant,
+    setDraftStage,
+    approveDraft,
+    rejectDraft,
+    denyPublishAll,
+    requestProactiveFollowup,
+  } = useAuth();
   const [denied, setDenied] = useState<string | null>(null);
   const [shipNote, setShipNote] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const items = tenant?.drafts ?? [];
 
   const move = (id: string, stage: Stage) => {
@@ -46,16 +54,30 @@ function Studio() {
   return (
     <AppShell
       title="Studio"
-      subtitle="Offline kanban. Source + agent on every card. Ship only after human schedule."
+      subtitle="Live kanban fed by AFTERCUT Director Mind. Ship only after human schedule."
       actions={
-        <PrimaryButton
-          onClick={() => {
-            const res = denyPublishAll();
-            setDenied(res.detail);
-          }}
-        >
-          Post everything now
-        </PrimaryButton>
+        <div className="flex flex-wrap gap-2">
+          <PrimaryButton
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              setShipNote("Director Mind rewriting…");
+              const res = await requestProactiveFollowup();
+              setShipNote(res.ok ? "Live proactive rewrite — check Needs approve." : res.error);
+              setBusy(false);
+            }}
+          >
+            Live Day-2 follow-up
+          </PrimaryButton>
+          <PrimaryButton
+            onClick={async () => {
+              const res = await denyPublishAll();
+              setDenied(res.detail);
+            }}
+          >
+            Post everything now
+          </PrimaryButton>
+        </div>
       }
     >
       {denied ? (
@@ -64,13 +86,21 @@ function Studio() {
           <div>
             <p className="text-sm font-semibold text-red-200">PUBLISH DENIED</p>
             <p className="mt-1 text-xs text-red-200/80">{denied}</p>
-            <button
-              type="button"
-              className="mt-2 text-[11px] uppercase tracking-wide text-red-200/70 underline-offset-2 hover:underline"
-              onClick={() => setDenied(null)}
-            >
-              Dismiss
-            </button>
+            <div className="mt-2 flex flex-wrap gap-3">
+              <Link
+                to="/timeline"
+                className="text-[11px] uppercase tracking-wide text-red-200/90 underline-offset-2 hover:underline"
+              >
+                Open Memory →
+              </Link>
+              <button
+                type="button"
+                className="text-[11px] uppercase tracking-wide text-red-200/70 underline-offset-2 hover:underline"
+                onClick={() => setDenied(null)}
+              >
+                Dismiss
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
@@ -85,9 +115,14 @@ function Studio() {
         <GlassCard>
           <p className="text-sm font-medium">No drafts yet</p>
           <p className="mt-2 text-xs text-muted-foreground">
-            Ingest long-form and run atomization — the Circle builds this board from your content
-            only.
+            Ingest long-form and run atomization — the board is built from your content only.
           </p>
+          <Link
+            to="/ingest"
+            className="mt-4 inline-block text-xs font-medium underline-offset-2 hover:underline"
+          >
+            Open Ingest →
+          </Link>
         </GlassCard>
       ) : (
         <div className="grid gap-4 lg:grid-cols-5">
@@ -105,11 +140,16 @@ function Studio() {
                 .filter((d) => d.stage === s.id)
                 .map((d) => (
                   <GlassCard key={d.id} className="p-4 sm:p-4">
-                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                       <span className="rounded-full bg-white/10 px-2 py-0.5">
                         {platformLabel[d.platform]}
                       </span>
                       <span>{d.agent}</span>
+                      {d.proactive ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-foreground">
+                          <Bell className="h-3 w-3" /> Day 2
+                        </span>
+                      ) : null}
                     </div>
                     <p className="mt-2 text-sm font-medium leading-snug">{d.title}</p>
                     <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
@@ -121,14 +161,20 @@ function Studio() {
                       <div className="mt-3 flex gap-2">
                         <button
                           type="button"
-                          onClick={() => approveDraft(d.id)}
+                          onClick={() => {
+                            const res = approveDraft(d.id);
+                            if (!res.ok) setShipNote(res.error);
+                          }}
                           className="flex flex-1 items-center justify-center gap-1 rounded-full bg-white/10 py-1.5 text-xs hover:bg-white/20"
                         >
                           <Check className="h-3.5 w-3.5" /> Approve
                         </button>
                         <button
                           type="button"
-                          onClick={() => rejectDraft(d.id)}
+                          onClick={() => {
+                            const res = rejectDraft(d.id);
+                            if (!res.ok) setShipNote(res.error);
+                          }}
                           className="flex items-center justify-center gap-1 rounded-full bg-white/5 px-3 py-1.5 text-xs hover:bg-white/10"
                         >
                           <X className="h-3.5 w-3.5" />
@@ -170,8 +216,8 @@ function Studio() {
           <div>
             <p className="text-sm font-medium">Publish leash is armed</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              The Director can draft, rewrite and schedule — it can never blast-publish. &ldquo;Post
-              everything now&rdquo; returns PUBLISH DENIED.
+              Director drafts and rewrites only. &ldquo;Post everything now&rdquo; always returns
+              PUBLISH DENIED. QC blocks near-dupe ships via fingerprint ledger.
             </p>
           </div>
         </div>

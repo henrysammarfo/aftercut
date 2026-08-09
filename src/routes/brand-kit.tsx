@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { AppShell, GlassCard, PrimaryButton } from "@/components/app/AppShell";
-import { emptyBrandKit, type BrandKit } from "@/lib/aftercut-data";
+import { emptyBrandKit, platforms, platformLabel, type BrandKit } from "@/lib/aftercut-data";
 import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
 import { Ban, Quote, Check } from "lucide-react";
@@ -12,16 +12,16 @@ export const Route = createFileRoute("/brand-kit")({
   },
   head: () => ({
     meta: [
-      { title: "Brand kit — Day 0 Soul (offline)" },
+      { title: "Brand kit — Day 0 Soul (live Mind)" },
       {
         name: "description",
         content:
-          "Tone, example posts, CTAs and do-not-say — stored in offline Soul so Studio never re-briefs.",
+          "Tone, examples, CTAs and do-not-say — synced to live AFTERCUT Director Soul on hellominds.",
       },
       { property: "og:title", content: "AFTERCUT Brand kit" },
       {
         property: "og:description",
-        content: "Store tone, examples, CTAs and forbidden phrases once in offline tenant storage.",
+        content: "Store DNA in Studio then sync Soul to live Director Mind.",
       },
     ],
   }),
@@ -37,6 +37,8 @@ function BrandKitPage() {
   const [bannedInput, setBannedInput] = useState("");
   const [saved, setSaved] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [hint, setHint] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (tenant?.brandKit) {
@@ -61,28 +63,55 @@ function BrandKitPage() {
   return (
     <AppShell
       title="Brand kit"
-      subtitle="Day 0 · offline Soul. Name + tone required before atomize. Stored only in this browser tenant."
+      subtitle="Day 0 · saves locally then syncs Soul to live AFTERCUT Director Mind (hellominds)."
       actions={
-        <PrimaryButton
-          onClick={() => {
-            const res = saveBrandKit(kit);
-            if (!res.ok) {
-              setErr(res.error);
-              setSaved(false);
-              return;
-            }
-            setErr(null);
-            setSaved(true);
-          }}
-        >
-          {saved ? "Saved to Soul" : "Save to Soul"}
-        </PrimaryButton>
+        <div className="flex flex-wrap gap-2">
+          {saved ? (
+            <Link
+              to="/ingest"
+              className="rounded-full px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+              style={{ background: "linear-gradient(to bottom, #2B2B2B, #101010)" }}
+            >
+              Open Ingest →
+            </Link>
+          ) : null}
+          <PrimaryButton
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              setHint("Syncing Soul to live Director…");
+              const filledExamples = kit.examples.filter((e) => e.trim()).length;
+              const res = await saveBrandKit(kit);
+              setBusy(false);
+              if (!res.ok) {
+                setErr(res.error);
+                setSaved(false);
+                setHint(null);
+                return;
+              }
+              setErr(null);
+              setSaved(true);
+              if (filledExamples === 0 || kit.ctas.length === 0) {
+                setHint(
+                  "Soul synced live. Tip: add ≥1 example + CTA for sharper cuts.",
+                );
+              } else {
+                setHint("Soul synced to live Mind. Next: paste long-form on Ingest.");
+              }
+            }}
+          >
+            {busy ? "Syncing…" : saved ? "Synced to Soul" : "Save + sync Soul"}
+          </PrimaryButton>
+        </div>
       }
     >
       {err ? (
         <p className="mb-4 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-2 text-xs text-red-200/90">
           {err}
         </p>
+      ) : null}
+      {hint ? (
+        <p className="mb-4 rounded-xl bg-white/10 px-4 py-2 text-xs text-muted-foreground">{hint}</p>
       ) : null}
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -100,12 +129,18 @@ function BrandKitPage() {
             </label>
             <label className="flex flex-col gap-2 text-xs text-muted-foreground">
               Primary platform
-              <input
+              <select
                 className={field}
                 value={kit.primaryPlatform ?? ""}
                 onChange={(e) => update({ primaryPlatform: e.target.value })}
-                placeholder="YouTube long-form"
-              />
+              >
+                <option value="">No preference</option>
+                {platforms.map((p) => (
+                  <option key={p} value={p}>
+                    {platformLabel[p]}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="sm:col-span-2 flex flex-col gap-2 text-xs text-muted-foreground">
               Tone description

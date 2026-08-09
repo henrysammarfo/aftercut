@@ -126,6 +126,7 @@ export function atomizeText(input: {
   title: string;
   source: string;
   kit: BrandKit;
+  ingestId?: string;
 }): AtomizeResult {
   if (!kitIsReady(input.kit)) {
     return {
@@ -160,13 +161,19 @@ export function atomizeText(input: {
     source: input.source,
     hook: scrubDoNotSay(beats[0]!.slice(0, 100), input.kit.doNotSay) || "Raw long-form queued.",
     agent: "AFTERCUT Director",
+    ingestId: input.ingestId,
   });
 
-  // One draft per beat × rotate platforms; primary kit platform weighted first index
+  // One draft per beat × rotate platforms; primary kit platform weighted first
   const order: Platform[] = [...platforms];
-  const primary = input.kit.primaryPlatform?.toLowerCase();
-  if (primary) {
-    const match = platforms.find((p) => p === primary || platformLabel[p].toLowerCase() === primary);
+  const primaryRaw = input.kit.primaryPlatform?.trim().toLowerCase() ?? "";
+  if (primaryRaw) {
+    const match = platforms.find(
+      (p) =>
+        p === primaryRaw ||
+        platformLabel[p].toLowerCase() === primaryRaw ||
+        p.replace(/\s/g, "") === primaryRaw.replace(/\s/g, ""),
+    );
     if (match) {
       order.splice(order.indexOf(match), 1);
       order.unshift(match);
@@ -185,12 +192,14 @@ export function atomizeText(input: {
       source: input.title,
       hook,
       agent: agentForPlatform(platform),
+      ingestId: input.ingestId,
     });
   });
 
   return { ok: true, drafts, beatCount: beats.length };
 }
 
+/** Stable fingerprint for QC dupe checks (full-ish hook, not display preview). */
 export function normalizeCaption(s: string): string {
   return s
     .toLowerCase()
@@ -198,7 +207,11 @@ export function normalizeCaption(s: string): string {
     .replace(/[^\w\s]/g, "")
     .replace(/\s+/g, " ")
     .trim()
-    .slice(0, 48);
+    .slice(0, 120);
+}
+
+export function captionFingerprint(hook: string): string {
+  return normalizeCaption(hook);
 }
 
 export function proactiveRewriteHook(hook: string, kit: BrandKit): string {

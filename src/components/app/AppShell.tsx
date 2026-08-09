@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/lib/auth";
+import { DemoProgress } from "@/components/app/DemoProgress";
 
 const nav = [
   { to: "/dashboard" as const, label: "Dashboard", icon: LayoutDashboard },
@@ -30,19 +31,30 @@ export function AppShell({
   subtitle,
   actions,
   children,
+  showDemoProgress = true,
 }: {
   title: string;
   subtitle?: string;
   actions?: ReactNode;
   children: ReactNode;
+  showDemoProgress?: boolean;
 }) {
-  const { session, tenant, signOut, setCognitionNote, productMode, health } = useAuth();
+  const { session, tenant, signOut, setCognitionNote, productMode, health, mindStatus, mindLoading } =
+    useAuth();
   const navigate = useNavigate();
   const [note, setNote] = useState(tenant?.cognitionNote ?? "");
 
   useEffect(() => {
     setNote(tenant?.cognitionNote ?? "");
   }, [tenant?.cognitionNote]);
+
+  const mindLabel = mindStatus?.ok
+    ? `live · ${mindStatus.mindName}${mindStatus.cognition != null ? ` · cog ${mindStatus.cognition}` : ""}`
+    : mindLoading
+      ? "live · connecting…"
+      : mindStatus && !mindStatus.ok
+        ? "live · mind offline"
+        : "live · awaiting key";
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -51,10 +63,15 @@ export function AppShell({
           <Link to="/" className="text-foreground">
             <Logo />
           </Link>
-          <p className="mt-3 inline-flex items-center rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground">
-            {productMode}
-            {health?.kitReady ? " · kit ready" : " · kit incomplete"}
+          <p className="mt-3 inline-flex max-w-full items-center rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+            <span className="truncate">
+              {productMode} · {mindLabel}
+              {health?.kitReady ? " · kit ready" : " · kit incomplete"}
+            </span>
           </p>
+          {mindStatus && !mindStatus.ok ? (
+            <p className="mt-2 text-[10px] leading-snug text-red-300/90">{mindStatus.error}</p>
+          ) : null}
           <nav className="mt-6 flex gap-1 overflow-x-auto lg:mt-10 lg:flex-col lg:overflow-visible">
             {nav.map(({ to, label, icon: Icon }) => (
               <Link
@@ -97,7 +114,7 @@ export function AppShell({
                 onBlur={() => {
                   if (note !== (tenant?.cognitionNote ?? "")) setCognitionNote(note);
                 }}
-                placeholder="Optional note for cognition / boost reminders…"
+                placeholder="Optional note synced with Soul to live Director…"
                 className="mt-2 w-full resize-none rounded-xl border border-white/10 bg-transparent px-3 py-2 text-xs outline-none placeholder:text-muted-foreground focus:border-white/25"
               />
             </div>
@@ -129,6 +146,11 @@ export function AppShell({
             </div>
             {actions}
           </div>
+          {showDemoProgress && session ? (
+            <div className="mt-6">
+              <DemoProgress tenant={tenant} />
+            </div>
+          ) : null}
           <div className="mt-8">{children}</div>
         </main>
       </div>

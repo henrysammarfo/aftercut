@@ -1,22 +1,18 @@
-# ROADMAP — after SCOUT
+# ROADMAP — AFTERCUT + portfolio
 
-> Mirror of scoutbot memory. Fact-checked 2026-08-07 (Tavily + Animoca).
+> SCOUT Aug 10–24 live mandatory · AFTERCUT submit **Aug 28 2026**.
 
-**Next ship after SCOUT trading (Aug 10–24):** **AFTERCUT** — Creative Minds Jam #1 · submit **Aug 28 2026**.
+## Parallel now
 
-Full portfolio sequence: [`../../scoutbot/docs/memory/ROADMAP.md`](../../scoutbot/docs/memory/ROADMAP.md)  
-If path differs on another machine, open `C:\Users\jessi\Desktop\scoutbot\docs\memory\ROADMAP.md`.
-
-## AFTERCUT focus
-
-| Item | Lock |
+| When | Focus |
 |---|---|
-| Product | Persistent Mind — brand DNA + overnight platform cuts |
-| Track | Content repurposing |
-| Must show | Memory · continuity · autonomous follow-up · Mind integral |
-| Moat | Opus clips once; AFTERCUT remembers and keeps cutting |
-| Bible | [`../AFTERCUT_BIBLE.md`](../AFTERCUT_BIBLE.md) |
+| **Now until Aug 10 AM** | AFTERCUT live Mind demo spine · film package |
+| **Aug 10 AM (lock)** | SCOUT: TST → paper off → day1 → day1:live — **no skip** |
+| **Aug 10–24** | SCOUT trade + AFTERCUT nights/spare capacity |
+| **By Aug 28** | AFTERCUT DoraHacks: video + repo + working Mind |
 
-## Research
+## AFTERCUT open
 
-Always Tavily + TinyFish before changing deadlines/prizes — see scoutbot `docs/memory/RESEARCH_PROTOCOL.md`.
+1. Browser E2E film path (kit → atomize → leash → day2)  
+2. Confirm minds-smoke green every machine  
+3. Submit packaging  

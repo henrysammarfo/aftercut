@@ -27,23 +27,23 @@ const days = [
   {
     icon: Moon,
     day: "Day 0",
-    title: "Awaken & teach",
+    title: "Teach the Soul",
     detail:
-      "Spin up the AFTERCUT Director Mind. Write tone, example posts, CTAs and do-not-say into the Soul once.",
+      "Save tone, examples, CTAs, do-not-say — sync Soul to live AFTERCUT Director on hellominds.",
   },
   {
     icon: Sunrise,
     day: "Day 1",
     title: "Dump long-form",
     detail:
-      "Telegram dump, transcript paste or YouTube URL. The Circle atomizes beats into Shorts, X, LinkedIn and newsletter.",
+      "Paste transcript or Telegram text. Live Director atomizes Shorts, X, LinkedIn and newsletter.",
   },
   {
     icon: Sun,
     day: "Day 2",
     title: "Mind still knows",
     detail:
-      "Reopen the studio — kit intact, drafts queued. The Director proactively rewrites a weak hook without a new prompt.",
+      "Reopen Studio — kit intact, drafts queued. Live Director proactively rewrites a weak hook.",
   },
 ];
 
@@ -73,8 +73,8 @@ function Index() {
                 Ship cuts that grind while you rest
               </h1>
               <p className="mt-4 max-w-md text-sm leading-relaxed text-[#010101]/80 sm:text-base lg:text-white/80">
-                A Minds agent that remembers your creative DNA and keeps turning last night&apos;s
-                long-form into platform-native posts overnight.
+                A Minds agent that remembers your creative DNA and keeps cutting long-form into
+                platform posts — live on hellominds, filmable in Studio.
               </p>
 
               <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:items-center">
@@ -257,7 +257,7 @@ function Index() {
       </section>
 
       <footer className="border-t border-white/10 px-5 py-8 text-center text-xs text-muted-foreground sm:px-8 lg:px-12">
-        AFTERCUT · Creative Minds Jam · content repurposing · Mind by Animoca integral
+        AFTERCUT · Creative Minds Jam #1 · submit 28 Aug 2026 · live Mind Director · Studio control plane
       </footer>
     </div>
   );

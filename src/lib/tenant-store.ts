@@ -1,6 +1,6 @@
 /**
- * Offline Studio tenant — creator data only (localStorage).
- * No network. No seeded P&L/drafts. Hellominds live bridge is out of band.
+ * Tenant ledger — stores live Mind outputs + ship rules (localStorage).
+ * Generation is via hellominds Builder API only (see src/lib/minds/*).
  */
 
 import {
@@ -18,11 +18,9 @@ import {
   type Stage,
 } from "./aftercut-data";
 import {
-  atomizeText,
+  captionFingerprint,
   kitIsReady,
   normalizeCaption,
-  proactiveRewriteHook,
-  type AtomizeError,
 } from "./atomize";
 
 export type TenantState = {
@@ -134,6 +132,16 @@ function event(
   };
 }
 
+const TIMELINE_MAX = 300;
+
+function pushEvents(timeline: MemoryEvent[], ...evts: MemoryEvent[]): MemoryEvent[] {
+  return [...timeline, ...evts].slice(-TIMELINE_MAX);
+}
+
+function ledgerFingerprint(entry: ShipEntry): string {
+  return entry.fingerprint || normalizeCaption(entry.caption);
+}
+
 export type SaveKitResult =
   | { ok: true; state: TenantState }
   | { ok: false; message: string };
@@ -162,8 +170,8 @@ export function saveBrandKit(userId: string, kit: BrandKit): SaveKitResult {
   const next = persist({
     ...state,
     brandKit: cleaned,
-    timeline: [
-      ...state.timeline,
+    timeline: pushEvents(
+      state.timeline,
       event(
         "Day 0",
         "AFTERCUT Director",
@@ -171,7 +179,7 @@ export function saveBrandKit(userId: string, kit: BrandKit): SaveKitResult {
         `Offline Soul stored for ${cleaned.name}: tone, examples, CTAs, do-not-say.`,
         "memory",
       ),
-    ],
+    ),
   });
   return { ok: true, state: next };
 }
@@ -214,8 +222,8 @@ export function addIngest(
   const next = persist({
     ...state,
     ingests: [ingest, ...state.ingests].slice(0, 40),
-    timeline: [
-      ...state.timeline,
+    timeline: pushEvents(
+      state.timeline,
       event(
         "Day 1",
         "Ingest",
@@ -223,77 +231,9 @@ export function addIngest(
         `${ingest.source}: "${ingest.title}" queued (${text.length} chars).`,
         "action",
       ),
-    ],
+    ),
   });
   return { ok: true, state: next, ingestId: ingest.id };
-}
-
-export type AtomizeOpResult =
-  | { ok: true; state: TenantState; beatCount: number; draftCount: number }
-  | { ok: false; error: AtomizeError | "NO_INGEST"; message: string; state: TenantState };
-
-export function atomizeIngest(userId: string, ingestId?: string): AtomizeOpResult {
-  const state = loadTenant(userId);
-  const target =
-    (ingestId ? state.ingests.find((i) => i.id === ingestId) : null) ??
-    state.ingests.find((i) => i.status === "queued") ??
-    state.ingests[0];
-
-  if (!target) {
-    return {
-      ok: false,
-      error: "NO_INGEST",
-      message: "Queue an ingest before atomizing.",
-      state,
-    };
-  }
-
-  const result = atomizeText({
-    text: target.text,
-    title: target.title,
-    source: target.source,
-    kit: state.brandKit,
-  });
-
-  if (!result.ok) {
-    return { ok: false, error: result.error, message: result.message, state };
-  }
-
-  const ingests = state.ingests.map((i) =>
-    i.id === target.id
-      ? { ...i, status: "atomized" as const, beatCount: result.beatCount }
-      : i,
-  );
-
-  const next = persist({
-    ...state,
-    ingests,
-    drafts: [...result.drafts, ...state.drafts].slice(0, 200),
-    timeline: [
-      ...state.timeline,
-      event(
-        "Day 1",
-        "PLATFORMFIT",
-        "Platform variants drafted",
-        `${result.beatCount} beat(s) → ${result.drafts.length - 1} platform draft(s) · offline atomizer · kit “${state.brandKit.name}”.`,
-        "action",
-      ),
-      event(
-        "Day 1",
-        "HOOKsmith",
-        "Hooks adapted",
-        "Per-platform length + CTA/do-not-say scrub applied.",
-        "action",
-      ),
-    ],
-  });
-
-  return {
-    ok: true,
-    state: next,
-    beatCount: result.beatCount,
-    draftCount: result.drafts.length,
-  };
 }
 
 export type StageOpResult =
@@ -317,17 +257,15 @@ export function setDraftStage(
         state,
       };
     }
-    const cap = normalizeCaption(draft.hook);
+    const fp = captionFingerprint(draft.hook);
     const hit = state.shipLedger.find(
-      (s) =>
-        s.platform === platformLabel[draft.platform] &&
-        normalizeCaption(s.caption) === cap,
+      (s) => s.platform === platformLabel[draft.platform] && ledgerFingerprint(s) === fp,
     );
     if (hit) {
       const blocked = persist({
         ...state,
-        timeline: [
-          ...state.timeline,
+        timeline: pushEvents(
+          state.timeline,
           event(
             "Day 2",
             "QC",
@@ -335,7 +273,7 @@ export function setDraftStage(
             `Near-match ${hit.hash} already on ${hit.platform}.`,
             "denied",
           ),
-        ],
+        ),
       });
       return {
         ok: false,
@@ -354,16 +292,18 @@ export function setDraftStage(
   let timeline = state.timeline;
 
   if (stage === "shipped") {
+    const fp = captionFingerprint(draft.hook);
     const caption = draft.hook;
     const entry: ShipEntry = {
-      hash: shortHash(`${draft.platform}|${normalizeCaption(caption)}|${Date.now()}`),
+      hash: shortHash(`${draft.platform}|${fp}`),
+      fingerprint: fp,
       platform: platformLabel[draft.platform],
       caption: caption.slice(0, 40) + (caption.length > 40 ? "…" : ""),
       ts: nowTs(),
     };
     shipLedger = [entry, ...shipLedger].slice(0, 100);
-    timeline = [
-      ...timeline,
+    timeline = pushEvents(
+      timeline,
       event(
         "Day 2",
         "QC",
@@ -371,12 +311,12 @@ export function setDraftStage(
         `${entry.platform} · ${entry.hash} remembered (offline ledger).`,
         "memory",
       ),
-    ];
+    );
   }
 
   if (stage === "scheduled") {
-    timeline = [
-      ...timeline,
+    timeline = pushEvents(
+      timeline,
       event(
         "Day 2",
         "AFTERCUT Director",
@@ -384,36 +324,44 @@ export function setDraftStage(
         `"${draft.title}" scheduled — human approved under publish leash.`,
         "action",
       ),
-    ];
+    );
   }
 
   return { ok: true, state: persist({ ...state, drafts, shipLedger, timeline }) };
 }
 
-export function approveDraft(userId: string, draftId: string): TenantState {
-  const res = setDraftStage(userId, draftId, "scheduled");
-  return res.state;
+export function approveDraft(
+  userId: string,
+  draftId: string,
+): StageOpResult {
+  return setDraftStage(userId, draftId, "scheduled");
 }
 
-export function rejectDraft(userId: string, draftId: string): TenantState {
+export function rejectDraft(
+  userId: string,
+  draftId: string,
+): StageOpResult {
   const state = loadTenant(userId);
   const draft = state.drafts.find((d) => d.id === draftId);
   const res = setDraftStage(userId, draftId, "drafting");
-  if (!draft) return res.state;
-  if (!res.ok) return res.state;
-  return persist({
-    ...res.state,
-    timeline: [
-      ...res.state.timeline,
-      event(
-        "Day 2",
-        "AFTERCUT Director",
-        "Draft rejected",
-        `"${draft.title}" returned to drafting.`,
-        "action",
+  if (!draft) return res;
+  if (!res.ok) return res;
+  return {
+    ok: true,
+    state: persist({
+      ...res.state,
+      timeline: pushEvents(
+        res.state.timeline,
+        event(
+          "Day 2",
+          "AFTERCUT Director",
+          "Draft rejected",
+          `"${draft.title}" returned to drafting.`,
+          "action",
+        ),
       ),
-    ],
-  });
+    }),
+  };
 }
 
 export function denyPublishAll(userId: string): { state: TenantState; detail: string } {
@@ -429,10 +377,10 @@ export function denyPublishAll(userId: string): { state: TenantState; detail: st
 
   const next = persist({
     ...state,
-    timeline: [
-      ...state.timeline,
+    timeline: pushEvents(
+      state.timeline,
       event("Day 2", "Publish leash", "PUBLISH DENIED", detail, "denied"),
-    ],
+    ),
   });
   return { state: next, detail };
 }
@@ -451,78 +399,7 @@ export function appendTimeline(
     detail: partial.detail,
     kind: partial.kind,
   };
-  return persist({ ...state, timeline: [...state.timeline, evt].slice(-300) });
-}
-
-export function simulateDay2Followup(
-  userId: string,
-): { ok: true; state: TenantState } | { ok: false; message: string; state: TenantState } {
-  const state = loadTenant(userId);
-  if (!kitIsReady(state.brandKit)) {
-    return {
-      ok: false,
-      message: "Save a complete brand kit (name + tone) first.",
-      state,
-    };
-  }
-  if (state.ingests.length === 0) {
-    return { ok: false, message: "Add at least one ingest before Day 2.", state };
-  }
-
-  const draft =
-    state.drafts.find((d) => d.stage === "needs-approve" || d.stage === "drafting") ??
-    state.drafts.find((d) => d.stage !== "ingested") ??
-    state.drafts[0];
-
-  const label = draft?.title ?? state.ingests[0]!.title;
-  let drafts = state.drafts;
-
-  if (draft) {
-    const rewriteHook = proactiveRewriteHook(draft.hook, state.brandKit);
-    drafts = state.drafts.map((d) =>
-      d.id === draft.id
-        ? {
-            ...d,
-            hook: rewriteHook,
-            stage: "needs-approve" as Stage,
-            agent: "AFTERCUT Director",
-            title: d.title.includes("rewritten") ? d.title : `${d.title} — rewritten hook`,
-          }
-        : d,
-    );
-  } else {
-    // create proactive draft from kit + last ingest
-    const ing = state.ingests[0]!;
-    drafts = [
-      {
-        id: `dft_${crypto.randomUUID().slice(0, 8)}`,
-        title: `${label} — proactive cut`,
-        platform: "x",
-        stage: "needs-approve",
-        source: ing.title,
-        hook: proactiveRewriteHook(ing.text.slice(0, 120), state.brandKit),
-        agent: "AFTERCUT Director",
-      },
-      ...drafts,
-    ];
-  }
-
-  const next = persist({
-    ...state,
-    drafts,
-    timeline: [
-      ...state.timeline,
-      event(
-        "Day 2",
-        "AFTERCUT Director",
-        "Proactive follow-up sent",
-        `"${label}" needs a harder hook — rewritten from kit “${state.brandKit.name}” (offline). Approve or hold.`,
-        "proactive",
-      ),
-    ],
-  });
-
-  return { ok: true, state: next };
+  return persist({ ...state, timeline: pushEvents(state.timeline, evt) });
 }
 
 /** Export tenant JSON for backup / demo continuity. */
@@ -564,6 +441,160 @@ export function tenantHealth(state: TenantState) {
     shipped: state.shipLedger.length,
     denials: state.timeline.filter((t) => t.kind === "denied").length,
     proactive: state.timeline.filter((t) => t.kind === "proactive").length,
-    mode: "offline" as const,
+    mode: "live" as const,
   };
+}
+
+/** Apply drafts returned by live AFTERCUT Director Mind. */
+export function applyLiveAtomize(
+  userId: string,
+  input: {
+    ingestId: string;
+    beatCount: number;
+    mindName: string;
+    mindId: string;
+    drafts: Array<{
+      title: string;
+      platform: string;
+      stage: string;
+      hook: string;
+      agent: string;
+      proactive?: boolean;
+    }>;
+  },
+): TenantState {
+  const state = loadTenant(userId);
+  const target = state.ingests.find((i) => i.id === input.ingestId);
+  const ingests = state.ingests.map((i) =>
+    i.id === input.ingestId
+      ? { ...i, status: "atomized" as const, beatCount: input.beatCount }
+      : i,
+  );
+
+  const title = target?.title ?? "ingest";
+  const newDrafts: Draft[] = input.drafts.map((d) => ({
+    id: `dft_${crypto.randomUUID().slice(0, 8)}`,
+    title: d.title,
+    platform: (["shorts", "x", "linkedin", "newsletter"].includes(d.platform)
+      ? d.platform
+      : "x") as Draft["platform"],
+    stage: (["ingested", "drafting", "needs-approve", "scheduled", "shipped"].includes(d.stage)
+      ? d.stage
+      : "needs-approve") as Stage,
+    source: title,
+    hook: d.hook,
+    agent: d.agent || input.mindName,
+    ingestId: input.ingestId,
+    proactive: d.proactive,
+  }));
+
+  const kept = state.drafts.filter(
+    (d) => d.ingestId !== input.ingestId && d.source !== title,
+  );
+
+  return persist({
+    ...state,
+    ingests,
+    drafts: [...newDrafts, ...kept].slice(0, 200),
+    timeline: pushEvents(
+      state.timeline,
+      event(
+        "Day 1",
+        input.mindName,
+        "Live atomize complete",
+        `${input.beatCount} beat(s) · ${newDrafts.length} draft(s) via Mind ${input.mindId.slice(0, 8)}…`,
+        "action",
+      ),
+    ),
+  });
+}
+
+export function applyLiveProactive(
+  userId: string,
+  input: {
+    title: string;
+    hook: string;
+    platform: string;
+    agent: string;
+    mindName: string;
+    mindId: string;
+  },
+): TenantState {
+  const state = loadTenant(userId);
+  const platform = (["shorts", "x", "linkedin", "newsletter"].includes(input.platform)
+    ? input.platform
+    : "x") as Draft["platform"];
+
+  // Prefer rewrite an existing soft draft; else push new needs-approve card
+  const soft =
+    state.drafts.find((d) => d.stage === "needs-approve" || d.stage === "drafting") ??
+    state.drafts.find((d) => d.stage !== "ingested");
+
+  let drafts: Draft[];
+  if (soft) {
+    drafts = state.drafts.map((d) =>
+      d.id === soft.id
+        ? {
+            ...d,
+            title: input.title || `${d.title} — rewritten hook`,
+            hook: input.hook,
+            platform,
+            stage: "needs-approve" as Stage,
+            agent: input.agent || input.mindName,
+            proactive: true,
+          }
+        : d,
+    );
+  } else {
+    drafts = [
+      {
+        id: `dft_${crypto.randomUUID().slice(0, 8)}`,
+        title: input.title,
+        platform,
+        stage: "needs-approve",
+        source: state.ingests[0]?.title ?? "proactive",
+        hook: input.hook,
+        agent: input.agent || input.mindName,
+        proactive: true,
+        ingestId: state.ingests[0]?.id,
+      },
+      ...state.drafts,
+    ];
+  }
+
+  return persist({
+    ...state,
+    drafts,
+    timeline: pushEvents(
+      state.timeline,
+      event(
+        "Day 2",
+        input.mindName,
+        "Live proactive follow-up",
+        `Mind ${input.mindId.slice(0, 8)}… rewrote: “${input.hook.slice(0, 80)}${input.hook.length > 80 ? "…" : ""}”`,
+        "proactive",
+      ),
+    ),
+  });
+}
+
+export function markSoulSyncedLive(
+  userId: string,
+  mindName: string,
+  confirm: string,
+): TenantState {
+  const state = loadTenant(userId);
+  return persist({
+    ...state,
+    timeline: pushEvents(
+      state.timeline,
+      event(
+        "Day 0",
+        mindName,
+        "Soul synced to live Mind",
+        confirm.slice(0, 280),
+        "memory",
+      ),
+    ),
+  });
 }

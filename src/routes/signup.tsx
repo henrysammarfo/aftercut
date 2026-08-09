@@ -20,7 +20,7 @@ function SignupPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (ready && session) void navigate({ to: "/dashboard" });
+    if (ready && session) void navigate({ to: "/brand-kit" });
   }, [ready, session, navigate]);
 
   return (
@@ -30,10 +30,10 @@ function SignupPage() {
           <Logo />
         </Link>
         <h1 className="text-center text-2xl font-semibold tracking-tight">
-          Awaken your AFTERCUT Mind
+          Open AFTERCUT Studio
         </h1>
         <p className="mt-2 text-center text-sm text-muted-foreground">
-          Empty studio on day one. Teach the brand kit, dump long-form, keep the publish leash.
+          Live Mind-backed studio. Day 0 kit syncs Soul to Director, then ingest + atomize for real.
         </p>
         <form
           className="mt-8 space-y-4"
@@ -41,7 +41,7 @@ function SignupPage() {
             e.preventDefault();
             const res = signUp({ name, email, password });
             if (!res.ok) setError(res.error || "Sign up failed");
-            else void navigate({ to: "/dashboard" });
+            else void navigate({ to: "/brand-kit" });
           }}
         >
           <input

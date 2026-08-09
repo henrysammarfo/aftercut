@@ -1,84 +1,60 @@
-# TECH — AFTERCUT
+# TECH — AFTERCUT (live Mind path)
 
-> Creative Minds Jam #1 · content repurposing · Mind by Animoca **integral** (ops + film).  
-> Product build mode now: **production offline Studio** — no live hellominds / Telegram / OpenAI.  
-> Deadline **2026-08-28 23:59 HKT**. Ask before git push / Vercel.
+> Creative Minds Jam #1 · deadline **2026-08-28** (Animoca press).  
+> **Live mode:** Animoca Builder API `@animocabrands/minds-client-lib` → `api.build.hellominds.ai`.
 
-## Product truth (do not oversell)
+## Product truth
 
 | Layer | Status |
 |---|---|
-| Offline Studio (auth, kit, ingest, atomize, kanban, leash, Day 2, export) | **Built** — browser `localStorage` tenant v2 |
-| Hellominds / Telegram / OpenAI bridge | **Not in this build** — out-of-band jam ops |
-| Vercel production deploy | **Not claimed** until explicitly shipped |
+| Live Director (list, cognition, telegram flag) | **Wired** — polls Builder API |
+| Soul sync (kit → Mind message) | **Wired** — `syncSoulLive` + waitForReply |
+| Live atomize | **Wired** — Mind returns JSON drafts |
+| Live Day-2 proactive | **Wired** — Mind rewrite, no local simulate |
+| Publish leash | **Wired** — local deny + notify Mind |
+| Studio tenant (kanban, export) | Browser ledger of **live** outputs |
+| Telegram bot messages into Studio | Via hellominds Telegram link (platform) — paste dump if needed |
 
-## Product surface
-
-| Route | Layer |
-|---|---|
-| `/` | Marketing — 8s object, Circle, Day 0–2, publish leash |
-| `/signup` · `/login` | Multi-tenant auth (localStorage) |
-| `/dashboard` | Queue · leash · ledger · memory · **export/import JSON** |
-| `/brand-kit` | Day 0 Soul (validated name + tone) |
-| `/ingest` | Day 1 long-form queue + offline atomize |
-| `/studio` | Kanban · approve/reject · ship QC · **Post everything → DENIED** |
-| `/timeline` | Continuity receipts · Simulate Day 2 |
-| `/circle` | Mind roles + receipt counts (offline labels) |
-| `/pitch` | Demon Mode judging beats |
-| `/merch` | Brand mark placements |
-
-## Architecture (offline)
+## Env (server only)
 
 ```
-Creator (UI)
-  → Brand kit → Soul (aftercut_tenant_v2_{userId})
-  → Ingest text (>=48 chars) → atomize.ts (splitBeats, platform limits, do-not-say, CTAs)
-  → Circle agent meta on each draft
-  → Approve gate → scheduled → ship (QC near-dupe on ledger)
-  → denyPublishAll always logs PUBLISH DENIED
-  → Day 2: proactiveRewriteHook from kit
-  → exportTenantJson / importTenantJson
+MINDS_BUILDER_API_KEY=   # X-Api-Key · required
+MINDS_DIRECTOR_MIND_ID=  # optional UUID
 ```
 
-- **Tenant key:** `aftercut_tenant_v2_{userId}` (migrates once from `aftercut_tenant_{userId}`).
-- **No seeded P&L / fake drafts** on signup.
-- **Mode flag:** `productMode: "offline"` on auth + shell badge.
+Copy `.env.example` → `.env.local` (gitignored).  
+Or place the same vars in `scoutbot/agent/.env` (server reads as fallback for local dev).
 
-## Core modules
+## Modules
 
-| File | Job |
+| File | Role |
 |---|---|
-| `src/lib/atomize.ts` | Pure offline atomizer |
-| `src/lib/tenant-store.ts` | Typed ops + persistence + ship rules |
-| `src/lib/auth.tsx` | Session + Result-typed Studio ops |
+| `src/lib/minds/runtime.ts` | Client, talkToDirector, key load |
+| `src/lib/minds/live.ts` | createServerFn endpoints |
+| `src/lib/minds/parse.ts` | Mind JSON → drafts |
+| `src/lib/minds/prompts.ts` | Soul / atomize / proactive prompts |
+| `src/lib/auth.tsx` | Live async kit/atomize/proactive |
 
-## Minds integral (film path)
+## Setup ops
 
-1. **Day 0** — save kit → “Soul awakened”  
-2. **Day 1** — dump → atomize → Studio cards  
-3. **Leash** — “Post everything now” → **PUBLISH DENIED**  
-4. **Day 2** — Simulate reopen → proactive rewrite  
+1. hellominds.ai — awaken **AFTERCUT Director**  
+2. Builder key → `.env.local`  
+3. Optional: Telegram Link Bot (platform UI)  
+4. `npm run dev` → Badge shows **live · Director · cog N**  
+5. Brand kit **Save + sync Soul** must succeed before atomize  
 
-Live hellominds is separate jam ops, not this codebase path.
+## No longer product path
 
-## Stack
-
-- Vite + React 19 + TanStack Router / Start  
-- Tailwind CSS 4  
-- Host when ready: **Vercel** (UI only). No Railway.
+- "Simulate Day 2" local rewrite — removed  
+- Offline-only atomizer as product — local `atomize.ts` remains pure helpers only; tenant path uses live Mind for generation  
 
 ## Local
 
 ```sh
 npm i
+# set MINDS_BUILDER_API_KEY in .env.local
+npx tsx scripts/minds-smoke.ts
+npm run minds-smoke
 npm run dev
 npm run build
 ```
-
-## Submit pack (still open)
-
-- Working product (offline Studio = filmable)  
-- 1.5–2 min Day0 / Day1 / Day2 video  
-- TECH.md + bible  
-- DoraHacks BUIDL by deadline  
-- Mind account note in README when live  

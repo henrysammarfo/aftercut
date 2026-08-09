@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { AppShell, GlassCard, PrimaryButton } from "@/components/app/AppShell";
 import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
@@ -11,16 +11,16 @@ export const Route = createFileRoute("/ingest")({
   },
   head: () => ({
     meta: [
-      { title: "Ingest — offline long-form queue" },
+      { title: "Ingest — live Mind atomize" },
       {
         name: "description",
         content:
-          "Paste transcript or notes. Offline atomizer splits beats into platform drafts from your brand kit.",
+          "Paste transcript or Telegram dump. Live AFTERCUT Director atomizes into platform drafts.",
       },
       { property: "og:title", content: "AFTERCUT Ingest" },
       {
         property: "og:description",
-        content: "Paste long-form → queue → atomize. No live Telegram or URL fetch in this build.",
+        content: "Paste long-form → queue → live Mind atomize.",
       },
     ],
   }),
@@ -28,33 +28,49 @@ export const Route = createFileRoute("/ingest")({
 });
 
 const sources = [
-  { icon: FileText, title: "Paste transcript", detail: "Production offline path — full text" },
-  { icon: Send, title: "Telegram dump", detail: "Paste bot text here (live bridge not wired)" },
+  { icon: FileText, title: "Paste transcript", detail: "Primary path — full text to live Director" },
+  { icon: Send, title: "Telegram dump", detail: "Paste text from your linked AFTERCUT bot" },
   { icon: Link2, title: "YouTube notes", detail: "Paste captions / chapters as text" },
-  { icon: UploadCloud, title: "VOD notes", detail: "Paste edited notes · no file upload API" },
+  { icon: UploadCloud, title: "VOD notes", detail: "Paste edited notes" },
 ];
 
 function Ingest() {
-  const { tenant, addIngest, atomizeIngest, health } = useAuth();
+  const { tenant, addIngest, atomizeIngest, health, mindStatus } = useAuth();
   const [text, setText] = useState("");
   const [title, setTitle] = useState("");
   const [source, setSource] = useState("Transcript paste");
   const [notice, setNotice] = useState<string | null>(null);
   const [isErr, setIsErr] = useState(false);
+  const [studioCta, setStudioCta] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const ingests = tenant?.ingests ?? [];
 
   const flash = (msg: string, error = false) => {
     setNotice(msg);
     setIsErr(error);
+    if (!error && msg.toLowerCase().includes("atomiz")) setStudioCta(true);
   };
 
   return (
     <AppShell
       title="Ingest"
-      subtitle="Day 1 · offline. Queue long-form in this browser, then atomize with the Day 0 kit. No network fetch."
+      subtitle={
+        mindStatus?.ok
+          ? `Day 1 · live atomize via ${mindStatus.mindName}`
+          : "Day 1 · queue text, then live atomize (requires MINDS_BUILDER_API_KEY + awakened Director)"
+      }
       actions={
         <div className="flex flex-wrap gap-2">
+          {studioCta ? (
+            <Link
+              to="/studio"
+              className="rounded-full px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+              style={{ background: "linear-gradient(to bottom, #2B2B2B, #101010)" }}
+            >
+              Open Studio →
+            </Link>
+          ) : null}
           <PrimaryButton
             onClick={() => {
               const res = addIngest({ text, title: title || undefined, source });
@@ -64,31 +80,40 @@ function Ingest() {
               }
               setText("");
               setTitle("");
-              flash("Ingest queued in offline tenant.");
+              flash("Ingest queued. Run live atomization next.");
+              setStudioCta(false);
             }}
           >
             Queue ingest
           </PrimaryButton>
           <PrimaryButton
-            disabled={!health?.kitReady}
-            title={health?.kitReady ? undefined : "Save brand kit (name + tone) first"}
-            onClick={() => {
-              const res = atomizeIngest();
+            disabled={!health?.kitReady || busy}
+            title={health?.kitReady ? undefined : "Save brand kit + sync Soul first"}
+            onClick={async () => {
+              setBusy(true);
+              flash("Director Mind atomizing…");
+              const res = await atomizeIngest();
+              setBusy(false);
               if (!res.ok) {
                 flash(res.error, true);
+                setStudioCta(false);
                 return;
               }
-              flash("Atomized into Studio drafts (offline atomizer).");
+              flash("Live atomize complete — drafts in Studio.");
             }}
           >
-            Run atomization
+            {busy ? "Atomizing…" : "Run live atomization"}
           </PrimaryButton>
         </div>
       }
     >
       {!health?.kitReady ? (
         <p className="mb-4 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-2 text-xs text-amber-100/90">
-          Brand kit incomplete — open Brand kit and save name + tone before atomize.
+          Brand kit incomplete —{" "}
+          <Link to="/brand-kit" className="underline underline-offset-2">
+            open Brand kit
+          </Link>{" "}
+          and save name + tone before atomize.
         </p>
       ) : null}
 
@@ -158,7 +183,13 @@ function Ingest() {
         <h2 className="text-sm font-semibold">Recent ingests</h2>
         <div className="mt-4 flex flex-col gap-3 text-xs">
           {ingests.length === 0 ? (
-            <p className="text-muted-foreground">Nothing ingested yet.</p>
+            <p className="text-muted-foreground">
+              Nothing yet.{" "}
+              <Link to="/brand-kit" className="underline underline-offset-2">
+                Confirm kit
+              </Link>{" "}
+              then paste long-form.
+            </p>
           ) : (
             ingests.map((r) => (
               <div
@@ -172,13 +203,16 @@ function Ingest() {
                 </span>
                 <button
                   type="button"
-                  onClick={() => {
-                    const res = atomizeIngest(r.id);
+                  onClick={async () => {
+                    setBusy(true);
+                    flash("Director Mind atomizing…");
+                    const res = await atomizeIngest(r.id);
+                    setBusy(false);
                     if (!res.ok) {
                       flash(res.error, true);
                       return;
                     }
-                    flash(`Atomized “${r.title}”.`);
+                    flash(`Live atomized “${r.title}”. Open Studio.`);
                   }}
                   className="rounded-full bg-white/10 px-2.5 py-0.5 hover:bg-white/15"
                 >
