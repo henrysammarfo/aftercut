@@ -19,16 +19,33 @@
 
 `src/lib/minds/{runtime,live,parse,prompts}.ts` · atomize/soul/proactive/leash via Director  
 
-## Live smoke (2026-08-09)
+## Live smoke (2026-08-10)
 
 ```
 ok: true
 director: AFTERCUT.Director
-mindId: 6bf0483e-f36b-1410-8466-00039ce7df11
+mindId: [REDACTED]
 isEnabled: true
-cognition: ~171
+cognition: ~79.6
 npx tsx scripts/minds-smoke.ts
 ```
+
+## Cloud film E2E (2026-08-10 · cursor/aftercut-live-film-e2e-aa1d)
+
+| Beat | Result |
+|---|---|
+| 0 Landing `/` | ✓ |
+| 1 Sign up `film+cloud{ts}@example.com` | ✓ → `/brand-kit` |
+| 2 Brand kit Save + sync Soul (Northline Studio) | ✓ UI; sync hung in browser |
+| 3 Ingest → Queue → Live atomize | ⚠ Mind reply timed out (~180s) |
+| 4 Studio kanban advance | ✓ (no drafts — atomize failed) |
+| 5 Post everything now | ✓ **PUBLISH DENIED** banner |
+| 6 Live Day-2 follow-up | ⚠ Proactive parse failed (no JSON in reply) |
+| 7 `/timeline` | ✓ Soul + leash receipts |
+| 8 `/circle` | ✓ Director + Circle Minds |
+
+**Artifacts:** video `aftercut-film-demo-walkthrough.mp4` · screenshots `beat-00`…`beat-08` in `/opt/cursor/artifacts/`.  
+**Dev:** `npm run dev` → `http://localhost:8080/` · status bar live · Director · cog.
 
 ## Market validation (2026-08-09)
 
@@ -41,18 +58,11 @@ Production lock: **full live** Soul · native atoms · leash · Day-2 · ship le
 
 Code ready on **main** `acf49a5` (native prompts + live do-not-say scrub).
 
-### Cloud film (Computer Use video Artifacts) — 2026-08-09 attempt
+### Cloud film (Computer Use video Artifacts)
 
-| Path | Result |
-|---|---|
-| In-chat Task `environment:cloud` | **Blocked** — multi-root workspace (aftercut+scoutbot) → “exactly one known git remote” |
-| move_agent_to_root(aftercut) | **Blocked** — multi-repo cloud agent cannot pull into single-folder |
-| Cloud Agents API | Script ready: `node scripts/launch-cloud-film.mjs` — needs **`CURSOR_API_KEY`** ([dashboard integrations](https://cursor.com/dashboard/integrations)); injects Minds keys via session `envVars` |
-| cursor.com/agents browser | Requires interactive Cursor login (not signed in in agent browser) |
+**2026-08-10:** Full walk recorded on Cloud Agent VM. Atomize/Day-2 Mind replies intermittently timeout or return non-JSON — investigate cognition / Telegram / prompt latency on hellominds.
 
-**Unblock 100% film:** paste `CURSOR_API_KEY` into shell (or open **Cloud** under agent input in an **aftercut-only** window) → run launch script → open returned `https://cursor.com/agents/bc-…` for desktop + video.
-
-1. Launch Cloud film (above) — remaining  
+1. Re-run atomize when Mind API stable (for kanban + Day-2 beats with drafts)  
 2. Pitch packaging polish  
 3. **Aug 10 AM first:** SCOUT mandatory go-live checklist  
 
