@@ -19,14 +19,13 @@
 
 `src/lib/minds/{runtime,live,parse,prompts}.ts` · atomize/soul/proactive/leash via Director  
 
-## Live smoke (2026-08-09)
+## Live smoke (2026-08-10)
 
 ```
 ok: true
 director: AFTERCUT.Director
-mindId: 6bf0483e-f36b-1410-8466-00039ce7df11
 isEnabled: true
-cognition: ~171
+cognition: ~61
 npx tsx scripts/minds-smoke.ts
 ```
 
@@ -41,18 +40,25 @@ Production lock: **full live** Soul · native atoms · leash · Day-2 · ship le
 
 Code ready on **main** `acf49a5` (native prompts + live do-not-say scrub).
 
-### Cloud film (Computer Use video Artifacts) — 2026-08-09 attempt
+### Cloud film E2E (Computer Use + video Artifacts) — 2026-08-10 ✓
 
-| Path | Result |
+| Step | Result |
 |---|---|
-| In-chat Task `environment:cloud` | **Blocked** — multi-root workspace (aftercut+scoutbot) → “exactly one known git remote” |
-| move_agent_to_root(aftercut) | **Blocked** — multi-repo cloud agent cannot pull into single-folder |
-| Cloud Agents API | Script ready: `node scripts/launch-cloud-film.mjs` — needs **`CURSOR_API_KEY`** ([dashboard integrations](https://cursor.com/dashboard/integrations)); injects Minds keys via session `envVars` |
-| cursor.com/agents browser | Requires interactive Cursor login (not signed in in agent browser) |
+| `.env.local` from injected secrets | ✓ gitignored |
+| `npx tsx scripts/minds-smoke.ts` | ✓ `ok: true` · AFTERCUT.Director · enabled · cognition > 0 |
+| `npm run dev` @ localhost:8080 | ✓ status bar **live · Director** |
+| Landing → Sign up → Brand kit Soul sync | ✓ Northline Studio · calm sharp founder · 3 bans |
+| Ingest → Live atomize | ✗ Mind reply HTML, not JSON |
+| Studio kanban advance | ⚠ no drafts (atomize blocked) |
+| Post everything now | ✓ **PUBLISH DENIED** banner |
+| Live Day-2 follow-up | ✗ same JSON parse failure |
+| `/timeline` + `/circle` | ✓ receipts + Circle agents visible |
 
-**Unblock 100% film:** paste `CURSOR_API_KEY` into shell (or open **Cloud** under agent input in an **aftercut-only** window) → run launch script → open returned `https://cursor.com/agents/bc-…` for desktop + video.
+**Artifacts:** video `aftercut-film-demo-walkthrough.mp4` + 9 beat screenshots.
 
-1. Launch Cloud film (above) — remaining  
+**Blocker:** Director Mind returns HTML prose instead of JSON-only atomize/proactive replies — upstream Mind behavior, not UI.
+
+1. Fix Director Mind JSON compliance on hellominds  
 2. Pitch packaging polish  
 3. **Aug 10 AM first:** SCOUT mandatory go-live checklist  
 
