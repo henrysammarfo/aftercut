@@ -8,12 +8,22 @@
 - **API:** `api.build.hellominds.ai` · `X-Api-Key`  
 - **Keys:** `.env.local` has `MINDS_BUILDER_API_KEY` + `MINDS_DIRECTOR_MIND_ID` (gitignored)
 
+## GOAI — locked T1 TOOLLAW (build in **other** chat)
+
+- **Product:** TOOLLAW · Track 1 Agent Infra · prelim **Aug 16 CST**  
+- **Repo:** `C:\Users\jessi\Desktop\toollaw` · bible `toollaw/docs/TOOLLAW_BIBLE.md`  
+- **This chat:** AFTERCUT + pointer only. Do not implement TOOLLAW here.  
+- PROOFLOOP parked. Research: `docs/memory/GOAI_IDEA_SEARCH.md`
+
 ## Parallel timer
 
 | When | What |
 |---|---|
-| **Aug 10 morning** | SCOUT go-live checklist **mandatory full** (TST → unpaper → day1 → day1:live) — do not skip |
-| **Now → Aug 9 night / post flip** | **AFTERCUT** jam product for **Aug 28** |
+| **Aug 16 CST** | GOAI Agent Infra prelim (after idea lock) |
+| **Aug 24** | SCOUT Delphi window ends |
+| **Aug 28 HKT** | AFTERCUT submit |
+
+SCOUT ops (other tree): **FENN** live on `scout-trader :8791` (approval-gated, allowlist empty). Broncos/LAFC/Ipswich Nos open — wait settles. Do not mix into AFTERCUT or TOOLLAW.
 
 ## Live path (code)
 
@@ -41,20 +51,20 @@ Production lock: **full live** Soul · native atoms · leash · Day-2 · ship le
 
 Code ready on **main** `acf49a5` (native prompts + live do-not-say scrub).
 
-### Cloud film (Computer Use video Artifacts) — 2026-08-09 attempt
+### Cloud film (Computer Use video Artifacts) — folder
+
+**Point other chats here:** `C:\Users\jessi\Desktop\aftercut\cloud-video\` (see `README.md`)
 
 | Path | Result |
 |---|---|
-| In-chat Task `environment:cloud` | **Blocked** — multi-root workspace (aftercut+scoutbot) → “exactly one known git remote” |
-| move_agent_to_root(aftercut) | **Blocked** — multi-repo cloud agent cannot pull into single-folder |
-| Cloud Agents API | Script ready: `node scripts/launch-cloud-film.mjs` — needs **`CURSOR_API_KEY`** ([dashboard integrations](https://cursor.com/dashboard/integrations)); injects Minds keys via session `envVars` |
-| cursor.com/agents browser | Requires interactive Cursor login (not signed in in agent browser) |
+| Folder | `cloud-video/` — `launch.mjs` generic · `film.mjs` AFTERCUT · `presets/` |
+| Last launch | agent `bc-04115a08-e073-4d59-a63c-3d40e4c6fb63` · [open](https://cursor.com/agents/bc-04115a08-e073-4d59-a63c-3d40e4c6fb63) |
 
-**Unblock 100% film:** paste `CURSOR_API_KEY` into shell (or open **Cloud** under agent input in an **aftercut-only** window) → run launch script → open returned `https://cursor.com/agents/bc-…` for desktop + video.
+Chat paste: *Read aftercut/cloud-video/README.md and run the launcher for my video.*
 
-1. Launch Cloud film (above) — remaining  
+1. Finish / re-run film via `node cloud-video/film.mjs`  
 2. Pitch packaging polish  
-3. **Aug 10 AM first:** SCOUT mandatory go-live checklist  
+3. **Aug 10 from 12PM ET:** SCOUT go-live  
 
 **Not in jam critical path:** full Opus-style 9:16 reframe karaoke NLE (crowded video pipeline — see COMPETITIVE_RESEARCH).  
 

@@ -1,0 +1,124 @@
+{
+  "stamp": "2026-08-14T18:52:39.261Z",
+  "tools": {
+    "tavily": true,
+    "tinyfish": true
+  },
+  "tavily": [
+    {
+      "query": "GOAI Hangzhou Global Open-source AI Challenge 2026 Agent Infra AgentTeams Hiclaw deadline",
+      "http": 432,
+      "answer": null,
+      "results": [],
+      "error": "http 432"
+    },
+    {
+      "query": "AgentTeams formerly Hiclaw agentscope-ai multi-agent Skill MCP required",
+      "http": 432,
+      "answer": null,
+      "results": [],
+      "error": "http 432"
+    },
+    {
+      "query": "open source multi-agent infrastructure 2026 CrewAI AutoGen LangGraph AgentScope vs production SRE",
+      "http": 432,
+      "answer": null,
+      "results": [],
+      "error": "http 432"
+    },
+    {
+      "query": "Alibaba Cloud Skills MCP Nacos Higress AgentLoop hackathon Agent Infra crowded",
+      "http": 432,
+      "answer": null,
+      "results": [],
+      "error": "http 432"
+    },
+    {
+      "query": "production AI agent observability OpenTelemetry GenAI traces approval rollback audit",
+      "http": 432,
+      "answer": null,
+      "results": [],
+      "error": "http 432"
+    },
+    {
+      "query": "multi-agent blast radius isolation human approval high-risk tool calls 2026",
+      "http": 432,
+      "answer": null,
+      "results": [],
+      "error": "http 432"
+    },
+    {
+      "query": "agent skill versioning marketplace reusable skills agent teams",
+      "http": 432,
+      "answer": null,
+      "results": [],
+      "error": "http 432"
+    }
+  ],
+  "tinyfish": [
+    {
+      "url": "https://www.goaihz.com/",
+      "goal": "Extract official GOAI 2026 tracks, Agent Infra requirements, deadlines, prizes, AgentTeams/Hiclaw mentions, submission dates. Quote exact dates and rules. List any unique constraints.",
+      "http": 200,
+      "events": [
+        "STARTED",
+        "STREAMING_URL",
+        "PROGRESS",
+        "PROGRESS",
+        "PROGRESS",
+        "PROGRESS",
+        "PROGRESS",
+        "PROGRESS",
+        "PROGRESS",
+        "PROGRESS",
+        "PROGRESS",
+        "PROGRESS",
+        "PROGRESS",
+        "PROGRESS",
+        "PROGRESS",
+        "PROGRESS",
+        "PROGRESS",
+        "PROGRESS",
+        "PROGRESS",
+        "COMPLETE"
+      ],
+      "extract": "{\"result\":\"## GOAI 2026 — Complete Extracted Information\\n\\n---\\n\\n### Official GOAI 2026 Tracks\\n\\n1. **Agent Infra** — Multi-agent infrastructure and collaboration systems for complex enterprise tasks (moving agents from demo to production)\\n2. **Boundless Agents** — Real-world AI Agent deployment in high-frequency industry scenarios (personal devices, automotive, finance, education, industrial manufacturing)\\n3. **AI for Research** — Intersection of AI and science, algorithmic solutions or autonomous exploration for real scientific problems\\n4. **Embodied Future** — Open-source embodied intelligence, physical-world interaction, complex dual-arm manipulation, and all-terrain patrol in industrial parks\\n\\n---\\n\\n### Agent Infra Track — Requirements (Exact Rules)\\n\\n- **Design at least three agents with clear, distinct roles**\\n- **Mandatory: Use AgentTeams (formerly Hiclaw) as the collaboration design baseline** — teams must explain how role orchestration, task decomposition, context passing, collaborative execution, and state tracking map to this framework\\n- **Mandatory: Implement \\\"Skills\\\"** (task-capability abstraction layer) — Skills are required, not optional\\n- **Recommended technologies**: MCP (Model Context Protocol), RAG (Retrieval-Augmented Generation), and Observability tools (e.g., LoongSuite, AgentScope Studio, Alibaba Cloud AgentLoop)\\n- **Recommended infrastructure**: Nacos, Higress, PolarDB, RocketMQ, LoongSuite, AgentScope Studio, AgentLoop\\n- **Solutions must target enterprise scenarios** with end-to-end task loops\\n- **Must demonstrate engineering maturity**\\n\\n---\\n\\n### AgentTeams / Hiclaw Mentions (Exact Quotes)\\n\\n> \\\"AgentTeams (formerly Hiclaw) is the mandatory multi-agent collaboration design baseline for the Agent Infra track.\\\"\\n\\n> \\\"Teams must explain how role orchestration, task decomposition, context passing, collaborative execution, and state tracking map to this framework.\\\"\\n\\n---\\n\\n### Deadlines — All Official Dates\\n\\n| Milestone | Date |\\n|---|---|\\n| Registration Opens | Jul 15 (Agent Infra) / Jul 16 (Others) |\\n| Preliminary Submission | **Aug 16** (Agent Infra, Boundless Agents, AI for Research) / **Aug 20** (Embodied Future) |\\n| Preliminary Review | Aug 17–24 (Agent Infra) / Aug 21–23 (Embodied Future) |\\n| Semi-finalist Announcement | **Aug 24** |\\n| Semi-final Submission | **Sep 3** |\\n| Semi-final Review | Sep 4–10 |\\n| Finalist Announcement | **Sep 10** |\\n| Final Offline Debugging (Embodied Future only) | Aug 25–Sep 20 |\\n| Final Defense | **Sep 22** |\\n| GOAI DAY / Awards | **Sep 23** |\\n\\n---\\n\\n### Submission Materials by Stage\\n\\n**Preliminary:**\\n- Project Introduction\\n- Proposal Deck/PPT/PDF\\n- Optional: Code Package / preliminary solution\\n\\n**Semi-final:**\\n- Updated Proposal\\n- Executable AgentTeams Code Package\\n- Runnable Demo / Video\\n- Running instructions\\n- Code/engineering materials\\n\\n**Final:**\\n- Final Pitch Deck\\n- On-site Demo\\n- Final Code Repository / Engineering Materials\\n- One-page project summary\\n- Defense materials / poster / showcase materials (Embodied Future)\\n\\n---\\n\\n### Prizes\\n\\n**Common across Agent Infra, Boundless Agents, AI for Research, Embodied Future:**\\n\\n| Award | Teams | Amount |\\n|---|---|---|\\n| Grand Award | 1 team | **RMB 1,000,000** |\\n\\n**Agent Infra & Boundless Agents:**\\n| Award | Teams | Amount |\\n|---|---|---|\\n| Champion | 1 team | RMB 500,000 |\\n| Runner-up | 1 team | RMB 300,000 |\\n| Third Prize | 1 team | RMB 100,000 |\\n| Open-Source Rising Star | 4th–10th (7 teams) | RMB 5,000 each |\\n| Open-Source Impact | 11th–15th (5 teams) | RMB 3,000 each |\\n| Excellence Award | Semi-finalists | RMB 500 each |\\n| Participation Award | Valid entries | T-shirt (limited to 300) |\\n\\n**AI for Research (different prize structure):**\\n| Award | Teams | Amount |\\n|---|---|---|\\n| Champion | 2 teams | RMB 250,000 each |\\n| Runner-up | 2 teams | RMB 150,000 each |\\n| Third Prize | 2 teams | RMB 50,000 each |\\n| Scientist Fast-track Award | 1–2 teams | RMB 20,000 each |\\n| Paradigm Creation Award | 0–1 team | RMB 20,000 |\\n\\n**Embodied Future (different prize structure):**\\n| Award | Teams | Amount |\\n|---|---|---|\\n| Champion | 2 teams | RMB 250,000 each |\\n| Runner-up | 2 teams | RMB 150,000 each |\\n| Third Prize | 2 teams | RMB 50,000 each |\\n| Algorithm Innovation Award | 1 team | RMB 30,000 |\\n| Rising Team Award | 2 teams | RMB 20,000 each |\\n| Outstanding Open-source Project Award | 1 team | RMB 30,000 |\\n\\n---\\n\\n### Unique Constraints\\n\\n1. **Agent Teams (formerly Hiclaw) is MANDATORY** for Agent Infra track — not optional\\n2. **Skills implementation is MANDATORY** for Agent Infra track\\n3. **Negative results are explicitly allowed** in AI for Research track but must be \\\"explainable and inspectable\\\"\\n4. **T-shirts limited to 300** for Participation Awards across multiple tracks\\n5. **Resource support** of up to **RMB 200** per team available for eligible participants (based on preliminary scores) — available for Agent Infra, Boundless Agents, AI for Research, and Embodied Future\\n6. **Embodied Future** has a unique offline debugging window (Aug 25–Sep 20) and requires full evaluation platform participation via X-Eval\\n7. **Embodied Future** requires code, deployment instructions, dependency notes, data-source explanations, and system architecture/resource usage disclosure\\n8. **Boundless Agents** explicitly discourages \\\"generic chatbots or simple Q&A tools\\\"\\n9. **Embodied Future** dual-arm track has a dedicated \\\"submission flowchart\\\" and utilizes both simulation and real-machine integrated evaluation platforms\\n10. **Global participants**: All tracks are open to global developers/teams\"}"
+    },
+    {
+      "url": "https://github.com/agentscope-ai/agentteams",
+      "goal": "Summarize AgentTeams (HiClaw) architecture: Manager Leader Workers Skills MCP Matrix. What is required vs optional. Any demo scenarios they already ship that hackathon teams will copy.",
+      "http": 200,
+      "events": [
+        "STARTED",
+        "STREAMING_URL",
+        "PROGRESS",
+        "PROGRESS",
+        "PROGRESS",
+        "PROGRESS",
+        "PROGRESS",
+        "PROGRESS",
+        "PROGRESS",
+        "PROGRESS",
+        "HEARTBEAT",
+        "HEARTBEAT",
+        "PROGRESS",
+        "COMPLETE"
+      ],
+      "extract": "{\"result\":\"# AgentTeams (HiClaw) Architecture Summary\\n\\n## Overview\\nAgentTeams is an open-source collaborative multi-agent runtime platform where a **Manager orchestrates multiple Workers** (and optional Teams with a Team Leader) while a **Human participates via Matrix IM**. It eliminates the need for human oversight of individual Worker Claws by enabling agents to manage other agents.\\n\\n---\\n\\n## Architecture: Manager, Leader, Workers\\n\\n### Manager (Required)\\nThe central coordinator agent that:\\n- **Orchestrates tasks, workers, teams, humans, and Higress routes/MCP** via Matrix and the controller API\\n- Decomposes goals into subtasks, delegates to Workers/Teams, tracks state, and consolidates results\\n- Does NOT implement work itself (should not use file/command tools for work already assigned to Workers)\\n- Provides manager skills for coordination, project management, task management, team management, worker management, worker-model-switch, etc.\\n\\n### Team Leader (Optional)\\n- An **optional** component for stable team coordination\\n- Manages internal task decomposition within a Team while the Manager focuses on project-level results\\n- Communicates via Matrix; Workers explicitly join Team Rooms\\n- Leader skills: communication, file-sharing, mcporter, organization, project-management, task-management, team-coordination\\n- Used when the same roles collaborate repeatedly across multi-stage projects with dependent subtasks\\n\\n### Workers (Required)\\n- **Stateless task executors** created on demand with config/artifacts stored in object storage (MinIO)\\n- Workers cannot access real credentials — they hold only consumer tokens\\n- The Controller (Go operator) reconciles CRDs (Worker, Manager, Team, Human), manages REST API, lifecycle, and credential flows\\n- Workers pull from **skills.sh (80,000+ community skills)** on demand\\n\\n### Human (Required Participant)\\n- Participates over **Matrix** for assignments, progress monitoring, and interventions\\n- Has built-in Matrix Room visibility for all tasks\\n- Must approve any production changes, publishing, or irreversible operations\\n- Can inspect code or change requirements at any time\\n\\n---\\n\\n## Skills\\n\\n### Manager Skills (17 total)\\nchannel-management, file-sync-management, git-delegation-management, agentteams-find-worker, human-management, matrix-server-management, mcporter, mcp-server-management, model-switch, project-management, service-publishing, task-coordination, task-management, team-management, worker-management, worker-model-switch\\n\\n### Worker Skills\\n**Core built-ins:** file-sync, mcporter, find-skills, project-participation, task-progress\\n**On-demand/distributable:** github-operations, git-delegation (from skills.sh 80,000+ community skills)\\n**Custom skills supported** — can be distributed via Manager message attachment or Dashboard Skill Center\\n\\n### Team Leader Skills\\ncommunication, file-sharing, mcporter, organization, project-management, task-management, team-coordination\\n\\n---\\n\\n## MCP (Model Context Protocol) Support\\n\\n**Declarative MCP** on Worker/Manager/Team CRDs and on Team Leader:\\n- MCP servers are modeled as **gateway routes** managed during reconciliation\\n- The **mcporter skill** facilitates MCP tool calls through the Higress AI Gateway\\n- Workers can access source repositories, search, monitoring, ticketing, and other external systems only when MCP Servers/Skills are configured and authorized\\n- MCP support is **declarative** — specify in CRDs, the controller handles routing and reconciliation\\n\\n---\\n\\n## Matrix IM Integration\\n\\n- Uses **Element IM Client + Tuwunel IM Server** (Matrix protocol-based)\\n- Eliminates DingTalk/Lark integration overhead and enterprise approval workflows\\n- Human, Manager, Worker, and Team Leader all use Matrix client-server API for communication\\n- Provides human-in-the-loop visibility for assignments, progress, and interventions\\n- Workers and Teams explicitly join Matrix Rooms\\n- Any Matrix client can be used for mobile access, zero config\\n- @mentions trigger automatic handoff between roles\\n\\n---\\n\\n## Required vs Optional Components\\n\\n### Required Components\\n| Component | Purpose |\\n|-----------|---------|\\n| **Docker Desktop/Engine** | Runtime environment |\\n| **AgentTeams Controller** | Go operator reconciling CRDs |\\n| **Higress AI Gateway** | AI routing, MCP server route management |\\n| **Tuwunel (Matrix)** | Matrix IM homeserver |\\n| **MinIO** | Object storage for Worker config and artifacts |\\n| **Manager Agent** | Central orchestrator |\\n\\n### Optional Components\\n| Component | Purpose |\\n|-----------|---------|\\n| **AgentTeams Dashboard** | Web UI for Skill Center, Worker management, distributed skills |\\n| **Element Web** | Matrix web UI (can use any Matrix client instead) |\\n| **Specific credential providers** | Only when external system access is needed |\\n| **Team Leaders** | Only for stable, multi-stage collaboration patterns |\\n\\n**Minimum hardware:** 2 CPU cores + 4 GB RAM (4 cores + 8 GB recommended for multiple Workers)\\n\\n---\\n\\n## Demo Scenarios (Hackathon Teams Can Copy)\\n\\n### 6 Complete Use Cases with Full Templates\\n\\n#### 1. Software Feature Delivery\\n- **Roles:** Backend Worker, Frontend Worker, Test Worker, Review Worker\\n- **Goal:** Start from requirement through design, implementation, testing, and code review\\n- **Parallel execution:** Backend and frontend in parallel; Test Worker prepares from API contract; Review Worker does read-only review\\n- **Acceptance checklist:** Scope match, API contract agreement, automated coverage, test reproducibility, no real secrets committed, human approval for production\\n\\n#### 2. Research and Analysis Report\\n- **Roles:** Research Worker, Data Analysis Worker, Fact-check Worker, Report Editor Worker\\n- **Goal:** Collect sources, analyze data, verify facts in parallel, produce a cited report\\n- **Key feature:** Distinguishes sourced facts, analytical inferences, and recommendations\\n- **Handles uncertainty:** Preserves conflicting sources and explains differences\\n\\n#### 3. Content Production and Localization\\n- **Roles:** Content Planning Worker, Writing Worker, Review Worker, Localization Worker\\n- **Goal:** Produce multilingual versions from one set of facts without inconsistent terminology\\n- **Key feature:** Planning Worker builds fact/terminology table; all Workers use same source material; Review Worker checks item-by-item\\n\\n#### 4. Incident Analysis and Remediation Proposal\\n- **Roles:** Log Analysis Worker, Configuration Analysis Worker, Change Analysis Worker, Verification Worker\\n- **Goal:** Analyze logs/config/changes for root-cause hypotheses (read-only by default)\\n- **Key feature:** Workers form hypotheses independently to reduce anchoring; Verification Worker prioritizes read-only, reversible checks; no production writes without human approval\\n\\n#### 5. Long-Running Project Collaboration (Team Mode)\\n- **Uses Team Leader + stable members across multi-stage projects**\\n- **Example:** Developer portal redesign with 5 stages (requirement clarification → technical design → implementation → integration testing → release prep)\\n- **Key feature:** Shared task directories, progress records, acceptance gates; stage results consolidated through Leader to Manager\\n\\n#### 6. Custom Skill Distribution & Usage\\n- **Full end-to-end example:** Distributing a `bilingual-doc-review` Skill to a Worker, verifying it was discovered at runtime, and having it complete a task\\n- **Validates:** Skill files distributed → Worker runtime discovered it → Worker followed Skill during task execution\\n\\n---\\n\\n### Reusable Task Template (For Any Hackathon)\\n```\\nGoal: [the problem to solve]\\nDeliverables: [artifact list]\\nRoles and responsibilities: [Worker/Team role → responsibility]\\nInputs and allowed access: [shared directory, repository, MCP Server]\\nConstraints: [Prohibited: publishing, deletion, production changes]\\nApproval required: [operations needing Human conf"
+    },
+    {
+      "url": "https://hiclaw.io/",
+      "goal": "Extract product positioning, core features, example use cases. Note what a typical hackathon demo would clone.",
+      "http": 200,
+      "events": [
+        "STARTED",
+        "STREAMING_URL",
+        "PROGRESS",
+        "PROGRESS",
+        "PROGRESS",
+        "COMPLETE"
+      ],
+      "extract": "{\"result\":\"## HiClaw (HiC law) — Product Information\\n\\n### Product Positioning\\nHiClaw is an **open-source Multi-Agent OS** designed to let multiple AI Agents collaborate in Matrix rooms, ensuring full visibility to humans with real-time intervention capabilities. It is positioned as an **enterprise-grade, secure platform for multi-agent collaboration**, enabling AI agent teams to work together as efficiently as human teams. It specifically fast-tracks **OPOC (One Person One Company)** and enterprise digital workforce initiatives.\\n\\n### Core Features\\n1. **Enterprise Security**: Workers never hold real API keys or GitHub PATs (Personal Access Tokens), using consumer tokens instead to prevent credential leakage.\\n2. **Multi-Agent Collaboration**: A **Manager Agent** decomposes tasks and coordinates **Worker Agents** for parallel execution.\\n3. **Matrix Protocol**: Built on the open Matrix IM protocol for transparent, auditable, and federated communication.\\n4. **Human Supervision**: Humans can enter Matrix rooms to observe, intervene, or correct Agent behavior in realtime.\\n5. **Manager-Worker Architecture**: A clear two-tier structure that is easily extensible.\\n6. **Fully Open Source**: Supports local private deployment with full data sovereignty and no vendor lock-in.\\n\\n### Architecture\\n- Uses a **Matrix-based collaboration hub** as the communication backbone.\\n- Leverages a **Higress AI Gateway** for secure external API access to LLM providers (Qwen, Claude, OpenAI, local models) and external APIs/MCP Servers/Skills.\\n\\n### Example Use Cases\\n- **Complex task handling** — decomposing and parallelizing multi-step tasks across worker agents.\\n- **Frontend development** — e.g., creating a Worker Agent named \\\"alice\\\" specifically for frontend dev tasks.\\n\\n### Typical Hackathon Demo\\nA quick-start demo typically involves:\\n1. Installing HiClaw via a bash script (available for macOS/Linux or Windows PowerShell 7+).\\n2. Accessing the local Manager dashboard at `http://127.0.0.1:18088`.\\n3. Instructing the Manager to create specific Worker Agents tailored to the demo use case.\\n\\n### Additional Info\\n- **AI Market**: A marketplace for agents is available at market.hiclaw.io.\\n- **Source**: GitHub at github.com/alibaba/hiclaw.\\n- **Communication**: Discord, X, and DingTalk community channels are available.\"}"
+    }
+  ]
+}

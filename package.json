@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "minds-smoke": "tsx scripts/minds-smoke.ts"
+    "minds-smoke": "tsx scripts/minds-smoke.ts",
+    "cloud:film": "node cloud-video/film.mjs",
+    "cloud:video": "node cloud-video/launch.mjs"
   },
   "dependencies": {
     "@animocabrands/minds-client-lib": "^0.1.3",

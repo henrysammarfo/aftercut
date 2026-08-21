@@ -9,6 +9,7 @@ alwaysApply: true
 
 - Do not invent jam deadlines, prizes, or Minds API behavior.
 - Fact-check with **Tavily** + **TinyFish** (`X-API-Key`) using keys from `scoutbot/agent/.env` when needed.
+- Desk markets (SCOUT/LOCKIN/friends): **X + Reddit every book** via GooseWorks Node runner `scoutbot/docs/memory/research-raw/gw-social.mjs`.
 - Unverified → say so.
 
 ## Memory
