@@ -23,7 +23,7 @@
 | **Aug 24** | SCOUT Delphi window ends |
 | **Aug 28 HKT** | AFTERCUT submit |
 
-SCOUT ops (other tree): **FENN** live on `scout-trader :8791` (approval-gated, allowlist empty). Broncos/LAFC/Ipswich Nos open — wait settles. Do not mix into AFTERCUT or TOOLLAW.
+SCOUT ops (other tree): new isolated **FENN** hunter is paper/disarmed on `scout-trader :8791`. Do not mix into AFTERCUT or TOOLLAW.
 
 ## Live path (code)
 
