@@ -14,18 +14,19 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/lib/auth";
-import { DemoProgress } from "@/components/app/DemoProgress";
+import { SetupProgress } from "@/components/app/SetupProgress";
+import { agentLabel, friendlyError, mindLabel } from "@/lib/display";
 
 const nav = [
-  { to: "/onboarding" as const, label: "Setup", icon: ListChecks },
+  { to: "/onboarding" as const, label: "Get started", icon: ListChecks },
   { to: "/dashboard" as const, label: "Dashboard", icon: LayoutDashboard },
-  { to: "/brand-kit" as const, label: "Brand kit", icon: Palette },
-  { to: "/ingest" as const, label: "Ingest", icon: Inbox },
+  { to: "/brand-kit" as const, label: "Brand voice", icon: Palette },
+  { to: "/ingest" as const, label: "Import", icon: Inbox },
   { to: "/studio" as const, label: "Studio", icon: KanbanSquare },
-  { to: "/timeline" as const, label: "Memory", icon: History },
-  { to: "/circle" as const, label: "Circle", icon: Users },
-  { to: "/merch" as const, label: "Brand & merch", icon: Shirt },
-  { to: "/pitch" as const, label: "Pitch", icon: Sparkles },
+  { to: "/timeline" as const, label: "Activity", icon: History },
+  { to: "/circle" as const, label: "Agent team", icon: Users },
+  { to: "/merch" as const, label: "Brand assets", icon: Shirt },
+  { to: "/pitch" as const, label: "Pricing", icon: Sparkles },
 ];
 
 export function AppShell({
@@ -33,13 +34,13 @@ export function AppShell({
   subtitle,
   actions,
   children,
-  showDemoProgress = true,
+  showSetupProgress = true,
 }: {
   title: string;
   subtitle?: string;
   actions?: ReactNode;
   children: ReactNode;
-  showDemoProgress?: boolean;
+  showSetupProgress?: boolean;
 }) {
   const { session, tenant, signOut, setCognitionNote, productMode, health, mindStatus, mindLoading } =
     useAuth();
@@ -50,13 +51,13 @@ export function AppShell({
     setNote(tenant?.cognitionNote ?? "");
   }, [tenant?.cognitionNote]);
 
-  const mindLabel = mindStatus?.ok
-    ? `live · ${mindStatus.mindName}${mindStatus.cognition != null ? ` · cog ${mindStatus.cognition}` : ""}`
+  const mindBadge = mindStatus?.ok
+    ? `${mindLabel(mindStatus.mindName)}${mindStatus.cognition != null ? ` · ${Math.round(mindStatus.cognition)} credits` : ""}`
     : mindLoading
-      ? "live · connecting…"
+      ? "Connecting…"
       : mindStatus && !mindStatus.ok
-        ? "live · mind offline"
-        : "live · awaiting key";
+        ? "Offline"
+        : "Not connected";
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -67,12 +68,14 @@ export function AppShell({
           </Link>
           <p className="mt-3 inline-flex max-w-full items-center rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground">
             <span className="truncate">
-              {productMode} · {mindLabel}
-              {health?.kitReady ? " · kit ready" : " · kit incomplete"}
+              Connected · {mindBadge}
+              {health?.kitReady ? " · brand ready" : " · finish brand voice"}
             </span>
           </p>
           {mindStatus && !mindStatus.ok ? (
-            <p className="mt-2 text-[10px] leading-snug text-red-300/90">{mindStatus.error}</p>
+            <p className="mt-2 text-[10px] leading-snug text-red-300/90">
+              {friendlyError(mindStatus.error ?? "Not connected")}
+            </p>
           ) : null}
           <nav className="mt-6 flex gap-1 overflow-x-auto lg:mt-10 lg:flex-col lg:overflow-visible">
             {nav.map(({ to, label, icon: Icon }) => (
@@ -108,7 +111,7 @@ export function AppShell({
             </div>
 
             <div className="rounded-2xl bg-white/[0.06] p-4 backdrop-blur-lg">
-              <p className="text-xs text-muted-foreground">Director note</p>
+              <p className="text-xs text-muted-foreground">Notes for your agent</p>
               <textarea
                 rows={3}
                 value={note}
@@ -116,7 +119,7 @@ export function AppShell({
                 onBlur={() => {
                   if (note !== (tenant?.cognitionNote ?? "")) setCognitionNote(note);
                 }}
-                placeholder="Optional note synced with Soul to live Director…"
+                placeholder="Optional instructions your agent should remember…"
                 className="mt-2 w-full resize-none rounded-xl border border-white/10 bg-transparent px-3 py-2 text-xs outline-none placeholder:text-muted-foreground focus:border-white/25"
               />
             </div>
@@ -148,9 +151,9 @@ export function AppShell({
             </div>
             {actions}
           </div>
-          {showDemoProgress && session ? (
+          {showSetupProgress && session ? (
             <div className="mt-6">
-              <DemoProgress tenant={tenant} />
+              <SetupProgress tenant={tenant} />
             </div>
           ) : null}
           <div className="mt-8">{children}</div>

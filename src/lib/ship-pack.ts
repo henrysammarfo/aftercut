@@ -17,12 +17,12 @@ export function buildShipPack(input: {
   const lines = [
     `# AFTERCUT copy-pack — ${input.brandName || "untitled"}`,
     `# Generated ${new Date().toISOString()}`,
-    `# Paste into CapCut / native apps. Publish leash: human posts only.`,
+    `# Paste into CapCut or post natively. You approve every publish.`,
     "",
   ];
 
   if (rows.length === 0) {
-    lines.push("(No drafts in approve/scheduled/shipped — atomize and approve first.)");
+    lines.push("(No approved drafts yet — generate and approve content in Studio first.)");
     return lines.join("\n");
   }
 

@@ -5,6 +5,7 @@ import { stages, platformLabel, type Stage } from "@/lib/aftercut-data";
 import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
 import { buildShipPack } from "@/lib/ship-pack";
+import { agentLabel } from "@/lib/display";
 import { Check, X, Sparkles, ShieldAlert, Bell, Copy, Download } from "lucide-react";
 
 export const Route = createFileRoute("/studio")({
@@ -13,16 +14,16 @@ export const Route = createFileRoute("/studio")({
   },
   head: () => ({
     meta: [
-      { title: "Studio — the repurposing kanban" },
+      { title: "Studio — AFTERCUT" },
       {
         name: "description",
         content:
-          "Ingested to Drafting to Needs approve to Scheduled to Shipped. Nothing publishes without you.",
+          "New → Drafting → Needs approval → Scheduled → Published. Nothing goes live without you.",
       },
       { property: "og:title", content: "AFTERCUT Studio" },
       {
         property: "og:description",
-        content: "Kanban from ingest to shipped, with the publish leash on every card.",
+        content: "Review drafts, approve posts, and export captions.",
       },
     ],
   }),
@@ -61,9 +62,9 @@ function Studio() {
   const copyPack = async () => {
     try {
       await navigator.clipboard.writeText(pack());
-      setShipNote("Copy-pack on clipboard — paste into CapCut / native apps.");
+      setShipNote("Copied — paste into CapCut or your native apps.");
     } catch {
-      setShipNote("Clipboard blocked — use Download copy-pack instead.");
+      setShipNote("Clipboard blocked — use Download instead.");
     }
   };
 
@@ -72,38 +73,38 @@ function Studio() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `aftercut-copy-pack-${Date.now()}.txt`;
+    a.download = `aftercut-captions-${Date.now()}.txt`;
     a.click();
     URL.revokeObjectURL(url);
-    setShipNote("Downloaded copy-pack.");
+    setShipNote("Captions downloaded.");
   };
 
   return (
     <AppShell
       title="Studio"
-      subtitle="Live kanban fed by AFTERCUT Director Mind. Ship only after human schedule."
+      subtitle="Review drafts, approve what to publish, and export captions."
       actions={
         <div className="flex flex-wrap gap-2">
           <PrimaryButton disabled={busy || items.length === 0} onClick={() => void copyPack()}>
             <Copy className="mr-1.5 h-3.5 w-3.5" />
-            Copy pack
+            Copy captions
           </PrimaryButton>
           <PrimaryButton disabled={items.length === 0} onClick={downloadPack}>
             <Download className="mr-1.5 h-3.5 w-3.5" />
-            Download
+            Download file
           </PrimaryButton>
           <PrimaryButton
             disabled={busy}
             onClick={async () => {
               setBusy(true);
-              setShipNote("Director Mind rewriting…");
+              setShipNote("Improving your weakest hook…");
               const res = await requestProactiveFollowup();
-              setShipNote(res.ok ? "Live proactive rewrite — check Needs approve." : res.error);
+              setShipNote(res.ok ? "Updated draft in Needs approval." : res.error);
               setBusy(false);
             }}
           >
             <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-            Live Day-2 follow-up
+            Improve weakest hook
           </PrimaryButton>
           <PrimaryButton
             onClick={async () => {
@@ -111,7 +112,7 @@ function Studio() {
               setDenied(res.detail);
             }}
           >
-            Post everything now
+            Publish all now
           </PrimaryButton>
         </div>
       }
@@ -120,14 +121,14 @@ function Studio() {
         <div className="mb-4 flex items-start gap-3 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3">
           <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
           <div>
-            <p className="text-sm font-semibold text-red-200">PUBLISH DENIED</p>
+            <p className="text-sm font-semibold text-red-200">Publishing blocked</p>
             <p className="mt-1 text-xs text-red-200/80">{denied}</p>
             <div className="mt-2 flex flex-wrap gap-3">
               <Link
                 to="/timeline"
                 className="text-[11px] uppercase tracking-wide text-red-200/90 underline-offset-2 hover:underline"
               >
-                Open Memory →
+                View activity →
               </Link>
               <button
                 type="button"
@@ -151,13 +152,13 @@ function Studio() {
         <GlassCard>
           <p className="text-sm font-medium">No drafts yet</p>
           <p className="mt-2 text-xs text-muted-foreground">
-            Ingest long-form and run atomization — the board is built from your content only.
+            Import content to generate drafts — everything here comes from your uploads.
           </p>
           <Link
             to="/ingest"
             className="mt-4 inline-block text-xs font-medium underline-offset-2 hover:underline"
           >
-            Open Ingest →
+            Go to Import →
           </Link>
         </GlassCard>
       ) : (
@@ -180,10 +181,10 @@ function Studio() {
                       <span className="rounded-full bg-white/10 px-2 py-0.5">
                         {platformLabel[d.platform]}
                       </span>
-                      <span>{d.agent}</span>
+                      <span>{agentLabel(d.agent)}</span>
                       {d.proactive ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-foreground">
-                          <Bell className="h-3 w-3" /> Day 2
+                          <Bell className="h-3 w-3" /> Improved
                         </span>
                       ) : null}
                     </div>
@@ -207,6 +208,7 @@ function Studio() {
                         </button>
                         <button
                           type="button"
+                          title="Send back to drafting"
                           onClick={() => {
                             const res = rejectDraft(d.id);
                             if (!res.ok) setShipNote(res.error);
@@ -224,7 +226,7 @@ function Studio() {
                         onClick={() => move(d.id, "shipped")}
                         className="mt-3 w-full rounded-full bg-white/10 py-1.5 text-xs hover:bg-white/20"
                       >
-                        Mark shipped
+                        Mark as published
                       </button>
                     ) : null}
 
@@ -236,7 +238,7 @@ function Studio() {
                         }
                         className="mt-3 w-full rounded-full bg-white/5 py-1.5 text-xs hover:bg-white/10"
                       >
-                        Advance
+                        {d.stage === "ingested" ? "Start drafting" : "Submit for approval"}
                       </button>
                     ) : null}
                   </GlassCard>
@@ -250,10 +252,10 @@ function Studio() {
         <div className="flex items-start gap-3">
           <Sparkles className="mt-0.5 h-4 w-4" />
           <div>
-            <p className="text-sm font-medium">Publish leash is armed</p>
+            <p className="text-sm font-medium">You approve every publish</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Director drafts and rewrites only. &ldquo;Post everything now&rdquo; always returns
-              PUBLISH DENIED. QC blocks near-dupe ships via fingerprint ledger.
+              Your agent drafts and rewrites — but &ldquo;Publish all now&rdquo; stays blocked until
+              you approve each piece. Duplicate posts are caught automatically.
             </p>
           </div>
         </div>

@@ -30,10 +30,10 @@ function SignupPage() {
           <Logo />
         </Link>
         <h1 className="text-center text-2xl font-semibold tracking-tight">
-          Open AFTERCUT Studio
+          Create your AFTERCUT account
         </h1>
         <p className="mt-2 text-center text-sm text-muted-foreground">
-          Live Mind-backed studio. Day 0 kit syncs Soul to Director, then ingest + atomize for real.
+          Save your brand voice, import content, and review platform drafts in minutes.
         </p>
         <form
           className="mt-8 space-y-4"
@@ -41,7 +41,7 @@ function SignupPage() {
             e.preventDefault();
             const res = signUp({ name, email, password });
             if (!res.ok) setError(res.error || "Sign up failed");
-            else void navigate({ to: "/brand-kit" });
+            else void navigate({ to: "/onboarding" });
           }}
         >
           <input

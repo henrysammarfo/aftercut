@@ -4,6 +4,7 @@ import { AppShell, GlassCard, PrimaryButton } from "@/components/app/AppShell";
 import { circle } from "@/lib/aftercut-data";
 import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
+import { agentLabel, phaseLabel } from "@/lib/display";
 import { Brain, Zap, Bell, ShieldAlert } from "lucide-react";
 
 export const Route = createFileRoute("/timeline")({
@@ -12,16 +13,10 @@ export const Route = createFileRoute("/timeline")({
   },
   head: () => ({
     meta: [
-      { title: "Memory — continuity timeline" },
+      { title: "Activity — AFTERCUT" },
       {
         name: "description",
-        content:
-          "Every Mind action leaves a memory receipt: Day 0 kit, Day 1 dump, Day 2 proactive rewrite.",
-      },
-      { property: "og:title", content: "AFTERCUT Memory timeline" },
-      {
-        property: "og:description",
-        content: "Persistence you can film — memory receipts across Day 0, Day 1 and Day 2.",
+        content: "Everything your agent has done — brand saves, imports, approvals and rewrites.",
       },
     ],
   }),
@@ -42,17 +37,17 @@ function Timeline() {
 
   return (
     <AppShell
-      title="Continuity timeline"
-      subtitle="Live Mind receipts + studio ledger. Proactive follow-up hits real Director on hellominds."
+      title="Activity"
+      subtitle="A running log of what your agent remembers and does for you."
       actions={
         <PrimaryButton
           onClick={async () => {
-            setMsg("Contacting Director Mind…");
+            setMsg("Working on your weakest hook…");
             const res = await requestProactiveFollowup();
-            setMsg(res.ok ? "Live proactive rewrite applied." : res.error);
+            setMsg(res.ok ? "Draft updated — see Studio." : res.error);
           }}
         >
-          Request Day-2 follow-up
+          Improve weakest hook
         </PrimaryButton>
       }
     >
@@ -66,15 +61,15 @@ function Timeline() {
         <GlassCard className="lg:col-span-2">
           {timeline.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No memory receipts yet.{" "}
+              Nothing here yet.{" "}
               <Link to="/brand-kit" className="underline underline-offset-2">
-                Save brand kit
+                Save your brand voice
               </Link>{" "}
-              (Day 0) or{" "}
+              or{" "}
               <Link to="/ingest" className="underline underline-offset-2">
-                ingest long-form
-              </Link>{" "}
-              (Day 1).
+                import content
+              </Link>
+              .
             </p>
           ) : (
             <div className="flex flex-col">
@@ -92,7 +87,7 @@ function Timeline() {
                     </div>
                     <div className="pb-8">
                       <p className="text-xs text-muted-foreground">
-                        {t.day} · {t.time} · {t.agent}
+                        {phaseLabel(t.day)} · {t.time} · {agentLabel(t.agent)}
                       </p>
                       <p className="mt-1 text-sm font-medium">{t.title}</p>
                       <p className="mt-1 text-sm text-muted-foreground">{t.detail}</p>
@@ -104,15 +99,17 @@ function Timeline() {
           )}
         </GlassCard>
 
-        <div className="flex flex-col gap-4">
-          {circle.map((c) => (
-            <GlassCard key={c.name}>
-              <p className="text-sm font-semibold">{c.name}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{c.role}</p>
-              <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{c.duty}</p>
-            </GlassCard>
-          ))}
-        </div>
+        <GlassCard>
+          <p className="text-sm font-semibold">Your agent team</p>
+          <div className="mt-4 flex flex-col gap-3">
+            {circle.map((c) => (
+              <div key={c.name}>
+                <p className="text-xs font-medium">{c.displayName}</p>
+                <p className="text-[11px] text-muted-foreground">{c.duty}</p>
+              </div>
+            ))}
+          </div>
+        </GlassCard>
       </div>
     </AppShell>
   );

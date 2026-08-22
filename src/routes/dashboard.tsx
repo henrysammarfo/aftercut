@@ -3,6 +3,7 @@ import { AppShell, GlassCard, PrimaryButton } from "@/components/app/AppShell";
 import { circle, platformLabel } from "@/lib/aftercut-data";
 import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
+import { agentLabel, mindLabel, phaseLabel } from "@/lib/display";
 import { ArrowUpRight, ShieldAlert, Brain, HardDrive } from "lucide-react";
 import { useRef, useState } from "react";
 
@@ -12,16 +13,15 @@ export const Route = createFileRoute("/dashboard")({
   },
   head: () => ({
     meta: [
-      { title: "Dashboard — AFTERCUT live Mind Studio" },
+      { title: "Dashboard — AFTERCUT" },
       {
         name: "description",
-        content:
-          "Queue health, live Mind cognition, publish leash and ship ledger.",
+        content: "Draft queue, publish guard, agent team and workspace backup.",
       },
       { property: "og:title", content: "AFTERCUT Dashboard" },
       {
         property: "og:description",
-        content: "Live Studio overview: queue, leash, ledger, Director Mind.",
+        content: "Overview of drafts, approvals and agent activity.",
       },
     ],
   }),
@@ -57,24 +57,24 @@ function Dashboard() {
 
   return (
     <AppShell
-      title="Studio overview"
+      title="Overview"
       subtitle={
         mindStatus?.ok
-          ? `Live Director: ${mindStatus.mindName} · cognition ${mindStatus.cognition ?? "—"} · telegram ${mindStatus.hasTelegram ? "linked" : "not linked"}`
+          ? `${mindLabel(mindStatus.mindName)}${mindStatus.hasTelegram ? " · Telegram connected" : ""}${mindStatus.cognition != null ? ` · ${Math.round(mindStatus.cognition)} credits` : ""}`
           : mindStatus && !mindStatus.ok
-            ? `Mind offline: ${mindStatus.error}`
-            : "Connecting to AFTERCUT Director Mind…"
+            ? "Agent offline — check your connection"
+            : "Connecting to your agent…"
       }
       actions={
         <div className="flex flex-wrap gap-2">
           <PrimaryButton
             onClick={async () => {
-              flash("Contacting live Director…");
+              flash("Working on your weakest hook…");
               const res = await requestProactiveFollowup();
-              flash(res.ok ? "Live Day-2 follow-up applied." : res.error, !res.ok);
+              flash(res.ok ? "Hook updated — check Needs approval." : res.error, !res.ok);
             }}
           >
-            Live Day-2 follow-up
+            Improve weakest hook
           </PrimaryButton>
           <PrimaryButton
             onClick={async () => {
@@ -82,7 +82,7 @@ function Dashboard() {
               flash(res.detail);
             }}
           >
-            Post everything now
+            Publish all now
           </PrimaryButton>
         </div>
       }
@@ -104,22 +104,22 @@ function Dashboard() {
           {
             label: "In queue",
             value: String(drafts.length),
-            sub: "live drafts",
+            sub: "total drafts",
           },
           {
-            label: "Needs approve",
+            label: "Needs approval",
             value: String(needsApprove.length),
-            sub: "publish leash held",
+            sub: "awaiting you",
           },
           {
-            label: "Shipped",
+            label: "Published",
             value: String(health?.shipped ?? shipped.length),
-            sub: "hashed in ledger",
+            sub: "in history",
           },
           {
-            label: "Proactive acts",
+            label: "Auto-improvements",
             value: String(proactive),
-            sub: "from your timeline",
+            sub: "from your agent",
           },
         ].map((s) => (
           <GlassCard key={s.label}>
@@ -143,13 +143,13 @@ function Dashboard() {
               to="/studio"
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
             >
-              Open studio <ArrowUpRight className="h-3.5 w-3.5" />
+              Open Studio <ArrowUpRight className="h-3.5 w-3.5" />
             </Link>
           </div>
           <div className="mt-4 flex flex-col gap-3">
             {needsApprove.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No drafts in needs-approve. Atomize an ingest or run Day 2 follow-up.
+                No drafts waiting for approval. Import content or ask your agent to improve a hook.
               </p>
             ) : (
               needsApprove.map((d) => (
@@ -161,7 +161,7 @@ function Dashboard() {
                     <span className="rounded-full bg-white/10 px-2 py-0.5">
                       {platformLabel[d.platform]}
                     </span>
-                    <span>{d.agent}</span>
+                    <span>{agentLabel(d.agent)}</span>
                   </div>
                   <p className="mt-2 text-sm font-medium">{d.title}</p>
                   <p className="mt-1 text-sm text-muted-foreground">&ldquo;{d.hook}&rdquo;</p>
@@ -174,37 +174,37 @@ function Dashboard() {
         <div className="flex flex-col gap-4">
           <GlassCard>
             <div className="flex items-center gap-2 text-sm font-semibold">
-              <ShieldAlert className="h-4 w-4" /> Publish leash
+              <ShieldAlert className="h-4 w-4" /> Publish guard
             </div>
             {denied ? (
               <>
                 <p className="mt-3 rounded-xl bg-destructive/15 px-3 py-2 font-mono text-xs text-destructive">
-                  PUBLISH DENIED
+                  Publishing blocked
                 </p>
                 <p className="mt-3 text-xs text-muted-foreground">{denied.detail}</p>
               </>
             ) : (
               <p className="mt-3 text-xs text-muted-foreground">
-                Armed. Blast-publish denied · live Director notified when leash fires.
+                Bulk publish is blocked until you approve each draft.
               </p>
             )}
           </GlassCard>
 
           <GlassCard>
             <div className="flex items-center gap-2 text-sm font-semibold">
-              <Brain className="h-4 w-4" /> Live Circle
+              <Brain className="h-4 w-4" /> Agent team
             </div>
             <p className="mt-2 text-[11px] text-muted-foreground">
-              Role labels · receipt counts from your timeline — not live hellominds.
+              Activity from each specialist on your recent imports.
             </p>
             <div className="mt-3 flex flex-col gap-2">
               {circle.map((c) => {
                 const n = tenant?.timeline.filter((t) => t.agent === c.name).length ?? 0;
                 return (
                   <div key={c.name} className="flex items-center justify-between text-xs">
-                    <span>{c.name.replace("AFTERCUT ", "")}</span>
+                    <span>{c.displayName}</span>
                     <span className="text-muted-foreground">
-                      {n === 0 ? "idle" : `${n} receipt${n === 1 ? "" : "s"}`}
+                      {n === 0 ? "idle" : `${n} update${n === 1 ? "" : "s"}`}
                     </span>
                   </div>
                 );
@@ -214,10 +214,10 @@ function Dashboard() {
 
           <GlassCard>
             <div className="flex items-center gap-2 text-sm font-semibold">
-              <HardDrive className="h-4 w-4" /> Tenant backup
+              <HardDrive className="h-4 w-4" /> Workspace backup
             </div>
             <p className="mt-2 text-[11px] text-muted-foreground">
-              Export / import JSON backup of tenant state (studio ledger alongside live Mind).
+              Download or restore your drafts, brand voice and history.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <button
@@ -233,20 +233,20 @@ function Dashboard() {
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement("a");
                   a.href = url;
-                  a.download = `aftercut-tenant-${new Date().toISOString().slice(0, 10)}.json`;
+                  a.download = `aftercut-backup-${new Date().toISOString().slice(0, 10)}.json`;
                   a.click();
                   URL.revokeObjectURL(url);
-                  flash("Tenant JSON downloaded.");
+                  flash("Backup downloaded.");
                 }}
               >
-                Export JSON
+                Download backup
               </button>
               <button
                 type="button"
                 className="rounded-full bg-white/10 px-3 py-1.5 text-xs hover:bg-white/15"
                 onClick={() => fileRef.current?.click()}
               >
-                Import JSON
+                Restore backup
               </button>
               <input
                 ref={fileRef}
@@ -260,7 +260,7 @@ function Dashboard() {
                   try {
                     const text = await file.text();
                     const res = importTenant(text);
-                    flash(res.ok ? "Tenant restored from JSON." : res.error, !res.ok);
+                    flash(res.ok ? "Workspace restored." : res.error, !res.ok);
                   } catch {
                     flash("Could not read file.", true);
                   }
@@ -273,11 +273,11 @@ function Dashboard() {
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <GlassCard>
-          <h2 className="text-sm font-semibold">Ship ledger</h2>
+          <h2 className="text-sm font-semibold">Publish history</h2>
           <div className="mt-4 flex flex-col gap-3">
             {shipLedger.length === 0 ? (
               <p className="text-xs text-muted-foreground">
-                Empty until you mark a scheduled draft shipped in Studio.
+                Empty until you mark a scheduled draft as published in Studio.
               </p>
             ) : (
               shipLedger.map((s) => (
@@ -292,11 +292,11 @@ function Dashboard() {
         </GlassCard>
 
         <GlassCard>
-          <h2 className="text-sm font-semibold">Latest memory receipts</h2>
+          <h2 className="text-sm font-semibold">Recent activity</h2>
           <div className="mt-4 flex flex-col gap-3">
             {timeline.length === 0 ? (
               <p className="text-xs text-muted-foreground">
-                No receipts yet — save the brand kit to open Day 0.
+                No activity yet — save your brand voice to get started.
               </p>
             ) : (
               timeline
@@ -305,7 +305,7 @@ function Dashboard() {
                 .map((t) => (
                   <div key={t.id} className="text-xs">
                     <p className="text-muted-foreground">
-                      {t.day} · {t.time} · {t.agent}
+                      {phaseLabel(t.day)} · {t.time} · {agentLabel(t.agent)}
                     </p>
                     <p className="mt-1 text-sm">{t.title}</p>
                   </div>
@@ -316,7 +316,7 @@ function Dashboard() {
             to="/timeline"
             className="mt-4 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
           >
-            Full continuity timeline <ArrowUpRight className="h-3.5 w-3.5" />
+            View all activity <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
         </GlassCard>
       </div>

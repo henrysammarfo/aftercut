@@ -14,11 +14,11 @@ export const platforms: Platform[] = ["shorts", "x", "linkedin", "newsletter"];
 export type Stage = "ingested" | "drafting" | "needs-approve" | "scheduled" | "shipped";
 
 export const stages: { id: Stage; label: string }[] = [
-  { id: "ingested", label: "Ingested" },
+  { id: "ingested", label: "New" },
   { id: "drafting", label: "Drafting" },
-  { id: "needs-approve", label: "Needs approve" },
+  { id: "needs-approve", label: "Needs approval" },
   { id: "scheduled", label: "Scheduled" },
-  { id: "shipped", label: "Shipped" },
+  { id: "shipped", label: "Published" },
 ];
 
 export type Draft = {
@@ -37,7 +37,7 @@ export type Draft = {
 
 export type MemoryEvent = {
   id: string;
-  day: "Day 0" | "Day 1" | "Day 2";
+  day: "Setup" | "Content" | "Follow-up";
   time: string;
   agent: string;
   title: string;
@@ -101,26 +101,30 @@ export function emptyIngests(): IngestRecord[] {
   return [];
 }
 
-/** Static product truth — the 4 Mind roles (architecture, not mock user data). */
+/** Specialist roles on the AFTERCUT agent team. */
 export const circle = [
   {
     name: "AFTERCUT Director",
-    role: "Primary Mind · cognition boost",
-    duty: "Holds creative DNA, runs digests, owns approve / reject and follow-up.",
+    displayName: "Lead agent",
+    role: "Lead agent",
+    duty: "Remembers your brand, runs digests, and handles approvals and follow-ups.",
   },
   {
     name: "HOOKsmith",
-    role: "Circle agent",
-    duty: "Hooks and CTAs only. Rewrites weak openings until they land.",
+    displayName: "Hooks specialist",
+    role: "Hooks specialist",
+    duty: "Opens and CTAs only — rewrites weak first lines until they land.",
   },
   {
     name: "PLATFORMFIT",
-    role: "Circle agent",
-    duty: "Shorts vs X vs LinkedIn vs newsletter voice, length and pacing.",
+    displayName: "Platform specialist",
+    role: "Platform specialist",
+    duty: "Shorts, X, LinkedIn and newsletter — each with native length and voice.",
   },
   {
     name: "QC",
-    role: "Circle agent",
-    duty: "Spam and duplicate checks against the shipped ledger memory.",
+    displayName: "Quality check",
+    role: "Quality check",
+    duty: "Blocks spam and duplicate posts using your publish history.",
   },
 ] as const;

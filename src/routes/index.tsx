@@ -16,7 +16,7 @@ export const Route = createFileRoute("/")({
       {
         property: "og:description",
         content:
-          "Dump a VOD. Your Mind already knows your voice. It cuts, captions and follows up — without a re-brief.",
+          "Upload a stream or podcast. Your agent already knows your voice — it drafts, captions and follows up without starting over.",
       },
     ],
   }),
@@ -26,24 +26,24 @@ export const Route = createFileRoute("/")({
 const days = [
   {
     icon: Moon,
-    day: "Day 0",
-    title: "Teach the Soul",
+    day: "Step 1",
+    title: "Save your brand voice",
     detail:
-      "Save tone, examples, CTAs, do-not-say — sync Soul to live AFTERCUT Director on hellominds.",
+      "Set tone, example posts, CTAs and phrases to avoid. Your agent remembers them across every session.",
   },
   {
     icon: Sunrise,
-    day: "Day 1",
-    title: "Dump long-form",
+    day: "Step 2",
+    title: "Import long-form content",
     detail:
-      "Paste transcript or Telegram text. Live Director atomizes Shorts, X, LinkedIn and newsletter.",
+      "Paste a transcript, stream notes or Telegram text. Get Shorts, X, LinkedIn and newsletter drafts.",
   },
   {
     icon: Sun,
-    day: "Day 2",
-    title: "Mind still knows",
+    day: "Step 3",
+    title: "Wake up to better hooks",
     detail:
-      "Reopen Studio — kit intact, drafts queued. Live Director proactively rewrites a weak hook.",
+      "Your agent improves weak drafts overnight and queues them for your approval — no re-brief.",
   },
 ];
 
@@ -74,7 +74,7 @@ function Index() {
               </h1>
               <p className="mt-4 max-w-md text-sm leading-relaxed text-[#010101]/80 sm:text-base lg:text-white/80">
                 A Minds agent that remembers your creative DNA and keeps cutting long-form into
-                platform posts — live on hellominds, filmable in Studio.
+                platform posts — remembers your voice and keeps working overnight.
               </p>
 
               <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:items-center">
@@ -83,20 +83,20 @@ function Index() {
                   className="rounded-full px-6 py-3 text-center text-sm font-medium text-white transition-opacity hover:opacity-90"
                   style={{ background: "linear-gradient(to bottom, #2B2B2B, #101010)" }}
                 >
-                  Get started
+                  Get started free
                 </Link>
                 <a
                   href="#how"
                   className="rounded-full border border-[#010101]/20 bg-white/20 px-6 py-3 text-center text-sm font-medium text-[#010101] backdrop-blur-lg transition-colors hover:bg-white/30 lg:border-white/20 lg:text-white"
                 >
-                  See Day 0–2
+                  How it works
                 </a>
               </div>
             </div>
 
             <div className="rounded-2xl bg-white/10 p-5 backdrop-blur-lg sm:max-w-xs sm:p-6">
               <p className="text-xs font-medium uppercase tracking-wide text-[#010101]/60 lg:text-white/60">
-                Moat line
+                Why AFTERCUT
               </p>
               <p className="mt-3 text-sm leading-relaxed text-[#010101] lg:text-white">
                 Opus clips once. AFTERCUT remembers your DNA and keeps cutting overnight.
@@ -117,8 +117,7 @@ function Index() {
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
             Multi-platform is a time sink. Same post everywhere kills engagement. Creators ship
-            YouTube then dump one LinkedIn link. Incumbents clip and schedule — they do not hold
-            persistent Soul memory or behave like an employee who follows up.
+            YouTube then one LinkedIn link. Clip tools do not remember your brand or follow up on their own.
           </p>
           <div className="mt-10 grid gap-4 sm:grid-cols-3">
             {[
@@ -139,19 +138,19 @@ function Index() {
       <section className="border-t border-white/10 px-5 py-20 sm:px-8 lg:px-12">
         <div className="mx-auto max-w-5xl">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            The Circle
+            The agent team
           </p>
           <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">
-            One Director. Circle passes. One publish leash.
+            Specialists. One approval gate.
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-            Animoca-native Circle — live Director runs HOOKsmith, PLATFORMFIT and QC passes with
-            Memory receipts. Publish leash stays human.
+            Your lead agent coordinates hooks, platform fit and quality checks — then waits for you
+            before anything goes live.
           </p>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {circle.map((c) => (
               <div key={c.name} className="rounded-2xl bg-white/[0.06] p-5 backdrop-blur-lg">
-                <p className="text-sm font-semibold">{c.name}</p>
+                <p className="text-sm font-semibold">{c.displayName}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{c.role}</p>
                 <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{c.duty}</p>
               </div>
@@ -167,10 +166,10 @@ function Index() {
             How it works
           </p>
           <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">
-            Day 0 → Day 1 → Day 2
+            Three steps to multi-platform content
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-            Persistence you can film. Memory across sessions is the product — not a chatbot sticker.
+            Your agent remembers across sessions — it picks up where you left off.
           </p>
           <div className="mt-10 grid gap-4 lg:grid-cols-3">
             {days.map(({ icon: Icon, day, title, detail }) => (
@@ -194,34 +193,30 @@ function Index() {
         </div>
       </section>
 
-      {/* Publish leash */}
-      <section id="leash" className="scroll-mt-8 border-t border-white/10 px-5 py-20 sm:px-8 lg:px-12">
+      <section id="guard" className="scroll-mt-8 border-t border-white/10 px-5 py-20 sm:px-8 lg:px-12">
         <div className="mx-auto max-w-5xl">
           <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Autonomy with a leash
+                You stay in control
               </p>
               <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-                Draft freely. Blast-publish never.
+                Draft freely. Publish only when you say so.
               </h2>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                The Director can draft, rewrite and schedule. Ask it to &ldquo;post everything
-                now&rdquo; without approvals and the publish leash returns{" "}
-                <span className="font-mono text-destructive">PUBLISH DENIED</span>. Ship ledger
-                remembers every caption hash so QC can block dupes.
+                Your agent can draft, rewrite and schedule — but bulk publish without approval is
+                always blocked. Shipped history stops duplicate posts.
               </p>
             </div>
             <div className="rounded-2xl bg-white/[0.06] p-6 backdrop-blur-lg">
               <div className="flex items-center gap-2 text-sm font-semibold">
-                <ShieldAlert className="h-4 w-4" /> Publish leash
+                <ShieldAlert className="h-4 w-4" /> Approval required
               </div>
               <p className="mt-4 rounded-xl bg-destructive/15 px-4 py-3 font-mono text-sm text-destructive">
-                PUBLISH DENIED
+                Publishing blocked
               </p>
               <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-                Steal-cousin for judges: the agent cannot blast-publish. Autonomy you can trust on
-                camera.
+                Autonomous drafting, human publishing. Nothing goes live without your sign-off.
               </p>
             </div>
           </div>
@@ -235,8 +230,7 @@ function Index() {
             Teach the kit. Dump the stream. Sleep.
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground sm:text-base">
-            Start empty. Your brand kit and ingests become the only data the Circle works from —
-            no fake queues, no borrowed testimonials.
+            Start with your brand. Import your content. Review drafts in the morning.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
@@ -244,24 +238,23 @@ function Index() {
               className="rounded-full px-8 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90"
               style={{ background: "linear-gradient(to bottom, #2B2B2B, #101010)" }}
             >
-              Create account
+              Create free account
             </Link>
             <Link
               to="/pitch"
               className="rounded-full border border-white/15 px-8 py-3 text-sm font-medium text-foreground transition-colors hover:bg-white/5"
             >
-              Pitch + waitlist
+              View pricing
             </Link>
           </div>
           <p className="mt-6 text-xs text-muted-foreground">
-            Founding pricing target: $29–$79/mo · Mind-backed Studio · CapCut copy-pack now · social
-            OAuth next.
+            From $29/mo · Export captions for CapCut and native apps · Social publishing coming soon.
           </p>
         </div>
       </section>
 
       <footer className="border-t border-white/10 px-5 py-8 text-center text-xs text-muted-foreground sm:px-8 lg:px-12">
-        AFTERCUT · Creative Minds Jam #1 · submit 28 Aug 2026 · live Mind Director · Studio control plane
+        AFTERCUT · AI repurposing studio · Built on Minds by Animoca
       </footer>
     </div>
   );

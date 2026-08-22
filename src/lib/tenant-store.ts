@@ -152,7 +152,7 @@ export function saveBrandKit(userId: string, kit: BrandKit): SaveKitResult {
     return { ok: false, message: "Brand name needs at least 2 characters." };
   }
   if (!kit.tone.trim() || kit.tone.trim().length < 3) {
-    return { ok: false, message: "Tone needs at least 3 characters (Day 0 Soul requirement)." };
+    return { ok: false, message: "Tone needs at least 3 characters." };
   }
 
   const state = loadTenant(userId);
@@ -174,10 +174,10 @@ export function saveBrandKit(userId: string, kit: BrandKit): SaveKitResult {
     timeline: pushEvents(
       state.timeline,
       event(
-        "Day 0",
+        "Setup",
         "AFTERCUT Director",
-        "Soul awakened",
-        `Offline Soul stored for ${cleaned.name}: tone, examples, CTAs, do-not-say.`,
+        "Brand voice saved",
+        `Stored for ${cleaned.name}: tone, examples, CTAs, and banned phrases.`,
         "memory",
       ),
     ),
@@ -201,10 +201,10 @@ export function addIngest(
   const state = loadTenant(userId);
   const text = input.text.trim();
   if (text.length < 48) {
-    return { ok: false, message: "Paste at least ~48 characters of long-form." };
+    return { ok: false, message: "Paste at least 48 characters of content." };
   }
   if (text.length > 80_000) {
-    return { ok: false, message: "Ingest too large (80k char cap offline)." };
+    return { ok: false, message: "Content is too long (80,000 character limit)." };
   }
 
   const title =
@@ -226,10 +226,10 @@ export function addIngest(
     timeline: pushEvents(
       state.timeline,
       event(
-        "Day 1",
-        "Ingest",
-        "Long-form dump received",
-        `${ingest.source}: "${ingest.title}" queued (${text.length} chars).`,
+        "Content",
+        "Import",
+        "Content received",
+        `${ingest.source}: "${ingest.title}" added (${text.length} characters).`,
         "action",
       ),
     ),
@@ -254,7 +254,7 @@ export function setDraftStage(
     if (draft.stage !== "scheduled") {
       return {
         ok: false,
-        error: "Ship only after approve (scheduled). Publish leash.",
+        error: "Approve this draft before marking it published.",
         state,
       };
     }
@@ -268,17 +268,17 @@ export function setDraftStage(
         timeline: pushEvents(
           state.timeline,
           event(
-            "Day 2",
+            "Follow-up",
             "QC",
-            "Duplicate ship blocked",
-            `Near-match ${hit.hash} already on ${hit.platform}.`,
+            "Duplicate blocked",
+            `Already published similar copy to ${hit.platform} (${hit.hash}).`,
             "denied",
           ),
         ),
       });
       return {
         ok: false,
-        error: `QC blocked ship — matches ledger ${hit.hash}.`,
+        error: `This caption matches something you already published (${hit.hash}).`,
         state: blocked,
       };
     }
@@ -306,10 +306,10 @@ export function setDraftStage(
     timeline = pushEvents(
       timeline,
       event(
-        "Day 2",
+        "Follow-up",
         "QC",
-        "Shipped to ledger",
-        `${entry.platform} · ${entry.hash} remembered (offline ledger).`,
+        "Marked published",
+        `${entry.platform} · saved to history (${entry.hash}).`,
         "memory",
       ),
     );
@@ -319,10 +319,10 @@ export function setDraftStage(
     timeline = pushEvents(
       timeline,
       event(
-        "Day 2",
+        "Follow-up",
         "AFTERCUT Director",
         "Draft approved",
-        `"${draft.title}" scheduled — human approved under publish leash.`,
+        `"${draft.title}" is ready to publish when you mark it published.`,
         "action",
       ),
     );
@@ -354,7 +354,7 @@ export function rejectDraft(
       timeline: pushEvents(
         res.state.timeline,
         event(
-          "Day 2",
+          "Follow-up",
           "AFTERCUT Director",
           "Draft rejected",
           `"${draft.title}" returned to drafting.`,
@@ -373,14 +373,14 @@ export function denyPublishAll(userId: string): { state: TenantState; detail: st
   const scheduled = state.drafts.filter((d) => d.stage === "scheduled").length;
   const detail =
     pending + scheduled === 0
-      ? "PUBLISH DENIED — queue empty; nothing to blast."
-      : `"Post everything now" rejected — ${pending} unapproved · ${scheduled} scheduled still need explicit ship. Offline leash.`;
+      ? "Nothing ready to publish — your queue is empty."
+      : `Bulk publish blocked — ${pending} draft${pending === 1 ? "" : "s"} still need approval · ${scheduled} scheduled and waiting for you to mark published.`;
 
   const next = persist({
     ...state,
     timeline: pushEvents(
       state.timeline,
-      event("Day 2", "Publish leash", "PUBLISH DENIED", detail, "denied"),
+      event("Follow-up", "Publish guard", "Publishing blocked", detail, "denied"),
     ),
   });
   return { state: next, detail };
@@ -429,7 +429,7 @@ export function importTenantJson(
     });
     return { ok: true, state };
   } catch {
-    return { ok: false, message: "Could not parse tenant JSON." };
+    return { ok: false, message: "Could not read backup file." };
   }
 }
 
@@ -499,24 +499,24 @@ export function applyLiveAtomize(
   const passEvents: MemoryEvent[] = [];
   if (input.circle) {
     passEvents.push(
-      event("Day 1", "HOOKsmith", "Circle pass — hooks", input.circle.hooksmith.slice(0, 280), "action"),
+      event("Content", "HOOKsmith", "Hooks refined", input.circle.hooksmith.slice(0, 280), "action"),
       event(
-        "Day 1",
+        "Content",
         "PLATFORMFIT",
-        "Circle pass — platforms",
+        "Platforms adapted",
         input.circle.platformfit.slice(0, 280),
         "action",
       ),
-      event("Day 1", "QC", "Circle pass — QC", input.circle.qc.slice(0, 280), "action"),
+      event("Content", "QC", "Quality checked", input.circle.qc.slice(0, 280), "action"),
     );
   }
   passEvents.push(
     event(
-      "Day 1",
+      "Content",
       input.mindName,
-      "Live atomize complete",
-      `${input.beatCount} beat(s) · ${newDrafts.length} draft(s) via Mind ${input.mindId.slice(0, 8)}…${
-        input.trendsUsed ? " · trends injected" : ""
+      "Drafts generated",
+      `${input.beatCount} key moment${input.beatCount === 1 ? "" : "s"} · ${newDrafts.length} platform draft${newDrafts.length === 1 ? "" : "s"}${
+        input.trendsUsed ? " · trend-aware" : ""
       }`,
       "action",
     ),
@@ -592,10 +592,10 @@ export function applyLiveProactive(
     timeline: pushEvents(
       state.timeline,
       event(
-        "Day 2",
+        "Follow-up",
         input.mindName,
-        "Live proactive follow-up",
-        `Mind ${input.mindId.slice(0, 8)}… rewrote: “${scrubbedHook.slice(0, 80)}${scrubbedHook.length > 80 ? "…" : ""}”`,
+        "Hook improved",
+        `Updated: “${scrubbedHook.slice(0, 80)}${scrubbedHook.length > 80 ? "…" : ""}”`,
         "proactive",
       ),
     ),
@@ -613,9 +613,9 @@ export function markSoulSyncedLive(
     timeline: pushEvents(
       state.timeline,
       event(
-        "Day 0",
+        "Setup",
         mindName,
-        "Soul synced to live Mind",
+        "Brand voice synced",
         confirm.slice(0, 280),
         "memory",
       ),

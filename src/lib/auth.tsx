@@ -32,6 +32,7 @@ import {
   type TenantState,
 } from "./tenant-store";
 import type { BrandKit, Stage } from "./aftercut-data";
+import { friendlyError } from "./display";
 import {
   atomizeLive,
   fetchMindStatus,
@@ -98,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setMindStatus({
         ok: false,
         connected: false,
-        error: e instanceof Error ? e.message : String(e),
+        error: friendlyError(e instanceof Error ? e.message : String(e)),
       });
     } finally {
       setMindLoading(false);
@@ -139,14 +140,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshMindStatus,
       signIn: (email, password) => {
         const res = storeSignIn({ email, password });
-        if (!res.ok) return { ok: false, error: res.error };
+        if (!res.ok) return { ok: false, error: friendlyError(res.error) };
         setSession(res.session);
         setTenant(loadTenant(res.session.userId));
         return { ok: true };
       },
       signUp: (input) => {
         const res = storeSignUp(input);
-        if (!res.ok) return { ok: false, error: res.error };
+        if (!res.ok) return { ok: false, error: friendlyError(res.error) };
         setSession(res.session);
         setTenant(loadTenant(res.session.userId));
         return { ok: true };
@@ -160,7 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       saveBrandKit: async (kit) => {
         if (!session) return { ok: false, error: "Sign in first." };
         const res = storeSaveBrandKit(session.userId, kit);
-        if (!res.ok) return { ok: false, error: res.message };
+        if (!res.ok) return { ok: false, error: friendlyError(res.message) };
         setTenant(res.state);
 
         const live = await syncSoulLive({
@@ -173,7 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!live.ok) {
           return {
             ok: false,
-            error: `Kit saved locally but live Mind sync failed: ${live.error}`,
+            error: `Saved on this device but your agent could not sync: ${friendlyError(live.error)}`,
           };
         }
         setTenant(markSoulSyncedLive(session.userId, live.mindName, live.confirm));
@@ -187,7 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       addIngest: (input) => {
         if (!session) return { ok: false, error: "Sign in first." };
         const res = storeAddIngest(session.userId, input);
-        if (!res.ok) return { ok: false, error: res.message };
+        if (!res.ok) return { ok: false, error: friendlyError(res.message) };
         setTenant(res.state);
         return { ok: true };
       },
@@ -198,9 +199,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           (ingestId ? state.ingests.find((i) => i.id === ingestId) : null) ??
           state.ingests.find((i) => i.status === "queued") ??
           state.ingests[0];
-        if (!target) return { ok: false, error: "Queue an ingest before atomizing." };
+        if (!target) return { ok: false, error: "Import content before generating drafts." };
         if (!state.brandKit.name.trim() || !state.brandKit.tone.trim()) {
-          return { ok: false, error: "Save brand kit and sync Soul first." };
+          return { ok: false, error: "Save your brand voice before generating drafts." };
         }
 
         const live = await atomizeLive({
@@ -213,7 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             ingestId: target.id,
           },
         });
-        if (!live.ok) return { ok: false, error: live.error };
+        if (!live.ok) return { ok: false, error: friendlyError(live.error) };
 
         setTenant(
           applyLiveAtomize(session.userId, {
@@ -233,21 +234,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!session) return { ok: false, error: "Sign in first." };
         const res = storeSetDraftStage(session.userId, draftId, stage);
         setTenant(res.state);
-        if (!res.ok) return { ok: false, error: res.error };
+        if (!res.ok) return { ok: false, error: friendlyError(res.error) };
         return { ok: true };
       },
       approveDraft: (draftId) => {
         if (!session) return { ok: false, error: "Sign in first." };
         const res = storeApproveDraft(session.userId, draftId);
         setTenant(res.state);
-        if (!res.ok) return { ok: false, error: res.error };
+        if (!res.ok) return { ok: false, error: friendlyError(res.error) };
         return { ok: true };
       },
       rejectDraft: (draftId) => {
         if (!session) return { ok: false, error: "Sign in first." };
         const res = storeRejectDraft(session.userId, draftId);
         setTenant(res.state);
-        if (!res.ok) return { ok: false, error: res.error };
+        if (!res.ok) return { ok: false, error: friendlyError(res.error) };
         return { ok: true };
       },
       denyPublishAll: async () => {
@@ -262,10 +263,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!session) return { ok: false, error: "Sign in first." };
         const state = loadTenant(session.userId);
         if (!state.brandKit.name.trim()) {
-          return { ok: false, error: "Save + sync brand kit first." };
+          return { ok: false, error: "Save your brand voice first." };
         }
         if (state.ingests.length === 0) {
-          return { ok: false, error: "Add long-form ingest first." };
+          return { ok: false, error: "Import content before improving hooks." };
         }
         const live = await proactiveLive({
           data: {
@@ -280,7 +281,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             })),
           },
         });
-        if (!live.ok) return { ok: false, error: live.error };
+        if (!live.ok) return { ok: false, error: friendlyError(live.error) };
         setTenant(
           applyLiveProactive(session.userId, {
             title: live.title,
@@ -301,7 +302,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       importTenant: (json) => {
         if (!session) return { ok: false, error: "Sign in first." };
         const res = storeImport(session.userId, json);
-        if (!res.ok) return { ok: false, error: res.message };
+        if (!res.ok) return { ok: false, error: friendlyError(res.message) };
         setTenant(res.state);
         return { ok: true };
       },

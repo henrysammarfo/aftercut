@@ -5,6 +5,7 @@ import { circle } from "@/lib/aftercut-data";
 import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
 import { equipCreatorStack, fetchMindTranscript } from "@/lib/minds/live";
+import { agentLabel, formatToolUsage, friendlyError, mindLabel, phaseLabel } from "@/lib/display";
 import { Brain, Users, Radio, MessageSquare, Wrench } from "lucide-react";
 
 export const Route = createFileRoute("/circle")({
@@ -13,16 +14,10 @@ export const Route = createFileRoute("/circle")({
   },
   head: () => ({
     meta: [
-      { title: "Circle — live Mind by Animoca" },
+      { title: "Agent team — AFTERCUT" },
       {
         name: "description",
-        content:
-          "AFTERCUT Director + Circle roles with live hellominds status, cognition, Telegram link.",
-      },
-      { property: "og:title", content: "AFTERCUT Mind Circle" },
-      {
-        property: "og:description",
-        content: "Live Circle and Director status from Builder API.",
+        content: "Your lead agent, specialists, connected apps and conversation history.",
       },
     ],
   }),
@@ -33,7 +28,7 @@ function CirclePage() {
   const { session, tenant, mindStatus, mindLoading, refreshMindStatus } = useAuth();
   const kit = tenant?.brandKit;
   const hasKit = Boolean(kit?.name?.trim() || kit?.tone?.trim());
-  const receipts =
+  const teamActivity =
     tenant?.timeline.filter(
       (t) =>
         t.agent.includes("Director") ||
@@ -45,7 +40,6 @@ function CirclePage() {
   const [transcript, setTranscript] = useState<
     Array<{ sender: "mind" | "human"; text: string }>
   >([]);
-  const [alias, setAlias] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
 
@@ -53,7 +47,6 @@ function CirclePage() {
     if (!session?.userId) return;
     void fetchMindTranscript({ data: { userId: session.userId } }).then((res) => {
       if (res.ok) {
-        setAlias(res.alias);
         setTranscript(res.rows.filter((r) => r.text.trim()));
       }
     });
@@ -61,25 +54,25 @@ function CirclePage() {
 
   return (
     <AppShell
-      title="Mind Circle"
-      subtitle="Live hellominds Director — skills, apps, cognition tools, transcript, Circle passes."
+      title="Agent team"
+      subtitle="Lead agent, specialists, connected tools and your conversation history."
       actions={
         <PrimaryButton
           disabled={busy}
           onClick={async () => {
             setBusy(true);
-            setNote("Equipping VoiceTranscribe + YouTube Research Scout…");
+            setNote("Adding transcription and YouTube research tools…");
             const res = await equipCreatorStack();
             setNote(
               res.ok
-                ? `Equipped: ${res.equipped.join(", ") || "(none yet)"}`
-                : res.error,
+                ? `Connected: ${res.equipped.join(", ") || "tools updated"}`
+                : friendlyError(res.error),
             );
             await refreshMindStatus();
             setBusy(false);
           }}
         >
-          Equip creator Bazaar apps
+          Add creator tools
         </PrimaryButton>
       }
     >
@@ -93,27 +86,21 @@ function CirclePage() {
         <div className="flex items-start gap-3">
           <Radio className="mt-0.5 h-4 w-4 shrink-0" />
           <div>
-            <p className="text-sm font-medium">Live Director</p>
+            <p className="text-sm font-medium">Lead agent</p>
             {mindLoading && !mindStatus ? (
               <p className="mt-1 text-xs text-muted-foreground">Connecting…</p>
             ) : mindStatus?.ok ? (
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                {mindStatus.mindName} · id {mindStatus.mindId.slice(0, 8)}… · cognition{" "}
-                {mindStatus.cognition != null ? mindStatus.cognition.toFixed(1) : "—"} · Telegram{" "}
-                {mindStatus.hasTelegram
-                  ? `linked${mindStatus.telegramBotId ? ` · bot ${mindStatus.telegramBotId}` : ""}`
-                  : "not linked"}{" "}
-                · {mindStatus.isEnabled ? "enabled" : "disabled"}
-                {mindStatus.species ? ` · ${mindStatus.species}` : ""}
-                {mindStatus.walletAddress
-                  ? ` · wallet ${mindStatus.walletAddress.slice(0, 8)}…`
+                {mindLabel(mindStatus.mindName)}
+                {mindStatus.cognition != null
+                  ? ` · ${Math.round(mindStatus.cognition)} credits remaining`
                   : ""}
-                {mindStatus.email ? ` · ${mindStatus.email}` : ""} ·{" "}
-                {mindStatus.conversationCount} conversations
+                {mindStatus.hasTelegram ? " · Telegram connected" : ""}
+                {mindStatus.isEnabled ? " · Active" : " · Paused"}
               </p>
             ) : (
               <p className="mt-1 text-xs text-red-300/90">
-                {mindStatus?.error ?? "Director not connected"}
+                {friendlyError(mindStatus?.error ?? "Not connected")}
               </p>
             )}
           </div>
@@ -124,26 +111,30 @@ function CirclePage() {
         <div className="mb-4 grid gap-4 sm:grid-cols-3">
           <GlassCard>
             <div className="flex items-center gap-2 text-sm font-medium">
-              <Wrench className="h-4 w-4" /> Equipped skills
+              <Wrench className="h-4 w-4" /> Skills
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              {mindStatus.skills.length ? mindStatus.skills.join(" · ") : "None"}
+              {mindStatus.skills.length ? mindStatus.skills.join(" · ") : "None installed"}
             </p>
           </GlassCard>
           <GlassCard>
             <div className="flex items-center gap-2 text-sm font-medium">
-              <Wrench className="h-4 w-4" /> Equipped apps
+              <Wrench className="h-4 w-4" /> Connected apps
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              {mindStatus.apps.length ? mindStatus.apps.join(" · ") : "None — equip creator stack"}
+              {mindStatus.apps.length
+                ? mindStatus.apps.join(" · ")
+                : "Tap Add creator tools to connect transcription and research"}
             </p>
           </GlassCard>
           <GlassCard>
             <div className="flex items-center gap-2 text-sm font-medium">
-              <Brain className="h-4 w-4" /> Tools (day)
+              <Brain className="h-4 w-4" /> Usage today
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              {mindStatus.toolsUsed.length ? mindStatus.toolsUsed.join(" · ") : "—"}
+              {mindStatus.toolsUsed.length
+                ? mindStatus.toolsUsed.map(formatToolUsage).join(" · ")
+                : "—"}
             </p>
           </GlassCard>
         </div>
@@ -153,24 +144,11 @@ function CirclePage() {
         <div className="flex items-start gap-3">
           <Users className="mt-0.5 h-4 w-4 shrink-0" />
           <div>
-            <p className="text-sm font-medium">Soul kit + hellominds Circle (humans)</p>
+            <p className="text-sm font-medium">Brand memory</p>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
               {hasKit
-                ? `Kit “${kit?.name || "untitled"}” · tone “${kit?.tone || "—"}” · ${tenant?.shipLedger.length ?? 0} ship receipt(s).`
-                : "Soul empty — open Brand kit and Save + sync Soul."}
-            </p>
-            {mindStatus?.ok && mindStatus.circleHumans.length > 0 ? (
-              <p className="mt-2 text-xs text-muted-foreground">
-                Platform Circle:{" "}
-                {mindStatus.circleHumans
-                  .map((h) => `${h.email || h.name || "member"}${h.steward ? " (steward)" : ""}`)
-                  .join(" · ")}
-              </p>
-            ) : null}
-            <p className="mt-2 text-[11px] text-muted-foreground">
-              Note: Builder Circle API adds human collaborators by email — specialist HOOKsmith /
-              PLATFORMFIT / QC roles run as Director passes (receipts below), which the jam allows
-              for single-agent architectures.
+                ? `“${kit?.name || "Your brand"}” · ${tenant?.shipLedger.length ?? 0} published post${(tenant?.shipLedger.length ?? 0) === 1 ? "" : "s"} in history`
+                : "Not set up yet — save your brand voice first."}
             </p>
           </div>
         </div>
@@ -178,16 +156,14 @@ function CirclePage() {
 
       <GlassCard className="mb-4">
         <div className="flex items-center gap-2 text-sm font-semibold">
-          <MessageSquare className="h-4 w-4" /> Live Mind transcript
+          <MessageSquare className="h-4 w-4" /> Conversation history
         </div>
         <p className="mt-1 text-[11px] text-muted-foreground">
-          Persistence from Builder{" "}
-          <code className="text-foreground/80">getHistory</code>
-          {alias ? ` · alias ${alias}` : ""} — judges can see continuity across sessions.
+          What you and your agent have said — persists across sessions.
         </p>
         {transcript.length === 0 ? (
           <p className="mt-3 text-xs text-muted-foreground">
-            Empty for this tenant — sync Soul or atomize to create Mind messages.
+            No messages yet. Save your brand voice or generate drafts to start.
           </p>
         ) : (
           <ul className="mt-3 max-h-64 space-y-2 overflow-y-auto">
@@ -196,7 +172,9 @@ function CirclePage() {
                 key={`${r.sender}-${i}`}
                 className="border-t border-white/10 pt-2 text-xs first:border-0 first:pt-0"
               >
-                <span className="uppercase tracking-wide text-muted-foreground">{r.sender}</span>
+                <span className="uppercase tracking-wide text-muted-foreground">
+                  {r.sender === "mind" ? "Agent" : "You"}
+                </span>
                 <p className="mt-0.5 leading-relaxed text-foreground/90">{r.text}</p>
               </li>
             ))}
@@ -204,52 +182,33 @@ function CirclePage() {
         )}
       </GlassCard>
 
-      {mindStatus?.ok && mindStatus.minds.length > 0 ? (
-        <GlassCard className="mb-4">
-          <p className="text-sm font-semibold">Builder account Minds</p>
-          <ul className="mt-3 space-y-2 text-xs">
-            {mindStatus.minds.map((m) => (
-              <li
-                key={m.mindId}
-                className="flex justify-between gap-2 border-t border-white/10 pt-2 first:border-0 first:pt-0"
-              >
-                <span>{m.name || m.mindId.slice(0, 8)}</span>
-                <span className="text-muted-foreground">
-                  {m.hasTelegram ? "Telegram on" : "Telegram off"}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </GlassCard>
-      ) : null}
-
       <div className="grid gap-4 sm:grid-cols-2">
         {circle.map((m) => (
           <GlassCard key={m.name}>
             <div className="flex items-center gap-2">
               <Brain className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm font-semibold">{m.name}</p>
+              <p className="text-sm font-semibold">{m.displayName}</p>
             </div>
             <p className="mt-2 text-[11px] uppercase tracking-wide text-muted-foreground">
               {m.role}
             </p>
             <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{m.duty}</p>
             <p className="mt-4 text-[11px] text-muted-foreground">
-              Studio receipts: {tenant?.timeline.filter((t) => t.agent === m.name).length ?? 0}
+              Recent updates: {tenant?.timeline.filter((t) => t.agent === m.name).length ?? 0}
             </p>
           </GlassCard>
         ))}
       </div>
 
       <GlassCard className="mt-4">
-        <p className="text-sm font-semibold">Recent Circle activity</p>
-        {receipts.length === 0 ? (
+        <p className="text-sm font-semibold">Recent team activity</p>
+        {teamActivity.length === 0 ? (
           <p className="mt-3 text-xs text-muted-foreground">
-            No receipts yet — sync kit + live atomize + leash.
+            No activity yet — import content to see your specialists at work.
           </p>
         ) : (
           <ul className="mt-3 space-y-2">
-            {[...receipts]
+            {[...teamActivity]
               .reverse()
               .slice(0, 8)
               .map((r) => (
@@ -258,7 +217,7 @@ function CirclePage() {
                   className="border-t border-white/10 pt-2 text-xs first:border-0 first:pt-0"
                 >
                   <span className="text-muted-foreground">
-                    {r.day} · {r.agent}
+                    {phaseLabel(r.day)} · {agentLabel(r.agent)}
                   </span>
                   <p className="mt-0.5 font-medium">{r.title}</p>
                 </li>

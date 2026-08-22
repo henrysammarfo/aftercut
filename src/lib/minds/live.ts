@@ -51,7 +51,7 @@ export const fetchMindStatus = createServerFn({ method: "GET" }).handler(
       return {
         ok: false,
         connected: false,
-        error: "MINDS_BUILDER_API_KEY not set — add Builder key in aftercut/.env.local",
+        error: "Your agent is not connected yet. Check workspace settings or try again later.",
       };
     }
     try {
@@ -232,10 +232,10 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
   > => {
     const data = payload<LiveAtomizeInput>(ctx);
     if (!data?.userId || !data.kit || !data.text?.trim()) {
-      return { ok: false, error: "Missing atomize payload." };
+      return { ok: false, error: "Something went wrong — try generating again." };
     }
     if (data.kit.name.trim().length < 2 || data.kit.tone.trim().length < 3) {
-      return { ok: false, error: "Brand kit incomplete before live atomize." };
+      return { ok: false, error: "Complete your brand voice before generating drafts." };
     }
 
     const trends = await fetchCreatorTrends({
@@ -283,7 +283,7 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
     } catch (e) {
       return {
         ok: false,
-        error: `Mind replied but JSON parse failed: ${e instanceof Error ? e.message : String(e)}. Excerpt: ${res.replyText.slice(0, 160)}`,
+        error: "Your agent returned an unexpected format. Try generating again.",
       };
     }
   },

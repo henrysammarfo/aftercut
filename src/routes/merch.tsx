@@ -76,7 +76,7 @@ function Merch() {
           <h2 className="text-sm font-semibold">Type</h2>
           <p className="mt-4 text-2xl font-semibold tracking-tight">Geist — everything</p>
           <p className="mt-3 text-2xl" style={{ fontFamily: "'Silkscreen', cursive" }}>
-            Day 0 — Silkscreen for numerals
+            Silkscreen — accent numerals
           </p>
           <p className="mt-4 text-xs text-muted-foreground">
             Wordmark is always lowercase. Never stretch, never outline, never rotate the mark.

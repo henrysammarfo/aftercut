@@ -132,13 +132,13 @@ export function atomizeText(input: {
     return {
       ok: false,
       error: "KIT_INCOMPLETE",
-      message: "Day 0 kit incomplete — set brand name (2+ chars) and tone (3+ chars) first.",
+      message: "Complete your brand voice first — add a name and tone.",
     };
   }
 
   const text = input.text.trim();
   if (!text) {
-    return { ok: false, error: "EMPTY_TEXT", message: "Ingest text is empty." };
+    return { ok: false, error: "EMPTY_TEXT", message: "Paste some content first." };
   }
 
   const beats = splitBeats(text);
@@ -146,7 +146,7 @@ export function atomizeText(input: {
     return {
       ok: false,
       error: "TOO_SHORT",
-      message: "Need denser long-form (more sentences or paragraphs) to atomize.",
+      message: "Add more content — we need full sentences or paragraphs to work with.",
     };
   }
 

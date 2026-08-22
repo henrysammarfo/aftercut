@@ -42,7 +42,7 @@ function LoginPage() {
         </Link>
         <h1 className="text-center text-2xl font-semibold tracking-tight">Welcome back</h1>
         <p className="mt-2 text-center text-sm text-muted-foreground">
-          Offline Studio Soul for this account — browser tenant only.
+          Sign in to your studio — brand voice, drafts and history stay on this device.
         </p>
         <form
           className="mt-8 space-y-4"

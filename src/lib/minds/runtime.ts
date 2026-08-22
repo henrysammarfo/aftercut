@@ -149,13 +149,13 @@ export async function talkToDirector(input: {
       return {
         ok: false,
         error:
-          "Mind reply timed out. Check cognition balance and Telegram linkage on hellominds.",
+          "Your agent took too long to respond. Check your credits and try again.",
       };
     }
 
     const replyText = (outcome.reply.messageText ?? "").trim();
     if (!replyText) {
-      return { ok: false, error: "Mind returned empty reply text." };
+      return { ok: false, error: "Your agent returned an empty response. Try again." };
     }
 
     return {

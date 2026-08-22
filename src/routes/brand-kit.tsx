@@ -4,6 +4,7 @@ import { AppShell, GlassCard, PrimaryButton } from "@/components/app/AppShell";
 import { emptyBrandKit, platforms, platformLabel, type BrandKit } from "@/lib/aftercut-data";
 import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
+import { friendlyError } from "@/lib/display";
 import { Ban, Quote, Check } from "lucide-react";
 
 export const Route = createFileRoute("/brand-kit")({
@@ -12,16 +13,15 @@ export const Route = createFileRoute("/brand-kit")({
   },
   head: () => ({
     meta: [
-      { title: "Brand kit — Day 0 Soul (live Mind)" },
+      { title: "Brand voice — AFTERCUT" },
       {
         name: "description",
-        content:
-          "Tone, examples, CTAs and do-not-say — synced to live AFTERCUT Director Soul on hellominds.",
+        content: "Tone, examples, CTAs and banned phrases — saved to your agent's memory.",
       },
-      { property: "og:title", content: "AFTERCUT Brand kit" },
+      { property: "og:title", content: "AFTERCUT Brand voice" },
       {
         property: "og:description",
-        content: "Store DNA in Studio then sync Soul to live Director Mind.",
+        content: "Teach your agent how you sound before importing content.",
       },
     ],
   }),
@@ -62,8 +62,8 @@ function BrandKitPage() {
 
   return (
     <AppShell
-      title="Brand kit"
-      subtitle="Day 0 · saves locally then syncs Soul to live AFTERCUT Director Mind (hellominds)."
+      title="Brand voice"
+      subtitle="Tone, examples and banned phrases — saved to your agent's memory."
       actions={
         <div className="flex flex-wrap gap-2">
           {saved ? (
@@ -72,14 +72,14 @@ function BrandKitPage() {
               className="rounded-full px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
               style={{ background: "linear-gradient(to bottom, #2B2B2B, #101010)" }}
             >
-              Open Ingest →
+              Open Import →
             </Link>
           ) : null}
           <PrimaryButton
             disabled={busy}
             onClick={async () => {
               setBusy(true);
-              setHint("Syncing Soul to live Director…");
+              setHint("Saving to your agent…");
               const filledExamples = kit.examples.filter((e) => e.trim()).length;
               const res = await saveBrandKit(kit);
               setBusy(false);
@@ -92,22 +92,20 @@ function BrandKitPage() {
               setErr(null);
               setSaved(true);
               if (filledExamples === 0 || kit.ctas.length === 0) {
-                setHint(
-                  "Soul synced live. Tip: add ≥1 example + CTA for sharper cuts.",
-                );
+                setHint("Saved. Tip: add an example post and a CTA for sharper drafts.");
               } else {
-                setHint("Soul synced to live Mind. Next: paste long-form on Ingest.");
+                setHint("Saved. Next: import long-form content.");
               }
             }}
           >
-            {busy ? "Syncing…" : saved ? "Synced to Soul" : "Save + sync Soul"}
+            {busy ? "Saving…" : saved ? "Saved" : "Save brand voice"}
           </PrimaryButton>
         </div>
       }
     >
       {err ? (
         <p className="mb-4 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-2 text-xs text-red-200/90">
-          {err}
+          {friendlyError(err)}
         </p>
       ) : null}
       {hint ? (
