@@ -14,6 +14,7 @@ import {
   signUp as storeSignUp,
   type Session,
 } from "./auth-store";
+import { authClient } from "./auth-client";
 import {
   addIngest as storeAddIngest,
   applyLiveAtomize,
@@ -31,6 +32,22 @@ import {
   tenantHealth,
   type TenantState,
 } from "./tenant-store";
+import {
+  cloudAddIngest,
+  cloudApplyLiveAtomize,
+  cloudApplyLiveProactive,
+  cloudApproveDraft,
+  cloudDenyPublishAll,
+  cloudExportTenant,
+  cloudImportTenant,
+  cloudMarkSoulSynced,
+  cloudRejectDraft,
+  cloudSaveBrandKit,
+  cloudSetCognitionNote,
+  cloudSetDraftStage,
+  fetchCloudTenant,
+  fetchProductConfig,
+} from "./tenant-cloud";
 import type { BrandKit, Stage } from "./aftercut-data";
 import { friendlyError } from "./display";
 import {
@@ -41,6 +58,7 @@ import {
   syncSoulLive,
   type LiveStatusResult,
 } from "./minds/live";
+import { setBridgeSession } from "./session-bridge";
 
 type OpOk = { ok: true };
 type OpFail = { ok: false; error: string };
@@ -50,35 +68,35 @@ type AuthContextValue = {
   ready: boolean;
   session: Session | null;
   tenant: TenantState | null;
-  productMode: "live";
+  productMode: "live" | "cloud";
+  cloudStorage: boolean;
   mindStatus: LiveStatusResult | null;
   mindLoading: boolean;
   health: ReturnType<typeof tenantHealth> | null;
   refreshMindStatus: () => Promise<void>;
-  signIn: (email: string, password: string) => { ok: boolean; error?: string };
+  signIn: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   signUp: (input: {
     email: string;
     password: string;
     name: string;
-  }) => { ok: boolean; error?: string };
-  signOut: () => void;
-  refreshTenant: () => void;
+  }) => Promise<{ ok: boolean; error?: string }>;
+  signOut: () => Promise<void>;
+  refreshTenant: () => Promise<void>;
   saveBrandKit: (kit: BrandKit) => AsyncOp;
   setCognitionNote: (note: string) => void;
   addIngest: (input: {
     title?: string;
     text: string;
     source?: string;
-  }) => OpOk | OpFail;
+  }) => OpOk | OpFail | Promise<OpOk | OpFail>;
   atomizeIngest: (ingestId?: string) => AsyncOp;
-  setDraftStage: (draftId: string, stage: Stage) => OpOk | OpFail;
-  approveDraft: (draftId: string) => OpOk | OpFail;
-  rejectDraft: (draftId: string) => OpOk | OpFail;
+  setDraftStage: (draftId: string, stage: Stage) => OpOk | OpFail | Promise<OpOk | OpFail>;
+  approveDraft: (draftId: string) => OpOk | OpFail | Promise<OpOk | OpFail>;
+  rejectDraft: (draftId: string) => OpOk | OpFail | Promise<OpOk | OpFail>;
   denyPublishAll: () => Promise<{ detail: string }>;
-  /** Live Day-2 proactive from Director Mind (not a local rewrite). */
   requestProactiveFollowup: () => AsyncOp;
-  exportTenant: () => string | null;
-  importTenant: (json: string) => OpOk | OpFail;
+  exportTenant: () => Promise<string | null>;
+  importTenant: (json: string) => OpOk | OpFail | Promise<OpOk | OpFail>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -89,6 +107,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [tenant, setTenant] = useState<TenantState | null>(null);
   const [mindStatus, setMindStatus] = useState<LiveStatusResult | null>(null);
   const [mindLoading, setMindLoading] = useState(false);
+  const [cloudStorage, setCloudStorage] = useState(false);
+
+  const cloudSession = authClient.useSession();
 
   const refreshMindStatus = useCallback(async () => {
     setMindLoading(true);
@@ -107,11 +128,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    void fetchProductConfig().then((c) => setCloudStorage(c.cloudAuth && c.cloudStorage));
+  }, []);
+
+  const loadTenantForUser = useCallback(
+    async (userId: string) => {
+      if (cloudStorage) {
+        const t = await fetchCloudTenant();
+        setTenant(t.state);
+        return t.state;
+      }
+      const state = loadTenant(userId);
+      setTenant(state);
+      return state;
+    },
+    [cloudStorage],
+  );
+
+  useEffect(() => {
+    if (cloudStorage) {
+      if (cloudSession.isPending) return;
+      const user = cloudSession.data?.user;
+      if (user) {
+        const s: Session = { userId: user.id, email: user.email, name: user.name };
+        setSession(s);
+        setBridgeSession(s);
+        void loadTenantForUser(user.id).finally(() => setReady(true));
+      } else {
+        setSession(null);
+        setBridgeSession(null);
+        setTenant(null);
+        setReady(true);
+      }
+      return;
+    }
     const s = getSession();
     setSession(s);
+    setBridgeSession(s);
     setTenant(s ? loadTenant(s.userId) : null);
     setReady(true);
-  }, []);
+  }, [cloudStorage, cloudSession.isPending, cloudSession.data, loadTenantForUser]);
 
   useEffect(() => {
     if (!ready) return;
@@ -120,48 +176,73 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(id);
   }, [ready, refreshMindStatus]);
 
-  const refreshTenant = useCallback(() => {
+  const refreshTenant = useCallback(async () => {
     if (!session) {
       setTenant(null);
       return;
     }
-    setTenant(loadTenant(session.userId));
-  }, [session]);
+    await loadTenantForUser(session.userId);
+  }, [session, loadTenantForUser]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       ready,
       session,
       tenant,
-      productMode: "live",
+      productMode: cloudStorage ? "cloud" : "live",
+      cloudStorage,
       mindStatus,
       mindLoading,
       health: tenant ? tenantHealth(tenant) : null,
       refreshMindStatus,
-      signIn: (email, password) => {
+      signIn: async (email, password) => {
+        if (cloudStorage) {
+          const res = await authClient.signIn.email({ email, password });
+          if (res.error) {
+            return { ok: false, error: friendlyError(res.error.message ?? "Sign in failed") };
+          }
+          return { ok: true };
+        }
         const res = storeSignIn({ email, password });
         if (!res.ok) return { ok: false, error: friendlyError(res.error) };
         setSession(res.session);
+        setBridgeSession(res.session);
         setTenant(loadTenant(res.session.userId));
         return { ok: true };
       },
-      signUp: (input) => {
+      signUp: async (input) => {
+        if (cloudStorage) {
+          const res = await authClient.signUp.email({
+            email: input.email,
+            password: input.password,
+            name: input.name,
+          });
+          if (res.error) {
+            return { ok: false, error: friendlyError(res.error.message ?? "Sign up failed") };
+          }
+          return { ok: true };
+        }
         const res = storeSignUp(input);
         if (!res.ok) return { ok: false, error: friendlyError(res.error) };
         setSession(res.session);
+        setBridgeSession(res.session);
         setTenant(loadTenant(res.session.userId));
         return { ok: true };
       },
-      signOut: () => {
-        storeSignOut();
+      signOut: async () => {
+        if (cloudStorage) await authClient.signOut();
+        else storeSignOut();
         setSession(null);
+        setBridgeSession(null);
         setTenant(null);
       },
       refreshTenant,
       saveBrandKit: async (kit) => {
         if (!session) return { ok: false, error: "Sign in first." };
-        const res = storeSaveBrandKit(session.userId, kit);
-        if (!res.ok) return { ok: false, error: friendlyError(res.message) };
+        const res = cloudStorage
+          ? await cloudSaveBrandKit({ data: { kit } })
+          : storeSaveBrandKit(session.userId, kit);
+        if (!res.ok) return { ok: false, error: friendlyError("message" in res ? res.message : "Save failed") };
         setTenant(res.state);
 
         const live = await syncSoulLive({
@@ -174,19 +255,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!live.ok) {
           return {
             ok: false,
-            error: `Saved on this device but your agent could not sync: ${friendlyError(live.error)}`,
+            error: `Saved but your agent could not sync: ${friendlyError(live.error)}`,
           };
         }
-        setTenant(markSoulSyncedLive(session.userId, live.mindName, live.confirm));
+        if (cloudStorage) {
+          const synced = await cloudMarkSoulSynced({
+            data: { mindName: live.mindName, confirm: live.confirm },
+          });
+          setTenant(synced.state);
+        } else {
+          setTenant(markSoulSyncedLive(session.userId, live.mindName, live.confirm));
+        }
         void refreshMindStatus();
         return { ok: true };
       },
       setCognitionNote: (note) => {
         if (!session) return;
-        setTenant(storeSetCognitionNote(session.userId, note));
+        if (cloudStorage) {
+          void cloudSetCognitionNote({ data: { note } }).then((r) => setTenant(r.state));
+        } else {
+          setTenant(storeSetCognitionNote(session.userId, note));
+        }
       },
-      addIngest: (input) => {
+      addIngest: async (input) => {
         if (!session) return { ok: false, error: "Sign in first." };
+        if (cloudStorage) {
+          const res = await cloudAddIngest({ data: input });
+          if (!res.ok) return { ok: false, error: friendlyError(res.message) };
+          setTenant(res.state);
+          return { ok: true };
+        }
         const res = storeAddIngest(session.userId, input);
         if (!res.ok) return { ok: false, error: friendlyError(res.message) };
         setTenant(res.state);
@@ -194,7 +292,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       atomizeIngest: async (ingestId) => {
         if (!session) return { ok: false, error: "Sign in first." };
-        const state = loadTenant(session.userId);
+        const state = tenant ?? (cloudStorage ? (await fetchCloudTenant()).state : loadTenant(session.userId));
         const target =
           (ingestId ? state.ingests.find((i) => i.id === ingestId) : null) ??
           state.ingests.find((i) => i.status === "queued") ??
@@ -216,52 +314,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         if (!live.ok) return { ok: false, error: friendlyError(live.error) };
 
-        setTenant(
-          applyLiveAtomize(session.userId, {
-            ingestId: target.id,
-            beatCount: live.beatCount,
-            mindName: live.mindName,
-            mindId: live.mindId,
-            drafts: live.drafts,
-            circle: live.circle,
-            trendsUsed: live.trendsUsed,
-          }),
-        );
+        const atomizePayload = {
+          ingestId: target.id,
+          beatCount: live.beatCount,
+          mindName: live.mindName,
+          mindId: live.mindId,
+          drafts: live.drafts,
+          circle: live.circle,
+          trendsUsed: live.trendsUsed,
+        };
+
+        if (cloudStorage) {
+          const updated = await cloudApplyLiveAtomize({ data: atomizePayload });
+          setTenant(updated.state);
+        } else {
+          setTenant(applyLiveAtomize(session.userId, atomizePayload));
+        }
         void refreshMindStatus();
         return { ok: true };
       },
-      setDraftStage: (draftId, stage) => {
+      setDraftStage: async (draftId, stage) => {
         if (!session) return { ok: false, error: "Sign in first." };
-        const res = storeSetDraftStage(session.userId, draftId, stage);
+        const res = cloudStorage
+          ? await cloudSetDraftStage({ data: { draftId, stage } })
+          : storeSetDraftStage(session.userId, draftId, stage);
         setTenant(res.state);
         if (!res.ok) return { ok: false, error: friendlyError(res.error) };
         return { ok: true };
       },
-      approveDraft: (draftId) => {
+      approveDraft: async (draftId) => {
         if (!session) return { ok: false, error: "Sign in first." };
-        const res = storeApproveDraft(session.userId, draftId);
+        const res = cloudStorage
+          ? await cloudApproveDraft({ data: { draftId } })
+          : storeApproveDraft(session.userId, draftId);
         setTenant(res.state);
         if (!res.ok) return { ok: false, error: friendlyError(res.error) };
         return { ok: true };
       },
-      rejectDraft: (draftId) => {
+      rejectDraft: async (draftId) => {
         if (!session) return { ok: false, error: "Sign in first." };
-        const res = storeRejectDraft(session.userId, draftId);
+        const res = cloudStorage
+          ? await cloudRejectDraft({ data: { draftId } })
+          : storeRejectDraft(session.userId, draftId);
         setTenant(res.state);
         if (!res.ok) return { ok: false, error: friendlyError(res.error) };
         return { ok: true };
       },
       denyPublishAll: async () => {
         if (!session) return { detail: "Sign in first." };
-        const { state, detail } = storeDenyPublishAll(session.userId);
-        setTenant(state);
-        // Best-effort notify live Mind (leash memory)
-        void notifyLeashLive({ data: { userId: session.userId, detail } });
-        return { detail };
+        const out = cloudStorage
+          ? await cloudDenyPublishAll({ data: {} })
+          : storeDenyPublishAll(session.userId);
+        setTenant(out.state);
+        void notifyLeashLive({ data: { userId: session.userId, detail: out.detail } });
+        return { detail: out.detail };
       },
       requestProactiveFollowup: async () => {
         if (!session) return { ok: false, error: "Sign in first." };
-        const state = loadTenant(session.userId);
+        const state = tenant ?? loadTenant(session.userId);
         if (!state.brandKit.name.trim()) {
           return { ok: false, error: "Save your brand voice first." };
         }
@@ -282,26 +392,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           },
         });
         if (!live.ok) return { ok: false, error: friendlyError(live.error) };
-        setTenant(
-          applyLiveProactive(session.userId, {
-            title: live.title,
-            hook: live.hook,
-            platform: live.platform,
-            agent: live.agent,
-            mindName: live.mindName,
-            mindId: live.mindId,
-          }),
-        );
+
+        const proactivePayload = {
+          title: live.title,
+          hook: live.hook,
+          platform: live.platform,
+          agent: live.agent,
+          mindName: live.mindName,
+          mindId: live.mindId,
+        };
+
+        if (cloudStorage) {
+          const updated = await cloudApplyLiveProactive({ data: proactivePayload });
+          setTenant(updated.state);
+        } else {
+          setTenant(applyLiveProactive(session.userId, proactivePayload));
+        }
         void refreshMindStatus();
         return { ok: true };
       },
-      exportTenant: () => {
+      exportTenant: async () => {
         if (!session) return null;
+        if (cloudStorage) {
+          const res = await cloudExportTenant();
+          return res.json;
+        }
         return storeExport(session.userId);
       },
-      importTenant: (json) => {
+      importTenant: async (json) => {
         if (!session) return { ok: false, error: "Sign in first." };
-        const res = storeImport(session.userId, json);
+        const res = cloudStorage
+          ? await cloudImportTenant({ data: { json } })
+          : storeImport(session.userId, json);
         if (!res.ok) return { ok: false, error: friendlyError(res.message) };
         setTenant(res.state);
         return { ok: true };
@@ -311,6 +433,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ready,
       session,
       tenant,
+      cloudStorage,
       mindStatus,
       mindLoading,
       refreshTenant,

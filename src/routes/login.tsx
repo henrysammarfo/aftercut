@@ -46,9 +46,9 @@ function LoginPage() {
         </p>
         <form
           className="mt-8 space-y-4"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
-            const res = signIn(email, password);
+            const res = await signIn(email, password);
             if (!res.ok) setError(res.error || "Sign in failed");
             else void navigate({ to: safeNext(next) });
           }}
@@ -84,6 +84,11 @@ function LoginPage() {
           </button>
         </form>
         <p className="mt-6 text-center text-sm text-muted-foreground">
+          <Link to="/forgot-password" className="underline">
+            Forgot password?
+          </Link>
+        </p>
+        <p className="mt-4 text-center text-sm text-muted-foreground">
           No account?{" "}
           <Link to="/signup" className="font-medium text-foreground underline">
             Sign up

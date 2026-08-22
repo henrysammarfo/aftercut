@@ -37,9 +37,9 @@ function SignupPage() {
         </p>
         <form
           className="mt-8 space-y-4"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
-            const res = signUp({ name, email, password });
+            const res = await signUp({ name, email, password });
             if (!res.ok) setError(res.error || "Sign up failed");
             else void navigate({ to: "/onboarding" });
           }}

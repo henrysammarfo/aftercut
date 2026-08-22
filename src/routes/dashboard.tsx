@@ -223,8 +223,8 @@ function Dashboard() {
               <button
                 type="button"
                 className="rounded-full bg-white/10 px-3 py-1.5 text-xs hover:bg-white/15"
-                onClick={() => {
-                  const json = exportTenant();
+                onClick={async () => {
+                  const json = await exportTenant();
                   if (!json) {
                     flash("Nothing to export.", true);
                     return;

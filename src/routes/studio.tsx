@@ -1,12 +1,24 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppShell, GlassCard, PrimaryButton } from "@/components/app/AppShell";
-import { stages, platformLabel, type Stage } from "@/lib/aftercut-data";
+import { stages, platformLabel, type Draft, type Stage } from "@/lib/aftercut-data";
 import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
 import { buildShipPack } from "@/lib/ship-pack";
-import { agentLabel } from "@/lib/display";
-import { Check, X, Sparkles, ShieldAlert, Bell, Copy, Download } from "lucide-react";
+import { agentLabel, friendlyError } from "@/lib/display";
+import { scheduleToGoogleCalendar, fetchConnectionStatus } from "@/lib/social/calendar";
+import { publishToLinkedIn, publishToX } from "@/lib/social/publish";
+import {
+  Check,
+  X,
+  Sparkles,
+  ShieldAlert,
+  Bell,
+  Copy,
+  Download,
+  Calendar,
+  Send,
+} from "lucide-react";
 
 export const Route = createFileRoute("/studio")({
   beforeLoad: () => {
@@ -30,9 +42,16 @@ export const Route = createFileRoute("/studio")({
   component: Studio,
 });
 
+type Connections = { x: boolean; linkedin: boolean; google: boolean };
+
+function publishText(d: Draft): string {
+  return `${d.title}\n\n${d.hook}`.trim();
+}
+
 function Studio() {
   const {
     tenant,
+    cloudStorage,
     setDraftStage,
     approveDraft,
     rejectDraft,
@@ -42,15 +61,94 @@ function Studio() {
   const [denied, setDenied] = useState<string | null>(null);
   const [shipNote, setShipNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [busyDraft, setBusyDraft] = useState<string | null>(null);
+  const [connections, setConnections] = useState<Connections | null>(null);
   const items = tenant?.drafts ?? [];
 
-  const move = (id: string, stage: Stage) => {
-    const res = setDraftStage(id, stage);
+  useEffect(() => {
+    if (!cloudStorage) return;
+    void fetchConnectionStatus()
+      .then(setConnections)
+      .catch(() => setConnections(null));
+  }, [cloudStorage]);
+
+  const flash = (msg: string) => setShipNote(msg);
+
+  const move = async (id: string, stage: Stage) => {
+    const res = await Promise.resolve(setDraftStage(id, stage));
     if (!res.ok) {
       setShipNote(res.error);
       return;
     }
     setShipNote(null);
+  };
+
+  const markPublished = async (draftId: string) => {
+    const res = await Promise.resolve(setDraftStage(draftId, "shipped"));
+    if (!res.ok) setShipNote(res.error);
+    else flash("Marked as published.");
+  };
+
+  const publishDraft = async (d: Draft) => {
+    if (!cloudStorage) {
+      flash("Publishing requires cloud mode — set DATABASE_URL on your host. See docs/KEYS_SETUP.md");
+      return;
+    }
+    setBusyDraft(d.id);
+    const text = publishText(d);
+    try {
+      let res: { ok: boolean; error?: string; id?: string; htmlLink?: string };
+      if (d.platform === "x") {
+        res = await publishToX({ data: { text, draftId: d.id } });
+      } else if (d.platform === "linkedin") {
+        res = await publishToLinkedIn({ data: { text, draftId: d.id } });
+      } else {
+        flash("Copy captions for Shorts/newsletter — or add to Google Calendar.");
+        setBusyDraft(null);
+        return;
+      }
+      if (!res.ok) {
+        flash(friendlyError(res.error ?? "Publish failed"));
+        setBusyDraft(null);
+        return;
+      }
+      await markPublished(d.id);
+      flash(`Published to ${platformLabel[d.platform]}.`);
+    } catch (e) {
+      flash(friendlyError(e instanceof Error ? e.message : String(e)));
+    }
+    setBusyDraft(null);
+  };
+
+  const addToCalendar = async (d: Draft, startIso?: string) => {
+    if (!cloudStorage) {
+      flash("Calendar requires cloud mode — connect Google in Settings.");
+      return;
+    }
+    setBusyDraft(d.id);
+    try {
+      const res = await scheduleToGoogleCalendar({
+        data: {
+          title: d.title,
+          description: publishText(d),
+          draftId: d.id,
+          startIso,
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        },
+      });
+      if (!res.ok) {
+        flash(friendlyError(res.error ?? "Calendar failed"));
+      } else {
+        flash(
+          res.htmlLink
+            ? `Added to Google Calendar — open in your calendar app.`
+            : "Added to Google Calendar.",
+        );
+      }
+    } catch (e) {
+      flash(friendlyError(e instanceof Error ? e.message : String(e)));
+    }
+    setBusyDraft(null);
   };
 
   const pack = () =>
@@ -62,9 +160,9 @@ function Studio() {
   const copyPack = async () => {
     try {
       await navigator.clipboard.writeText(pack());
-      setShipNote("Copied — paste into CapCut or your native apps.");
+      flash("Copied — paste into CapCut or your native apps.");
     } catch {
-      setShipNote("Clipboard blocked — use Download instead.");
+      flash("Clipboard blocked — use Download instead.");
     }
   };
 
@@ -76,13 +174,27 @@ function Studio() {
     a.download = `aftercut-captions-${Date.now()}.txt`;
     a.click();
     URL.revokeObjectURL(url);
-    setShipNote("Captions downloaded.");
+    flash("Captions downloaded.");
   };
+
+  const connHint =
+    cloudStorage && connections && (!connections.x || !connections.linkedin || !connections.google) ? (
+      <p className="mb-4 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-2 text-xs text-amber-100/90">
+        Connect accounts in{" "}
+        <Link to="/settings" className="underline underline-offset-2">
+          Settings
+        </Link>{" "}
+        to publish to X/LinkedIn or schedule on Google Calendar.{" "}
+        <Link to="/settings" className="underline underline-offset-2">
+          Setup guide →
+        </Link>
+      </p>
+    ) : null;
 
   return (
     <AppShell
       title="Studio"
-      subtitle="Review drafts, approve what to publish, and export captions."
+      subtitle="Review drafts, publish to connected platforms, or schedule on Google Calendar."
       actions={
         <div className="flex flex-wrap gap-2">
           <PrimaryButton disabled={busy || items.length === 0} onClick={() => void copyPack()}>
@@ -97,9 +209,9 @@ function Studio() {
             disabled={busy}
             onClick={async () => {
               setBusy(true);
-              setShipNote("Improving your weakest hook…");
+              flash("Improving your weakest hook…");
               const res = await requestProactiveFollowup();
-              setShipNote(res.ok ? "Updated draft in Needs approval." : res.error);
+              flash(res.ok ? "Updated draft in Needs approval." : res.error ?? "Failed");
               setBusy(false);
             }}
           >
@@ -117,6 +229,7 @@ function Studio() {
         </div>
       }
     >
+      {connHint}
       {denied ? (
         <div className="mb-4 flex items-start gap-3 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3">
           <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
@@ -198,8 +311,8 @@ function Studio() {
                       <div className="mt-3 flex gap-2">
                         <button
                           type="button"
-                          onClick={() => {
-                            const res = approveDraft(d.id);
+                          onClick={async () => {
+                            const res = await Promise.resolve(approveDraft(d.id));
                             if (!res.ok) setShipNote(res.error);
                           }}
                           className="flex flex-1 items-center justify-center gap-1 rounded-full bg-white/10 py-1.5 text-xs hover:bg-white/20"
@@ -209,8 +322,8 @@ function Studio() {
                         <button
                           type="button"
                           title="Send back to drafting"
-                          onClick={() => {
-                            const res = rejectDraft(d.id);
+                          onClick={async () => {
+                            const res = await Promise.resolve(rejectDraft(d.id));
                             if (!res.ok) setShipNote(res.error);
                           }}
                           className="flex items-center justify-center gap-1 rounded-full bg-white/5 px-3 py-1.5 text-xs hover:bg-white/10"
@@ -221,24 +334,60 @@ function Studio() {
                     ) : null}
 
                     {d.stage === "scheduled" ? (
-                      <button
-                        type="button"
-                        onClick={() => move(d.id, "shipped")}
-                        className="mt-3 w-full rounded-full bg-white/10 py-1.5 text-xs hover:bg-white/20"
-                      >
-                        Mark as published
-                      </button>
+                      <div className="mt-3 flex flex-col gap-2">
+                        {(d.platform === "x" || d.platform === "linkedin") && cloudStorage ? (
+                          <button
+                            type="button"
+                            disabled={busyDraft === d.id}
+                            onClick={() => void publishDraft(d)}
+                            className="flex w-full items-center justify-center gap-1 rounded-full bg-white/10 py-1.5 text-xs hover:bg-white/20 disabled:opacity-50"
+                          >
+                            <Send className="h-3.5 w-3.5" />
+                            Publish to {platformLabel[d.platform]}
+                          </button>
+                        ) : null}
+                        {cloudStorage ? (
+                          <button
+                            type="button"
+                            disabled={busyDraft === d.id}
+                            onClick={() => void addToCalendar(d)}
+                            className="flex w-full items-center justify-center gap-1 rounded-full bg-white/10 py-1.5 text-xs hover:bg-white/20 disabled:opacity-50"
+                          >
+                            <Calendar className="h-3.5 w-3.5" />
+                            Add to Google Calendar
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={() => void move(d.id, "shipped")}
+                          className="w-full rounded-full bg-white/5 py-1.5 text-xs hover:bg-white/10"
+                        >
+                          Mark as published
+                        </button>
+                      </div>
                     ) : null}
 
                     {d.stage === "drafting" || d.stage === "ingested" ? (
                       <button
                         type="button"
                         onClick={() =>
-                          move(d.id, d.stage === "ingested" ? "drafting" : "needs-approve")
+                          void move(d.id, d.stage === "ingested" ? "drafting" : "needs-approve")
                         }
                         className="mt-3 w-full rounded-full bg-white/5 py-1.5 text-xs hover:bg-white/10"
                       >
                         {d.stage === "ingested" ? "Start drafting" : "Submit for approval"}
+                      </button>
+                    ) : null}
+
+                    {(d.stage === "needs-approve" || d.stage === "drafting") && cloudStorage ? (
+                      <button
+                        type="button"
+                        disabled={busyDraft === d.id}
+                        onClick={() => void addToCalendar(d)}
+                        className="mt-2 flex w-full items-center justify-center gap-1 rounded-full bg-white/5 py-1.5 text-xs hover:bg-white/10 disabled:opacity-50"
+                      >
+                        <Calendar className="h-3.5 w-3.5" />
+                        Schedule on Calendar
                       </button>
                     ) : null}
                   </GlassCard>
@@ -254,8 +403,8 @@ function Studio() {
           <div>
             <p className="text-sm font-medium">You approve every publish</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Your agent drafts and rewrites — but &ldquo;Publish all now&rdquo; stays blocked until
-              you approve each piece. Duplicate posts are caught automatically.
+              Scheduled drafts can go live on X or LinkedIn (official APIs) or onto your Google
+              Calendar. Bulk &ldquo;Publish all now&rdquo; stays blocked until you approve each piece.
             </p>
           </div>
         </div>

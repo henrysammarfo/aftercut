@@ -11,11 +11,13 @@ import {
   LogOut,
   Users,
   ListChecks,
+  Settings,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/lib/auth";
 import { SetupProgress } from "@/components/app/SetupProgress";
-import { agentLabel, friendlyError, mindLabel } from "@/lib/display";
+import { friendlyError, mindLabel } from "@/lib/display";
+import { cognitionWarningLevel } from "@/lib/minds/retry";
 
 const nav = [
   { to: "/onboarding" as const, label: "Get started", icon: ListChecks },
@@ -25,6 +27,7 @@ const nav = [
   { to: "/studio" as const, label: "Studio", icon: KanbanSquare },
   { to: "/timeline" as const, label: "Activity", icon: History },
   { to: "/circle" as const, label: "Agent team", icon: Users },
+  { to: "/settings" as const, label: "Settings", icon: Settings },
   { to: "/merch" as const, label: "Brand assets", icon: Shirt },
   { to: "/pitch" as const, label: "Pricing", icon: Sparkles },
 ];
@@ -75,6 +78,14 @@ export function AppShell({
           {mindStatus && !mindStatus.ok ? (
             <p className="mt-2 text-[10px] leading-snug text-red-300/90">
               {friendlyError(mindStatus.error ?? "Not connected")}
+            </p>
+          ) : mindStatus?.ok && cognitionWarningLevel(mindStatus.cognition) === "critical" ? (
+            <p className="mt-2 text-[10px] leading-snug text-amber-300/90">
+              Agent credits critically low — top up on hellominds.ai
+            </p>
+          ) : mindStatus?.ok && cognitionWarningLevel(mindStatus.cognition) === "low" ? (
+            <p className="mt-2 text-[10px] leading-snug text-amber-200/80">
+              Agent credits running low
             </p>
           ) : null}
           <nav className="mt-6 flex gap-1 overflow-x-auto lg:mt-10 lg:flex-col lg:overflow-visible">

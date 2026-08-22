@@ -39,6 +39,19 @@ function key(userId: string) {
   return `aftercut_tenant_v2_${userId}`;
 }
 
+/** In-memory tenant for server handlers (paired with Postgres load/save). */
+const serverTenantCache = new Map<string, TenantState>();
+
+export function primeServerTenant(state: TenantState) {
+  serverTenantCache.set(state.userId, state);
+}
+
+export function takeServerTenant(userId: string): TenantState | null {
+  const s = serverTenantCache.get(userId) ?? null;
+  serverTenantCache.delete(userId);
+  return s;
+}
+
 function nowTime(): string {
   return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
 }
@@ -76,7 +89,9 @@ function empty(userId: string): TenantState {
 }
 
 export function loadTenant(userId: string): TenantState {
-  if (typeof window === "undefined") return empty(userId);
+  if (typeof window === "undefined") {
+    return serverTenantCache.get(userId) ?? empty(userId);
+  }
   try {
     // migrate v1 key once
     const v2 = localStorage.getItem(key(userId));
@@ -104,7 +119,11 @@ export function loadTenant(userId: string): TenantState {
 }
 
 export function saveTenant(state: TenantState) {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") {
+    const next = { ...state, updatedAt: new Date().toISOString() };
+    serverTenantCache.set(state.userId, next);
+    return;
+  }
   const next = { ...state, updatedAt: new Date().toISOString() };
   localStorage.setItem(key(state.userId), JSON.stringify(next));
 }

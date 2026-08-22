@@ -48,7 +48,7 @@ npx tsx scripts/minds-smoke.ts
 | Demo film | **open — #1 blocker to win** |
 | DoraHacks apply | **open — after film** |
 | Stripe | **dropped for jam** |
-| Cloud auth / social OAuth / TG webhook | **stretch** (not forbidden) |
+| Cloud auth / social OAuth / TG webhook | **stretch → production batch in repo** (Studio publish + Calendar + `docs/KEYS_SETUP.md`) |
 
 ## Ship ladder (this week — AFTERCUT only)
 

@@ -13,6 +13,7 @@ import {
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { stripMindHtml } from "./parse";
+import { withRetry } from "./retry";
 
 const DIRECTOR_ENV = "MINDS_DIRECTOR_MIND_ID";
 const ALIAS_PREFIX = "aftercut";
@@ -126,47 +127,49 @@ export async function talkToDirector(input: {
   messageText: string;
   timeoutMs?: number;
 }): Promise<MindTalkResult> {
-  try {
-    const client = createLiveMindsClient();
-    const director = await resolveDirectorMind(client);
-    const alias = conversationAlias(input.userId);
-    await client.ensureConversation(alias, director.mindId);
+  return withRetry(
+    async () => {
+      const client = createLiveMindsClient();
+      const director = await resolveDirectorMind(client);
+      const alias = conversationAlias(input.userId);
+      await client.ensureConversation(alias, director.mindId);
 
-    const before = await client.getLatestHistoryFingerprint(alias);
-    await client.sendMessage({
-      alias,
-      messageText: input.messageText,
-    });
+      const before = await client.getLatestHistoryFingerprint(alias);
+      await client.sendMessage({
+        alias,
+        messageText: input.messageText,
+      });
 
-    const outcome = await client.waitForReply({
-      alias,
-      timeoutMs: input.timeoutMs ?? 180_000,
-      afterFingerprint: before,
-      sentMessageText: input.messageText,
-    });
+      const outcome = await client.waitForReply({
+        alias,
+        timeoutMs: input.timeoutMs ?? 180_000,
+        afterFingerprint: before,
+        sentMessageText: input.messageText,
+      });
 
-    if (outcome.timedOut) {
+      if (outcome.timedOut) {
+        return {
+          ok: false,
+          error: "Your agent took too long to respond. Check your credits and try again.",
+        };
+      }
+
+      const replyText = (outcome.reply.messageText ?? "").trim();
+      if (!replyText) {
+        return { ok: false, error: "Your agent returned an empty response. Try again." };
+      }
+
       return {
-        ok: false,
-        error:
-          "Your agent took too long to respond. Check your credits and try again.",
+        ok: true,
+        replyText: stripMindHtml(replyText) || replyText,
+        mindId: director.mindId,
+        mindName: director.name ?? "AFTERCUT Director",
+        alias,
       };
-    }
-
-    const replyText = (outcome.reply.messageText ?? "").trim();
-    if (!replyText) {
-      return { ok: false, error: "Your agent returned an empty response. Try again." };
-    }
-
-    return {
-      ok: true,
-      replyText: stripMindHtml(replyText) || replyText,
-      mindId: director.mindId,
-      mindName: director.name ?? "AFTERCUT Director",
-      alias,
-    };
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return { ok: false, error: msg };
-  }
+    },
+    { label: "talkToDirector", attempts: 2 },
+  ).catch((e) => ({
+    ok: false as const,
+    error: e instanceof Error ? e.message : String(e),
+  }));
 }

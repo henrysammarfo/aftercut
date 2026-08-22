@@ -13,14 +13,18 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as BrandKitRouteImport } from './routes/brand-kit'
 import { Route as CircleRouteImport } from './routes/circle'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as IngestRouteImport } from './routes/ingest'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MerchRouteImport } from './routes/merch'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PitchRouteImport } from './routes/pitch'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as StudioRouteImport } from './routes/studio'
 import { Route as TimelineRouteImport } from './routes/timeline'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiWebhooksTelegramRouteImport } from './routes/api/webhooks/telegram'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +44,11 @@ const CircleRoute = CircleRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IngestRoute = IngestRouteImport.update({
@@ -67,6 +76,11 @@ const PitchRoute = PitchRouteImport.update({
   path: '/pitch',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -82,34 +96,52 @@ const TimelineRoute = TimelineRouteImport.update({
   path: '/timeline',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksTelegramRoute = ApiWebhooksTelegramRouteImport.update({
+  id: '/api/webhooks/telegram',
+  path: '/api/webhooks/telegram',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/brand-kit': typeof BrandKitRoute
   '/circle': typeof CircleRoute
   '/dashboard': typeof DashboardRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/ingest': typeof IngestRoute
   '/login': typeof LoginRoute
   '/merch': typeof MerchRoute
   '/onboarding': typeof OnboardingRoute
   '/pitch': typeof PitchRoute
+  '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/studio': typeof StudioRoute
   '/timeline': typeof TimelineRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/webhooks/telegram': typeof ApiWebhooksTelegramRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/brand-kit': typeof BrandKitRoute
   '/circle': typeof CircleRoute
   '/dashboard': typeof DashboardRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/ingest': typeof IngestRoute
   '/login': typeof LoginRoute
   '/merch': typeof MerchRoute
   '/onboarding': typeof OnboardingRoute
   '/pitch': typeof PitchRoute
+  '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/studio': typeof StudioRoute
   '/timeline': typeof TimelineRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/webhooks/telegram': typeof ApiWebhooksTelegramRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -117,14 +149,18 @@ export interface FileRoutesById {
   '/brand-kit': typeof BrandKitRoute
   '/circle': typeof CircleRoute
   '/dashboard': typeof DashboardRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/ingest': typeof IngestRoute
   '/login': typeof LoginRoute
   '/merch': typeof MerchRoute
   '/onboarding': typeof OnboardingRoute
   '/pitch': typeof PitchRoute
+  '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/studio': typeof StudioRoute
   '/timeline': typeof TimelineRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/webhooks/telegram': typeof ApiWebhooksTelegramRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -133,42 +169,54 @@ export interface FileRouteTypes {
     | '/brand-kit'
     | '/circle'
     | '/dashboard'
+    | '/forgot-password'
     | '/ingest'
     | '/login'
     | '/merch'
     | '/onboarding'
     | '/pitch'
+    | '/settings'
     | '/signup'
     | '/studio'
     | '/timeline'
+    | '/api/auth/$'
+    | '/api/webhooks/telegram'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/brand-kit'
     | '/circle'
     | '/dashboard'
+    | '/forgot-password'
     | '/ingest'
     | '/login'
     | '/merch'
     | '/onboarding'
     | '/pitch'
+    | '/settings'
     | '/signup'
     | '/studio'
     | '/timeline'
+    | '/api/auth/$'
+    | '/api/webhooks/telegram'
   id:
     | '__root__'
     | '/'
     | '/brand-kit'
     | '/circle'
     | '/dashboard'
+    | '/forgot-password'
     | '/ingest'
     | '/login'
     | '/merch'
     | '/onboarding'
     | '/pitch'
+    | '/settings'
     | '/signup'
     | '/studio'
     | '/timeline'
+    | '/api/auth/$'
+    | '/api/webhooks/telegram'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -176,14 +224,18 @@ export interface RootRouteChildren {
   BrandKitRoute: typeof BrandKitRoute
   CircleRoute: typeof CircleRoute
   DashboardRoute: typeof DashboardRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   IngestRoute: typeof IngestRoute
   LoginRoute: typeof LoginRoute
   MerchRoute: typeof MerchRoute
   OnboardingRoute: typeof OnboardingRoute
   PitchRoute: typeof PitchRoute
+  SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
   StudioRoute: typeof StudioRoute
   TimelineRoute: typeof TimelineRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiWebhooksTelegramRoute: typeof ApiWebhooksTelegramRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -214,6 +266,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ingest': {
@@ -251,6 +310,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PitchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -272,6 +338,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TimelineRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/telegram': {
+      id: '/api/webhooks/telegram'
+      path: '/api/webhooks/telegram'
+      fullPath: '/api/webhooks/telegram'
+      preLoaderRoute: typeof ApiWebhooksTelegramRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -280,14 +360,18 @@ const rootRouteChildren: RootRouteChildren = {
   BrandKitRoute: BrandKitRoute,
   CircleRoute: CircleRoute,
   DashboardRoute: DashboardRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   IngestRoute: IngestRoute,
   LoginRoute: LoginRoute,
   MerchRoute: MerchRoute,
   OnboardingRoute: OnboardingRoute,
   PitchRoute: PitchRoute,
+  SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
   StudioRoute: StudioRoute,
   TimelineRoute: TimelineRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiWebhooksTelegramRoute: ApiWebhooksTelegramRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
