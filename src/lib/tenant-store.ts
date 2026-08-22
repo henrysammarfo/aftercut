@@ -462,6 +462,8 @@ export function applyLiveAtomize(
       agent: string;
       proactive?: boolean;
     }>;
+    circle?: { hooksmith: string; platformfit: string; qc: string };
+    trendsUsed?: boolean;
   },
 ): TenantState {
   const state = loadTenant(userId);
@@ -494,20 +496,37 @@ export function applyLiveAtomize(
     (d) => d.ingestId !== input.ingestId && d.source !== title,
   );
 
+  const passEvents: MemoryEvent[] = [];
+  if (input.circle) {
+    passEvents.push(
+      event("Day 1", "HOOKsmith", "Circle pass — hooks", input.circle.hooksmith.slice(0, 280), "action"),
+      event(
+        "Day 1",
+        "PLATFORMFIT",
+        "Circle pass — platforms",
+        input.circle.platformfit.slice(0, 280),
+        "action",
+      ),
+      event("Day 1", "QC", "Circle pass — QC", input.circle.qc.slice(0, 280), "action"),
+    );
+  }
+  passEvents.push(
+    event(
+      "Day 1",
+      input.mindName,
+      "Live atomize complete",
+      `${input.beatCount} beat(s) · ${newDrafts.length} draft(s) via Mind ${input.mindId.slice(0, 8)}…${
+        input.trendsUsed ? " · trends injected" : ""
+      }`,
+      "action",
+    ),
+  );
+
   return persist({
     ...state,
     ingests,
     drafts: [...newDrafts, ...kept].slice(0, 200),
-    timeline: pushEvents(
-      state.timeline,
-      event(
-        "Day 1",
-        input.mindName,
-        "Live atomize complete",
-        `${input.beatCount} beat(s) · ${newDrafts.length} draft(s) via Mind ${input.mindId.slice(0, 8)}…`,
-        "action",
-      ),
-    ),
+    timeline: pushEvents(state.timeline, ...passEvents),
   });
 }
 

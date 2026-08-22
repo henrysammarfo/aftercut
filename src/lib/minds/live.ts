@@ -5,6 +5,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import type { BrandKit } from "../aftercut-data";
+import { fetchCreatorTrends } from "../research/trends";
 import { parseAtomizeReply, parseProactiveReply } from "./parse";
 import { atomizePrompt, proactivePrompt, publishDeniedPrompt, soulSyncPrompt } from "./prompts";
 import {
@@ -125,6 +126,8 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
           agent: string;
           proactive?: boolean;
         }>;
+        circle?: { hooksmith: string; platformfit: string; qc: string };
+        trendsUsed: boolean;
         mindName: string;
         mindId: string;
       }
@@ -138,6 +141,13 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
       return { ok: false, error: "Brand kit incomplete before live atomize." };
     }
 
+    const trends = await fetchCreatorTrends({
+      brandName: data.kit.name,
+      primaryPlatform: data.kit.primaryPlatform,
+      topicHint: data.title,
+    });
+    const trendsSummary = trends.ok ? trends.summary : undefined;
+
     const res = await talkToDirector({
       userId: data.userId,
       messageText: atomizePrompt({
@@ -145,6 +155,7 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
         title: data.title,
         source: data.source,
         text: data.text,
+        trendsSummary,
       }),
       timeoutMs: 180_000,
     });
@@ -167,6 +178,8 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
           agent: d.agent,
           proactive: d.proactive,
         })),
+        circle: parsed.circle,
+        trendsUsed: Boolean(trendsSummary),
         mindName: res.mindName,
         mindId: res.mindId,
       };

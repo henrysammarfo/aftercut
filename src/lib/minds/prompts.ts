@@ -27,9 +27,14 @@ export function atomizePrompt(input: {
   title: string;
   source: string;
   text: string;
+  trendsSummary?: string;
 }): string {
   return [
-    "You are the AFTERCUT Mind Circle (Director + HOOKsmith + PLATFORMFIT + QC roles).",
+    "You are the AFTERCUT Mind Circle running as ONE Director with three specialist passes.",
+    "Simulate the Circle pipeline in order, then emit drafts:",
+    "  1) HOOKsmith — strongest first lines / CTAs only",
+    "  2) PLATFORMFIT — native Shorts vs X vs LinkedIn vs newsletter voice",
+    "  3) QC — scrub do-not-say + reject same-caption cross-posts",
     "Atomize this long-form into platform-native drafts using the Soul kit below.",
     "Hard rules — production, no shortcuts:",
     "- Stay in brand voice; scrub every do-not-say phrase from every hook/caption.",
@@ -40,11 +45,16 @@ export function atomizePrompt(input: {
     "  · linkedin: professional lead + lesson, 1–3 short lines, no TikTok slang.",
     "  · newsletter: subject-style open + 1 preview sentence teaser.",
     "- stages: one source card stage ingested; others drafting or needs-approve.",
-    "- agents: AFTERCUT Director | HOOKsmith | PLATFORMFIT | QC",
+    "- agents on drafts: HOOKsmith | PLATFORMFIT | QC | AFTERCUT Director",
     "- No markdown outside a single JSON object.",
     "- Reply with ONLY this JSON shape:",
     `{
   "beatCount": <number>,
+  "circle": {
+    "hooksmith": string,
+    "platformfit": string,
+    "qc": string
+  },
   "drafts": [
     {
       "title": string,
@@ -55,6 +65,7 @@ export function atomizePrompt(input: {
     }
   ]
 }`,
+    "- circle.hooksmith / platformfit / qc = 1–2 sentence pass receipts (what that role did).",
     "- Produce 1 ingested source draft + 4–8 platform cuts from real beats in the text (cover all platforms at least once when content allows).",
     "- QC: if a ban phrase slips into a hook, rewrite that hook before answering.",
     "",
@@ -72,11 +83,18 @@ export function atomizePrompt(input: {
       2,
     ),
     "",
+    input.trendsSummary
+      ? ["LIVE TREND CONTEXT (use lightly — do not invent facts not in LONG-FORM):", input.trendsSummary, ""].join(
+          "\n",
+        )
+      : "",
     `INGEST title: ${input.title}`,
     `INGEST source label: ${input.source}`,
     "LONG-FORM:",
     input.text.slice(0, 24_000),
-  ].join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 export function proactivePrompt(input: {

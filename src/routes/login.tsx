@@ -19,7 +19,7 @@ const field =
 
 function safeNext(next?: string) {
   if (next && next.startsWith("/") && !next.startsWith("//")) return next;
-  return "/brand-kit";
+  return "/onboarding";
 }
 
 function LoginPage() {

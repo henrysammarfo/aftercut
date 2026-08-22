@@ -20,7 +20,7 @@ function SignupPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (ready && session) void navigate({ to: "/brand-kit" });
+    if (ready && session) void navigate({ to: "/onboarding" });
   }, [ready, session, navigate]);
 
   return (

@@ -16,6 +16,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IngestRouteImport } from './routes/ingest'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MerchRouteImport } from './routes/merch'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PitchRouteImport } from './routes/pitch'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as StudioRouteImport } from './routes/studio'
@@ -56,6 +57,11 @@ const MerchRoute = MerchRouteImport.update({
   path: '/merch',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PitchRoute = PitchRouteImport.update({
   id: '/pitch',
   path: '/pitch',
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/ingest': typeof IngestRoute
   '/login': typeof LoginRoute
   '/merch': typeof MerchRoute
+  '/onboarding': typeof OnboardingRoute
   '/pitch': typeof PitchRoute
   '/signup': typeof SignupRoute
   '/studio': typeof StudioRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/ingest': typeof IngestRoute
   '/login': typeof LoginRoute
   '/merch': typeof MerchRoute
+  '/onboarding': typeof OnboardingRoute
   '/pitch': typeof PitchRoute
   '/signup': typeof SignupRoute
   '/studio': typeof StudioRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/ingest': typeof IngestRoute
   '/login': typeof LoginRoute
   '/merch': typeof MerchRoute
+  '/onboarding': typeof OnboardingRoute
   '/pitch': typeof PitchRoute
   '/signup': typeof SignupRoute
   '/studio': typeof StudioRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/ingest'
     | '/login'
     | '/merch'
+    | '/onboarding'
     | '/pitch'
     | '/signup'
     | '/studio'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/ingest'
     | '/login'
     | '/merch'
+    | '/onboarding'
     | '/pitch'
     | '/signup'
     | '/studio'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/ingest'
     | '/login'
     | '/merch'
+    | '/onboarding'
     | '/pitch'
     | '/signup'
     | '/studio'
@@ -167,6 +179,7 @@ export interface RootRouteChildren {
   IngestRoute: typeof IngestRoute
   LoginRoute: typeof LoginRoute
   MerchRoute: typeof MerchRoute
+  OnboardingRoute: typeof OnboardingRoute
   PitchRoute: typeof PitchRoute
   SignupRoute: typeof SignupRoute
   StudioRoute: typeof StudioRoute
@@ -224,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MerchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pitch': {
       id: '/pitch'
       path: '/pitch'
@@ -263,6 +283,7 @@ const rootRouteChildren: RootRouteChildren = {
   IngestRoute: IngestRoute,
   LoginRoute: LoginRoute,
   MerchRoute: MerchRoute,
+  OnboardingRoute: OnboardingRoute,
   PitchRoute: PitchRoute,
   SignupRoute: SignupRoute,
   StudioRoute: StudioRoute,

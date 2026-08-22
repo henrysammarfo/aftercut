@@ -4,7 +4,8 @@ import { AppShell, GlassCard, PrimaryButton } from "@/components/app/AppShell";
 import { stages, platformLabel, type Stage } from "@/lib/aftercut-data";
 import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
-import { Check, X, Sparkles, ShieldAlert, Bell } from "lucide-react";
+import { buildShipPack } from "@/lib/ship-pack";
+import { Check, X, Sparkles, ShieldAlert, Bell, Copy, Download } from "lucide-react";
 
 export const Route = createFileRoute("/studio")({
   beforeLoad: () => {
@@ -51,12 +52,46 @@ function Studio() {
     setShipNote(null);
   };
 
+  const pack = () =>
+    buildShipPack({
+      brandName: tenant?.brandKit.name ?? "aftercut",
+      drafts: items,
+    });
+
+  const copyPack = async () => {
+    try {
+      await navigator.clipboard.writeText(pack());
+      setShipNote("Copy-pack on clipboard — paste into CapCut / native apps.");
+    } catch {
+      setShipNote("Clipboard blocked — use Download copy-pack instead.");
+    }
+  };
+
+  const downloadPack = () => {
+    const blob = new Blob([pack()], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `aftercut-copy-pack-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setShipNote("Downloaded copy-pack.");
+  };
+
   return (
     <AppShell
       title="Studio"
       subtitle="Live kanban fed by AFTERCUT Director Mind. Ship only after human schedule."
       actions={
         <div className="flex flex-wrap gap-2">
+          <PrimaryButton disabled={busy || items.length === 0} onClick={() => void copyPack()}>
+            <Copy className="mr-1.5 h-3.5 w-3.5" />
+            Copy pack
+          </PrimaryButton>
+          <PrimaryButton disabled={items.length === 0} onClick={downloadPack}>
+            <Download className="mr-1.5 h-3.5 w-3.5" />
+            Download
+          </PrimaryButton>
           <PrimaryButton
             disabled={busy}
             onClick={async () => {
@@ -67,6 +102,7 @@ function Studio() {
               setBusy(false);
             }}
           >
+            <Sparkles className="mr-1.5 h-3.5 w-3.5" />
             Live Day-2 follow-up
           </PrimaryButton>
           <PrimaryButton

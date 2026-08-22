@@ -222,6 +222,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             mindName: live.mindName,
             mindId: live.mindId,
             drafts: live.drafts,
+            circle: live.circle,
+            trendsUsed: live.trendsUsed,
           }),
         );
         void refreshMindStatus();

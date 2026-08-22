@@ -10,12 +10,14 @@ import {
   Shirt,
   LogOut,
   Users,
+  ListChecks,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/lib/auth";
 import { DemoProgress } from "@/components/app/DemoProgress";
 
 const nav = [
+  { to: "/onboarding" as const, label: "Setup", icon: ListChecks },
   { to: "/dashboard" as const, label: "Dashboard", icon: LayoutDashboard },
   { to: "/brand-kit" as const, label: "Brand kit", icon: Palette },
   { to: "/ingest" as const, label: "Ingest", icon: Inbox },

@@ -5,9 +5,16 @@
 
 import { platforms, type Draft, type Platform, type Stage } from "../aftercut-data";
 
+export type CirclePasses = {
+  hooksmith: string;
+  platformfit: string;
+  qc: string;
+};
+
 export type ParsedAtomize = {
   beatCount: number;
   drafts: Omit<Draft, "id">[];
+  circle?: CirclePasses;
   rawExcerpt: string;
 };
 
@@ -64,6 +71,7 @@ export function parseAtomizeReply(
     beatCount?: number;
     beats?: number;
     drafts?: Array<Record<string, unknown>>;
+    circle?: Record<string, unknown>;
   };
 
   const list = Array.isArray(data)
@@ -100,9 +108,25 @@ export function parseAtomizeReply(
       ? Number(data.beatCount ?? data.beats ?? drafts.length)
       : drafts.length;
 
+  let circle: CirclePasses | undefined;
+  if (typeof data === "object" && data && !Array.isArray(data) && data.circle) {
+    const c = data.circle;
+    const hooksmith = String(c.hooksmith ?? c.HOOKsmith ?? "").trim();
+    const platformfit = String(c.platformfit ?? c.PLATFORMFIT ?? "").trim();
+    const qc = String(c.qc ?? c.QC ?? "").trim();
+    if (hooksmith || platformfit || qc) {
+      circle = {
+        hooksmith: hooksmith || "HOOKsmith pass complete",
+        platformfit: platformfit || "PLATFORMFIT pass complete",
+        qc: qc || "QC pass complete",
+      };
+    }
+  }
+
   return {
     beatCount: Number.isFinite(beatCount) ? beatCount : drafts.length,
     drafts,
+    circle,
     rawExcerpt: replyText.slice(0, 280),
   };
 }

@@ -43,7 +43,7 @@ function CirclePage() {
   return (
     <AppShell
       title="Mind Circle"
-      subtitle="Live hellominds Director + architected Circle roles. Receipts from Mind API and Studio."
+      subtitle="Live hellominds Director runs Circle specialist passes (HOOKsmith → PLATFORMFIT → QC). Receipts land in Memory."
     >
       <GlassCard className="mb-4">
         <div className="flex items-start gap-3">

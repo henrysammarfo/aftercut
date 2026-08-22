@@ -142,11 +142,11 @@ function Index() {
             The Circle
           </p>
           <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">
-            Four Minds. One publish leash.
+            One Director. Circle passes. One publish leash.
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-            Animoca-native Circle architecture — Director holds DNA; HOOKsmith, PLATFORMFIT and QC
-            cut, fit and check against the shipped ledger.
+            Animoca-native Circle — live Director runs HOOKsmith, PLATFORMFIT and QC passes with
+            Memory receipts. Publish leash stays human.
           </p>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {circle.map((c) => (
@@ -250,9 +250,13 @@ function Index() {
               to="/pitch"
               className="rounded-full border border-white/15 px-8 py-3 text-sm font-medium text-foreground transition-colors hover:bg-white/5"
             >
-              Read the pitch
+              Pitch + waitlist
             </Link>
           </div>
+          <p className="mt-6 text-xs text-muted-foreground">
+            Founding pricing target: $29–$79/mo · Mind-backed Studio · CapCut copy-pack now · social
+            OAuth next.
+          </p>
         </div>
       </section>
 

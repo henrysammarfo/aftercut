@@ -21,6 +21,7 @@ Source of truth: [`docs/AFTERCUT_BIBLE.md`](docs/AFTERCUT_BIBLE.md).
 |---|---|
 | `/` | Marketing — hero, problem, Circle, Day 0–2, publish leash, CTA |
 | `/signup` · `/login` | Auth |
+| `/onboarding` | Guided fundraise MVP loop (kit → atomize → leash → Day-2) |
 | `/dashboard` | Queue health, leash, ledger, memory (auth) |
 | `/brand-kit` | Day 0 Soul memory (auth) |
 | `/ingest` | Day 1 long-form dump + atomize (auth) |

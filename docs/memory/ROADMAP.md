@@ -13,6 +13,7 @@
 
 ## AFTERCUT open
 
-1. Browser E2E film path (kit → atomize → leash → day2)  
+1. Browser E2E film path (kit → atomize → leash → day2) — use `/onboarding`  
 2. Confirm minds-smoke green every machine  
-3. Submit packaging  
+3. Submit packaging + DoraHacks  
+4. Post-jam: cloud auth/DB · social OAuth · Stripe (see `docs/MVP_FREEZE.md`)  
