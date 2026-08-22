@@ -12,6 +12,7 @@ import {
 } from "@animocabrands/minds-client-lib";
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
+import { stripMindHtml } from "./parse";
 
 const DIRECTOR_ENV = "MINDS_DIRECTOR_MIND_ID";
 const ALIAS_PREFIX = "aftercut";
@@ -159,7 +160,7 @@ export async function talkToDirector(input: {
 
     return {
       ok: true,
-      replyText,
+      replyText: stripMindHtml(replyText) || replyText,
       mindId: director.mindId,
       mindName: director.name ?? "AFTERCUT Director",
       alias,

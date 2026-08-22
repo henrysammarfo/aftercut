@@ -44,13 +44,35 @@ Must feel like a **complete creator employee**, not a hackathon collage:
 5. Honest pitch: live Mind + browser ledger + waitlist  
 6. Demo film + DoraHacks package  
 
-## Explicitly NOT in Aug 28 fundraise MVP
+## Win path (official judging — lock)
 
-- Postgres / multi-device sync  
-- Real Twitter / LinkedIn / YouTube publish OAuth  
-- Billing / Stripe  
-- Four separately awakened Minds (unless hellominds Circle API is one-click)  
+Scored 1–10 each. AFTERCUT wins the room on **#1 + #4**, not on Stripe.
+
+| Criterion | What judges want | AFTERCUT move |
+|---|---|---|
+| **Minds Integration Depth** | Mind integral · memory · persistence · autonomy | Live Soul · atomize · Day-2 proactive · leash notify · Circle receipts |
+| **Creator-Economy Problem Fit** | Track problem clear | Content repurposing — LOCK |
+| **Innovation & Creativity** | Novel agent design | Publish leash + overnight employee vs Opus one-shot |
+| **Execution & Completeness** | Working demo · UX · persistence shown | `/onboarding` + **1.5–2 min film** (required) |
+| **Viability & Scalability** | Path to creator adoption | Copy-pack · waitlist · pricing story — **not** live OAuth |
+
+**Must submit by Aug 28 23:59 HKT:** working product · Mind integral · persistence demo · track fit · **video** · repo + docs.
+
+**Do not burn the week on Stripe.** Cloud auth / OAuth / Telegram webhook are **stretch** after Mind depth + film — not forbidden.
+
+If spare capacity after film is locked: polish UX + cognition boost ask + Open Campus community.  
+
+## Explicitly NOT in Aug 28 jam critical path
+
+- **Stripe / billing** (dropped for jam — waitlist + pricing story only)  
 - Merch commerce  
+
+## Stretch (ok if capacity — deepen Mind first, then film)
+
+- Cloud auth / multi-device DB  
+- Social OAuth publish (Twitter / LinkedIn / YT)  
+- Telegram→Studio webhook (bot already linked; paste works for film)  
+- Separate awakened specialist Minds (Builder Circle API today = human emails only)  
 
 ## Moat line (unchanged)
 

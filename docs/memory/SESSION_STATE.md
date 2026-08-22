@@ -41,9 +41,14 @@ npx tsx scripts/minds-smoke.ts
 | `/onboarding` guided loop | **shipped** |
 | Studio copy-pack (clipboard + download) | **shipped** |
 | Pitch waitlist + pricing + honest scope | **shipped** |
-| Demo film | **open — next** |
+| Full SDK depth (history · skills · apps · usage · circle humans) | **shipped** |
+| Equipped VoiceTranscribe + YouTube Research Scout | **live on Director** |
+| HTML Mind-reply parse harden | **shipped** |
+| Fact check vs jam paste | [`FACT_CHECK.md`](FACT_CHECK.md) |
+| Demo film | **open — #1 blocker to win** |
 | DoraHacks apply | **open — after film** |
-| Cloud auth / DB / social OAuth | **post-jam** (explicit) |
+| Stripe | **dropped for jam** |
+| Cloud auth / social OAuth / TG webhook | **stretch** (not forbidden) |
 
 ## Ship ladder (this week — AFTERCUT only)
 
@@ -51,10 +56,12 @@ npx tsx scripts/minds-smoke.ts
 |---|---|---|
 | 1 | minds-smoke green | **done** (cog 1187) |
 | 2 | Fundraise MVP surface (onboarding · circle · trends · copy-pack · pitch) | **in repo** |
-| 3 | Demo film (Computer Use) · `node cloud-video/film.mjs` | **open — next** |
+| 3 | Demo film (Computer Use) · `node cloud-video/film.mjs` | **open — #1 blocker to win** |
 | 4 | Pitch page `/pitch` + `docs/FILM_DEMO.md` walk | ready |
 | 5 | Tech docs (`docs/AFTERCUT_BIBLE.md` · `docs/TECH.md` · `docs/MVP_FREEZE.md`) | ready |
 | 6 | DoraHacks application form | **open — after film** |
+
+**Judging lock:** win on Minds depth + filmed persistence (Day0–Day2). **Stripe dropped.** Cloud auth / OAuth / TG webhook = stretch after Mind depth + film.
 
 **Moat line:** *Opus clips once. AFTERCUT remembers your DNA and keeps cutting overnight.*
 

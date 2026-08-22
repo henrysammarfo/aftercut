@@ -1,6 +1,7 @@
 /**
  * Parse live Mind replies into AFTERCUT draft rows.
  * Expects JSON (raw or fenced). No fabricated content if parse fails.
+ * Minds often wrap replies in HTML <p> — strip before JSON extract.
  */
 
 import { platforms, type Draft, type Platform, type Stage } from "../aftercut-data";
@@ -18,9 +19,28 @@ export type ParsedAtomize = {
   rawExcerpt: string;
 };
 
+/** Strip hellominds HTML chat wrappers so JSON survives. */
+export function stripMindHtml(text: string): string {
+  return text
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n")
+    .replace(/<\/div>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&ldquo;|&rdquo;|&#8220;|&#8221;/g, '"')
+    .replace(/&lsquo;|&rsquo;|&#8216;|&#8217;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 function extractJsonBlob(text: string): unknown {
-  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const candidate = (fenced?.[1] ?? text).trim();
+  const cleaned = stripMindHtml(text);
+  const fenced = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const candidate = (fenced?.[1] ?? cleaned).trim();
   // Try whole
   try {
     return JSON.parse(candidate);

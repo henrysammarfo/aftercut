@@ -11,13 +11,18 @@
 | Soul sync (kit → Mind message) | **Wired** — `syncSoulLive` + waitForReply |
 | Live atomize | **Wired** — Mind returns JSON drafts |
 | Circle passes (HOOK / PLATFORM / QC) | **Wired** — receipts on Memory timeline |
+| getHistory transcript | **Wired** — `/circle` live transcript |
+| Equipped skills / apps / usage-by-tool | **Wired** — status + equip creator stack |
 | Tavily trends into atomize | **Wired** — when `TAVILY_API_KEY` present |
 | Live Day-2 proactive | **Wired** — Mind rewrite, no local simulate |
 | Publish leash | **Wired** — local deny + notify Mind |
 | Guided `/onboarding` | **Wired** — kit → atomize → leash → Day-2 |
 | Studio copy-pack | **Wired** — clipboard + download for CapCut |
 | Studio tenant (kanban, export) | Browser ledger of **live** outputs |
-| Telegram bot messages into Studio | Via hellominds Telegram link (platform) — paste dump if needed |
+| Telegram bot messages into Studio | Bot linked on Director (`telegramBotId`) — paste dump until webhook |
+
+Fact check: [`docs/memory/FACT_CHECK.md`](memory/FACT_CHECK.md).  
+Honest fundraise scope: [`docs/MVP_FREEZE.md`](MVP_FREEZE.md).
 
 ## Env (server only)
 
@@ -30,7 +35,13 @@ TAVILY_API_KEY=          # optional · trends into atomize
 Copy `.env.example` → `.env.local` (gitignored).  
 Or place the same vars in `scoutbot/agent/.env` (server reads as fallback for local dev).
 
-Honest fundraise scope: [`docs/MVP_FREEZE.md`](MVP_FREEZE.md).
+## Ops scripts
+
+```sh
+npm run minds-smoke   # director + cognition
+npm run minds-probe   # full Builder surface probe
+npm run minds-equip   # VoiceTranscribe + YouTube Research Scout
+```
 
 ## Modules
 

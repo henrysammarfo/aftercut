@@ -6,9 +6,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import type { BrandKit } from "../aftercut-data";
 import { fetchCreatorTrends } from "../research/trends";
-import { parseAtomizeReply, parseProactiveReply } from "./parse";
+import { parseAtomizeReply, parseProactiveReply, stripMindHtml } from "./parse";
 import { atomizePrompt, proactivePrompt, publishDeniedPrompt, soulSyncPrompt } from "./prompts";
 import {
+  conversationAlias,
   createLiveMindsClient,
   getBuilderApiKey,
   resolveDirectorMind,
@@ -29,9 +30,17 @@ export type LiveStatusResult =
       mindId: string;
       mindName: string;
       hasTelegram: boolean;
+      telegramBotId: string | null;
       isEnabled: boolean;
       cognition: number | null;
       email: string | null;
+      walletAddress: string | null;
+      species: string | null;
+      skills: string[];
+      apps: string[];
+      toolsUsed: string[];
+      circleHumans: Array<{ email: string | null; name: string | null; steward: boolean }>;
+      conversationCount: number;
       minds: Array<{ mindId: string; name: string | null; hasTelegram: boolean }>;
     }
   | { ok: false; connected: false; error: string };
@@ -49,27 +58,50 @@ export const fetchMindStatus = createServerFn({ method: "GET" }).handler(
       const client = createLiveMindsClient();
       const minds = await client.listMinds();
       const director = await resolveDirectorMind(client);
-      let cognition: number | null = null;
-      try {
-        const bal = await client.getCognitionBalance(director.mindId);
-        cognition = bal.cognition;
-      } catch {
-        cognition = null;
-      }
-      const detail = await client.getMind(director.mindId);
+      const mindId = director.mindId;
+
+      const [bal, detail, skills, apps, usageByTool, circle, conversations] =
+        await Promise.all([
+          client.getCognitionBalance(mindId).catch(() => null),
+          client.getMind(mindId),
+          client.listEquippedSkills(mindId).catch(() => []),
+          client.listEquippedApps(mindId).catch(() => []),
+          client.getCognitionUsageByTool(mindId, { interval: "day" }).catch(() => null),
+          client.getCircle(mindId).catch(() => []),
+          client.listConversations().catch(() => []),
+        ]);
+
+      const telegramBotId =
+        typeof detail.telegramBotId === "string" ? detail.telegramBotId : null;
+
       return {
         ok: true,
         connected: true,
-        mindId: director.mindId,
+        mindId,
         mindName: director.name ?? detail.name ?? "Director",
-        hasTelegram: Boolean(detail.hasTelegram ?? director.hasTelegram),
+        hasTelegram: Boolean(detail.hasTelegram ?? director.hasTelegram ?? telegramBotId),
+        telegramBotId,
         isEnabled: detail.isEnabled !== false,
-        cognition,
+        cognition: bal?.cognition ?? null,
         email: detail.email ?? null,
+        walletAddress:
+          typeof detail.walletAddress === "string" ? detail.walletAddress : null,
+        species: typeof detail.species === "string" ? detail.species : null,
+        skills: skills.map((s) => s.name ?? s.skillId).filter(Boolean),
+        apps: apps.map((a) => a.appName ?? a.appId).filter(Boolean),
+        toolsUsed: (usageByTool?.summary ?? [])
+          .slice(0, 8)
+          .map((t) => `${t.tool}:${t.callCount}`),
+        circleHumans: circle.map((m) => ({
+          email: m.email ?? null,
+          name: m.name ?? null,
+          steward: Boolean(m.isSteward),
+        })),
+        conversationCount: conversations.length,
         minds: minds.map((m) => ({
           mindId: m.mindId,
           name: m.name ?? null,
-          hasTelegram: Boolean(m.hasTelegram),
+          hasTelegram: Boolean(m.hasTelegram || m.telegramBotId),
         })),
       };
     } catch (e) {
@@ -78,6 +110,71 @@ export const fetchMindStatus = createServerFn({ method: "GET" }).handler(
         connected: false,
         error: e instanceof Error ? e.message : String(e),
       };
+    }
+  },
+);
+
+/** Live conversation transcript for the signed-in tenant (persistence judges can see). */
+export const fetchMindTranscript = createServerFn({ method: "POST" }).handler(
+  async (
+    ctx,
+  ): Promise<
+    | {
+        ok: true;
+        alias: string;
+        rows: Array<{ sender: "mind" | "human"; text: string; at?: string }>;
+      }
+    | { ok: false; error: string }
+  > => {
+    const data = payload<{ userId: string }>(ctx);
+    if (!data?.userId) return { ok: false, error: "Missing userId." };
+    try {
+      const client = createLiveMindsClient();
+      const director = await resolveDirectorMind(client);
+      const alias = conversationAlias(data.userId);
+      await client.ensureConversation(alias, director.mindId);
+      const history = await client.getHistory(alias, { limit: 20 });
+      return {
+        ok: true,
+        alias,
+        rows: history.map((h) => ({
+          sender: h.senderType === 1 ? ("human" as const) : ("mind" as const),
+          text: stripMindHtml(h.messageText ?? "").slice(0, 400),
+          at: h.createdAt ?? undefined,
+        })),
+      };
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    }
+  },
+);
+
+/** Equip creator-economy Bazaar apps on Director (VoiceTranscribe + YouTube Research Scout). */
+export const equipCreatorStack = createServerFn({ method: "POST" }).handler(
+  async (): Promise<
+    | { ok: true; equipped: string[]; results: unknown }
+    | { ok: false; error: string }
+  > => {
+    if (!getBuilderApiKey()) {
+      return { ok: false, error: "MINDS_BUILDER_API_KEY missing" };
+    }
+    try {
+      const client = createLiveMindsClient();
+      const director = await resolveDirectorMind(client);
+      // Verified live bazaar IDs (2026-08-22 probe)
+      const ids = [
+        "4665473e-f36b-1410-8464-00039ce7df11", // VoiceTranscribe
+        "cc66d91f-902d-f111-ad1d-0ea9a5017e89", // YouTube Research Scout
+      ];
+      const result = await client.equipApps(director.mindId, { ids });
+      const apps = await client.listEquippedApps(director.mindId);
+      return {
+        ok: true,
+        equipped: apps.map((a) => a.appName ?? a.appId),
+        results: result.results,
+      };
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
     }
   },
 );
