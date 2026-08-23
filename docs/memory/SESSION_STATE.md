@@ -25,8 +25,10 @@ Apply: https://dorahacks.io/hackathon/creativeminds/detail
 
 | Check | Result |
 |---|---|
-| `npm run minds-smoke` | **ok** · Director · cog **1168.61** · mindId `6bf0483e-…df11` |
+| `npm run minds-smoke` | **ok** · Director · cog **1174.54** · mindId `6bf0483e-…df11` |
+| `npm test` | **4/4 pass** |
 | Production `/` + `/privacy` | **HTTP 200** |
+| Vercel prod deploy | **cd2fa56** (Resend SDK) via GitHub |
 | Telegram webhook | set → `/api/webhooks/telegram` · bot `8840245437` |
 | Neon users | **0** until first signup → TG ingest blocked |
 | Film / DoraHacks apply | **open** |

@@ -248,7 +248,7 @@ function Index() {
             </Link>
           </div>
           <p className="mt-6 text-xs text-muted-foreground">
-            From $29/mo · Export captions for CapCut and native apps · Social publishing coming soon.
+            From $29/mo · Export captions for CapCut · Ship to X, LinkedIn and Calendar from Studio
           </p>
         </div>
       </section>
