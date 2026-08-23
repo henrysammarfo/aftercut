@@ -2,6 +2,14 @@ import { redirect } from "@tanstack/react-router";
 import { getSession } from "./auth-store";
 import { getBridgeSession } from "./session-bridge";
 
+/**
+ * Client-safe route gate. Do NOT import `@tanstack/react-start/server` or
+ * `auth-server` here — Vite import-protection will break the client bundle
+ * (film/demo crash on /onboarding).
+ *
+ * Server mutations already enforce session via createServerFn handlers.
+ */
+
 const APP_PREFIXES = [
   "/dashboard",
   "/onboarding",
@@ -18,52 +26,27 @@ export function isAppRoute(pathname: string): boolean {
   return APP_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
-function clientRedirect(nextPath?: string): never {
-  const next =
-    nextPath && nextPath.startsWith("/") && !nextPath.startsWith("//")
-      ? nextPath
-      : typeof window !== "undefined"
-        ? window.location.pathname
-        : "/onboarding";
-  throw redirect({ to: "/login", search: { next } });
+function safeNext(nextPath?: string): string {
+  if (nextPath && nextPath.startsWith("/") && !nextPath.startsWith("//")) return nextPath;
+  if (typeof window !== "undefined") return window.location.pathname;
+  return "/onboarding";
 }
 
-/** Gate app routes — client + server (Better Auth cookies). */
+/** Gate app routes on the client (and no-op during SSR). */
 export async function requireAuth(nextPath?: string): Promise<void> {
-  if (typeof window !== "undefined") {
-    const session = getBridgeSession() ?? getSession();
-    if (!session) clientRedirect(nextPath);
-    return;
-  }
-
-  try {
-    const { cloudAuthEnabled, getAuth } = await import("./auth-server");
-    if (!cloudAuthEnabled()) return;
-    const { getRequestHeaders } = await import("@tanstack/react-start/server");
-    const session = await getAuth().api.getSession({ headers: getRequestHeaders() });
-    if (!session?.user?.id) {
-      throw redirect({ to: "/login" });
-    }
-  } catch (e) {
-    if (e && typeof e === "object" && "isRedirect" in e) throw e;
-    throw redirect({ to: "/login" });
+  if (typeof window === "undefined") return;
+  const session = getBridgeSession() ?? getSession();
+  if (!session) {
+    throw redirect({
+      to: "/login",
+      search: { next: safeNext(nextPath) },
+    });
   }
 }
 
-/** Marketing auth pages — bounce signed-in users to app. */
+/** Marketing auth pages — bounce signed-in users into the app. */
 export async function redirectIfAuthed(to: "/onboarding" | "/dashboard" = "/onboarding"): Promise<void> {
-  if (typeof window !== "undefined") {
-    const session = getBridgeSession() ?? getSession();
-    if (session) throw redirect({ to });
-    return;
-  }
-  try {
-    const { cloudAuthEnabled, getAuth } = await import("./auth-server");
-    if (!cloudAuthEnabled()) return;
-    const { getRequestHeaders } = await import("@tanstack/react-start/server");
-    const session = await getAuth().api.getSession({ headers: getRequestHeaders() });
-    if (session?.user?.id) throw redirect({ to });
-  } catch (e) {
-    if (e && typeof e === "object" && "isRedirect" in e) throw e;
-  }
+  if (typeof window === "undefined") return;
+  const session = getBridgeSession() ?? getSession();
+  if (session) throw redirect({ to });
 }
