@@ -28,42 +28,21 @@ function clientRedirect(nextPath?: string): never {
   throw redirect({ to: "/login", search: { next } });
 }
 
-/** Gate app routes — client + server (Better Auth cookies). */
+/**
+ * Gate app routes from the client. Local auth uses localStorage; cloud auth
+ * session cookies are enforced by API handlers — this file must stay free of
+ * server-only imports so Vite does not pull @tanstack/react-start/server
+ * into the client bundle.
+ */
 export async function requireAuth(nextPath?: string): Promise<void> {
-  if (typeof window !== "undefined") {
-    const session = getBridgeSession() ?? getSession();
-    if (!session) clientRedirect(nextPath);
-    return;
-  }
-
-  try {
-    const { cloudAuthEnabled, getAuth } = await import("./auth-server");
-    if (!cloudAuthEnabled()) return;
-    const { getRequestHeaders } = await import("@tanstack/react-start/server");
-    const session = await getAuth().api.getSession({ headers: getRequestHeaders() });
-    if (!session?.user?.id) {
-      throw redirect({ to: "/login" });
-    }
-  } catch (e) {
-    if (e && typeof e === "object" && "isRedirect" in e) throw e;
-    throw redirect({ to: "/login" });
-  }
+  if (typeof window === "undefined") return;
+  const session = getBridgeSession() ?? getSession();
+  if (!session) clientRedirect(nextPath);
 }
 
 /** Marketing auth pages — bounce signed-in users to app. */
 export async function redirectIfAuthed(to: "/onboarding" | "/dashboard" = "/onboarding"): Promise<void> {
-  if (typeof window !== "undefined") {
-    const session = getBridgeSession() ?? getSession();
-    if (session) throw redirect({ to });
-    return;
-  }
-  try {
-    const { cloudAuthEnabled, getAuth } = await import("./auth-server");
-    if (!cloudAuthEnabled()) return;
-    const { getRequestHeaders } = await import("@tanstack/react-start/server");
-    const session = await getAuth().api.getSession({ headers: getRequestHeaders() });
-    if (session?.user?.id) throw redirect({ to });
-  } catch (e) {
-    if (e && typeof e === "object" && "isRedirect" in e) throw e;
-  }
+  if (typeof window === "undefined") return;
+  const session = getBridgeSession() ?? getSession();
+  if (session) throw redirect({ to });
 }
