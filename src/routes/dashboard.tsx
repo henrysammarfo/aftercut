@@ -8,8 +8,8 @@ import { ArrowUpRight, ShieldAlert, Brain, HardDrive } from "lucide-react";
 import { useRef, useState } from "react";
 
 export const Route = createFileRoute("/dashboard")({
-  beforeLoad: () => {
-    requireAuth();
+  beforeLoad: async () => {
+    await requireAuth();
   },
   head: () => ({
     meta: [

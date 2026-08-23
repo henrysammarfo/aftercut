@@ -36,6 +36,7 @@ import {
   createStudioInvite,
 } from "@/lib/tenant-db";
 import { sendInviteEmail, sendOvernightHookEmail, sendCognitionLowEmail } from "@/lib/email";
+import { inviteEmailSchema, ingestSchema, parseOrError } from "@/lib/validation";
 
 async function requireUserId(): Promise<string> {
   if (!hasDatabase()) throw new Error("Cloud storage is not configured.");
@@ -96,12 +97,15 @@ export const cloudSetCognitionNote = createServerFn({ method: "POST" }).handler(
 
 export const cloudAddIngest = createServerFn({ method: "POST" }).handler(async (ctx) => {
   const userId = await requireUserId();
-  const input = (ctx.data ?? ctx) as {
+  const raw = (ctx.data ?? ctx) as {
     title?: string;
     text: string;
     source?: string;
     brandId?: string;
   };
+  const parsed = parseOrError(ingestSchema, raw);
+  if (!parsed.ok) throw new Error(parsed.error);
+  const input = { ...parsed.data, brandId: raw.brandId };
   const { result, state } = await withBrandMutation(userId, input.brandId, (uid) =>
     addIngest(uid, input),
   );
@@ -282,8 +286,12 @@ export const fetchStudioInvites = createServerFn({ method: "GET" }).handler(asyn
 
 export const cloudInviteStudioMember = createServerFn({ method: "POST" }).handler(async (ctx) => {
   const userId = await requireUserId();
-  const { email, role } = (ctx.data ?? ctx) as { email: string; role?: string };
-  const row = await createStudioInvite(userId, email, role ?? "editor");
+  const raw = (ctx.data ?? ctx) as { email: string; role?: string };
+  const parsed = parseOrError(inviteEmailSchema, raw.email);
+  if (!parsed.ok) return { ok: false as const, error: parsed.error };
+  const email = parsed.data;
+  const role = raw.role?.trim() === "admin" ? "admin" : "editor";
+  const row = await createStudioInvite(userId, email, role);
   const headers = getRequestHeaders();
   const session = await getAuth().api.getSession({ headers });
   const inviter = session?.user?.name || session?.user?.email || "A creator";

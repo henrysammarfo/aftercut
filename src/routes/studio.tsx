@@ -21,8 +21,8 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/studio")({
-  beforeLoad: () => {
-    requireAuth();
+  beforeLoad: async () => {
+    await requireAuth();
   },
   head: () => ({
     meta: [

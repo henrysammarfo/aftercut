@@ -12,8 +12,8 @@ import {
 import { friendlyError } from "@/lib/display";
 
 export const Route = createFileRoute("/settings")({
-  beforeLoad: () => {
-    requireAuth();
+  beforeLoad: async () => {
+    await requireAuth();
   },
   head: () => ({
     meta: [{ title: "Settings — AFTERCUT" }],

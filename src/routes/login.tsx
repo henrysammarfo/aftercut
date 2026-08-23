@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/lib/auth";
+import { redirectIfAuthed } from "@/lib/require-auth";
+import { parseOrError, signInSchema } from "@/lib/validation";
 
 const searchSchema = z.object({
   next: z.string().optional(),
@@ -10,6 +12,9 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/login")({
   validateSearch: searchSchema,
+  beforeLoad: async () => {
+    await redirectIfAuthed();
+  },
   head: () => ({ meta: [{ title: "Sign in — AFTERCUT" }] }),
   component: LoginPage,
 });
@@ -48,7 +53,13 @@ function LoginPage() {
           className="mt-8 space-y-4"
           onSubmit={async (e) => {
             e.preventDefault();
-            const res = await signIn(email, password);
+            setError(null);
+            const parsed = parseOrError(signInSchema, { email: email.trim(), password });
+            if (!parsed.ok) {
+              setError(parsed.error);
+              return;
+            }
+            const res = await signIn(parsed.data.email, parsed.data.password);
             if (!res.ok) setError(res.error || "Sign in failed");
             else void navigate({ to: safeNext(next) });
           }}
@@ -64,7 +75,7 @@ function LoginPage() {
           <input
             type="password"
             required
-            minLength={6}
+            minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className={field}

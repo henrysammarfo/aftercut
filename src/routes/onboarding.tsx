@@ -9,8 +9,8 @@ import { friendlyError, mindLabel } from "@/lib/display";
 import { Check, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/onboarding")({
-  beforeLoad: () => {
-    requireAuth();
+  beforeLoad: async () => {
+    await requireAuth();
   },
   head: () => ({
     meta: [

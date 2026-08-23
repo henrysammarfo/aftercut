@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteNav } from "@/components/site/SiteNav";
 import { circle } from "@/lib/aftercut-data";
+import { absoluteUrl, OG_IMAGE_PATH } from "@/lib/site-meta";
 import { ShieldAlert, Moon, Sunrise, Sun } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -18,6 +19,8 @@ export const Route = createFileRoute("/")({
         content:
           "Upload a stream or podcast. Your agent already knows your voice — it drafts, captions and follows up without starting over.",
       },
+      { property: "og:image", content: absoluteUrl(OG_IMAGE_PATH) },
+      { property: "og:url", content: absoluteUrl("/") },
     ],
   }),
   component: Index,

@@ -5,6 +5,7 @@
 import { and, eq } from "drizzle-orm";
 
 import { getDb, schema } from "@/db";
+import { decryptSecret } from "@/lib/crypto/secrets";
 
 export async function getProviderToken(
   userId: string,
@@ -22,7 +23,7 @@ export async function getProviderToken(
       ),
     )
     .limit(1);
-  if (conn[0]?.accessToken) return conn[0].accessToken;
+  if (conn[0]?.accessToken) return decryptSecret(conn[0].accessToken);
 
   if (provider === "google") {
     const acct = await db
@@ -32,7 +33,7 @@ export async function getProviderToken(
         and(eq(schema.account.userId, userId), eq(schema.account.providerId, "google")),
       )
       .limit(1);
-    if (acct[0]?.accessToken) return acct[0].accessToken;
+    if (acct[0]?.accessToken) return decryptSecret(acct[0].accessToken);
   }
 
   return null;

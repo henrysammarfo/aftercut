@@ -9,8 +9,8 @@ import { agentLabel, formatToolUsage, friendlyError, mindLabel, phaseLabel } fro
 import { Brain, Users, Radio, MessageSquare, Wrench } from "lucide-react";
 
 export const Route = createFileRoute("/circle")({
-  beforeLoad: () => {
-    requireAuth();
+  beforeLoad: async () => {
+    await requireAuth();
   },
   head: () => ({
     meta: [

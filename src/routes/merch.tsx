@@ -4,8 +4,8 @@ import { LogoMark } from "@/components/brand/Logo";
 import { requireAuth } from "@/lib/require-auth";
 
 export const Route = createFileRoute("/merch")({
-  beforeLoad: () => {
-    requireAuth();
+  beforeLoad: async () => {
+    await requireAuth();
   },
   head: () => ({
     meta: [

@@ -47,8 +47,16 @@ Apply: https://dorahacks.io/hackathon/creativeminds/detail
 1. Signup on live → set `TELEGRAM_DEFAULT_USER_ID` + redeploy  
 2. Settings: X token · LinkedIn · Connect Google  
 3. Optional `VITE_GUMROAD_URL`  
-4. Demo film → apply  
+4. **Demo film** → `CURSOR_API_KEY` in shell → `npm run cloud:film`  
 5. Rotate Resend key (was pasted in chat) + verify custom domain for `RESEND_FROM`  
+
+### Shipped this batch (security + brand)
+
+- AFTERCUT **favicon** + **og-image.png** (link previews)  
+- **Server-side route guards** (Better Auth cookies + client bridge)  
+- **Zod validation** on signup, sign-in, ingest, publish, invites, tokens  
+- **AES-256-GCM** encryption for OAuth tokens in `connected_account`  
+- Password min **8** chars on signup/sign-in/reset  
 
 ## Ship ladder
 

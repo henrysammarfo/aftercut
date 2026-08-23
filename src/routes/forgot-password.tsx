@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { z } from "zod";
 import { Logo } from "@/components/brand/Logo";
 import { authClient } from "@/lib/auth-client";
 import { fetchEmailStatus } from "@/lib/tenant-cloud";
@@ -51,8 +52,16 @@ function ForgotPasswordPage() {
             onSubmit={async (e) => {
               e.preventDefault();
               setError(null);
-              const res = await authClient.forgetPassword({
-                email: email.trim(),
+              const emailParsed = parseOrError(
+                z.object({ email: z.string().trim().email() }),
+                { email: email.trim() },
+              );
+              if (!emailParsed.ok) {
+                setError(emailParsed.error);
+                return;
+              }
+              const res = await authClient.requestPasswordReset({
+                email: emailParsed.data.email,
                 redirectTo: `${window.location.origin}/reset-password`,
               });
               if (res.error) setError(res.error.message ?? "Could not send reset email.");

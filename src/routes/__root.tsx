@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "../lib/auth";
+import { defaultHeadLinks, defaultHeadMeta } from "../lib/site-meta";
 
 function NotFoundComponent() {
   return (
@@ -78,15 +79,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "AFTERCUT — the editor that never forgets your DNA" },
-      {
-        name: "description",
-        content:
-          "AFTERCUT is a Minds agent that remembers your creative DNA and keeps turning long-form into platform-native posts overnight.",
-      },
-      { name: "author", content: "AFTERCUT" },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
+      ...defaultHeadMeta(),
     ],
     links: [
       {
@@ -99,7 +92,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Silkscreen:wght@400;700&display=swap",
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      ...defaultHeadLinks(),
     ],
   }),
   shellComponent: RootShell,

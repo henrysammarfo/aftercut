@@ -8,8 +8,8 @@ import { friendlyError } from "@/lib/display";
 import { Ban, Quote, Check } from "lucide-react";
 
 export const Route = createFileRoute("/brand-kit")({
-  beforeLoad: () => {
-    requireAuth();
+  beforeLoad: async () => {
+    await requireAuth();
   },
   head: () => ({
     meta: [

@@ -10,9 +10,11 @@ import { getRequestHeaders } from "@tanstack/react-start/server";
 
 import { getDb, hasDatabase, schema } from "@/db";
 import { getAuth, cloudAuthEnabled } from "@/lib/auth-server";
+import { encryptSecret } from "@/lib/crypto/secrets";
 import { sendShipReceiptEmail } from "@/lib/email";
 import { recordPublishEvent } from "@/lib/tenant-db";
 import { getProviderToken } from "@/lib/social/tokens";
+import { accessTokenSchema, parseOrError, publishTextSchema } from "@/lib/validation";
 
 async function requireUser() {
   if (!cloudAuthEnabled()) throw new Error("Cloud auth required.");
@@ -27,7 +29,10 @@ async function getToken(userId: string, provider: "x" | "linkedin") {
 
 export const publishToX = createServerFn({ method: "POST" }).handler(async (ctx) => {
   const user = await requireUser();
-  const { text, draftId, brandId } = (ctx as { data?: { text: string; draftId?: string; brandId?: string } }).data ?? ctx as { text: string; draftId?: string; brandId?: string };
+  const raw = (ctx as { data?: { text: string; draftId?: string; brandId?: string } }).data ?? ctx as { text: string; draftId?: string; brandId?: string };
+  const parsed = parseOrError(publishTextSchema, raw);
+  if (!parsed.ok) return { ok: false as const, error: parsed.error };
+  const { text, draftId, brandId } = parsed.data;
   const token = await getToken(user.id, "x");
   if (!token) return { ok: false as const, error: "Connect your X account in Settings first." };
 
@@ -64,7 +69,10 @@ export const publishToX = createServerFn({ method: "POST" }).handler(async (ctx)
 
 export const publishToLinkedIn = createServerFn({ method: "POST" }).handler(async (ctx) => {
   const user = await requireUser();
-  const { text, draftId, brandId } = (ctx as { data?: { text: string; draftId?: string; brandId?: string } }).data ?? ctx as { text: string; draftId?: string; brandId?: string };
+  const raw = (ctx as { data?: { text: string; draftId?: string; brandId?: string } }).data ?? ctx as { text: string; draftId?: string; brandId?: string };
+  const parsed = parseOrError(publishTextSchema, raw);
+  if (!parsed.ok) return { ok: false as const, error: parsed.error };
+  const { text, draftId, brandId } = parsed.data;
   const token = await getToken(user.id, "linkedin");
   if (!token) return { ok: false as const, error: "Connect LinkedIn in Settings first." };
 
@@ -123,7 +131,19 @@ export const publishToLinkedIn = createServerFn({ method: "POST" }).handler(asyn
 export const saveConnectedAccount = createServerFn({ method: "POST" }).handler(async (ctx) => {
   const user = await requireUser();
   if (!hasDatabase()) throw new Error("Database required.");
-  const input = (ctx as { data?: { provider: string; accessToken: string; refreshToken?: string; scope?: string } }).data ?? ctx as { provider: string; accessToken: string; refreshToken?: string; scope?: string };
+  const raw = (ctx as { data?: { provider: string; accessToken: string; refreshToken?: string; scope?: string } }).data ?? ctx as { provider: string; accessToken: string; refreshToken?: string; scope?: string };
+  const tokenCheck = parseOrError(accessTokenSchema, raw.accessToken);
+  if (!tokenCheck.ok) return { ok: false as const, error: tokenCheck.error };
+  const provider = raw.provider?.trim();
+  if (!provider || !["x", "linkedin", "google", "telegram"].includes(provider)) {
+    return { ok: false as const, error: "Unknown provider." };
+  }
+  const input = {
+    ...raw,
+    provider,
+    accessToken: encryptSecret(tokenCheck.data),
+    refreshToken: raw.refreshToken ? encryptSecret(raw.refreshToken) : undefined,
+  };
   const db = getDb();
   const id = `conn_${crypto.randomUUID().slice(0, 12)}`;
   const existing = await db

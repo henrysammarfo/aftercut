@@ -8,8 +8,8 @@ import { agentLabel, phaseLabel } from "@/lib/display";
 import { Brain, Zap, Bell, ShieldAlert } from "lucide-react";
 
 export const Route = createFileRoute("/timeline")({
-  beforeLoad: () => {
-    requireAuth();
+  beforeLoad: async () => {
+    await requireAuth();
   },
   head: () => ({
     meta: [

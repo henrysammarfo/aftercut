@@ -2,8 +2,13 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/lib/auth";
+import { redirectIfAuthed } from "@/lib/require-auth";
+import { parseOrError, signupSchema } from "@/lib/validation";
 
 export const Route = createFileRoute("/signup")({
+  beforeLoad: async () => {
+    await redirectIfAuthed();
+  },
   head: () => ({ meta: [{ title: "Create account — AFTERCUT" }] }),
   component: SignupPage,
 });
@@ -39,7 +44,17 @@ function SignupPage() {
           className="mt-8 space-y-4"
           onSubmit={async (e) => {
             e.preventDefault();
-            const res = await signUp({ name, email, password });
+            setError(null);
+            const parsed = parseOrError(signupSchema, {
+              name: name.trim(),
+              email: email.trim(),
+              password,
+            });
+            if (!parsed.ok) {
+              setError(parsed.error);
+              return;
+            }
+            const res = await signUp(parsed.data);
             if (!res.ok) setError(res.error || "Sign up failed");
             else void navigate({ to: "/onboarding" });
           }}
@@ -62,11 +77,11 @@ function SignupPage() {
           <input
             type="password"
             required
-            minLength={6}
+            minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className={field}
-            placeholder="Password (6+)"
+            placeholder="Password (8+)"
           />
           {error ? (
             <p className="rounded-lg bg-destructive/15 px-3 py-2 text-sm text-destructive">

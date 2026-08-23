@@ -7,8 +7,8 @@ import { mindLabel } from "@/lib/display";
 import { UploadCloud, Send, Link2, FileText } from "lucide-react";
 
 export const Route = createFileRoute("/ingest")({
-  beforeLoad: () => {
-    requireAuth();
+  beforeLoad: async () => {
+    await requireAuth();
   },
   head: () => ({
     meta: [
