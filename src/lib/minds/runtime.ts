@@ -112,9 +112,10 @@ export async function resolveDirectorMind(
   return byName;
 }
 
-export function conversationAlias(userId: string): string {
-  const clean = userId.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40) || "user";
-  return `${ALIAS_PREFIX}_${clean}`;
+export function conversationAlias(userId: string, channel = "main"): string {
+  const clean = userId.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 32) || "user";
+  const ch = channel.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 24) || "main";
+  return `${ALIAS_PREFIX}_${clean}_${ch}`;
 }
 
 export type MindTalkResult =
@@ -126,12 +127,14 @@ export async function talkToDirector(input: {
   userId: string;
   messageText: string;
   timeoutMs?: number;
+  /** Isolate JSON tasks from Soul chat so the Director does not meta-reply. */
+  channel?: string;
 }): Promise<MindTalkResult> {
   return withRetry(
     async () => {
       const client = createLiveMindsClient();
       const director = await resolveDirectorMind(client);
-      const alias = conversationAlias(input.userId);
+      const alias = conversationAlias(input.userId, input.channel ?? "main");
       await client.ensureConversation(alias, director.mindId);
 
       const before = await client.getLatestHistoryFingerprint(alias);

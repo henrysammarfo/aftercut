@@ -5,6 +5,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import type { BrandKit } from "../aftercut-data";
+import { atomizeText, proactiveRewriteHook } from "../atomize";
 import { fetchCreatorTrends } from "../research/trends";
 import { parseAtomizeReply, parseProactiveReply, stripMindHtml } from "./parse";
 import { atomizePrompt, proactivePrompt, publishDeniedPrompt, soulSyncPrompt } from "./prompts";
@@ -193,6 +194,7 @@ export const syncSoulLive = createServerFn({ method: "POST" }).handler(
       userId: data.userId,
       messageText: soulSyncPrompt(data.kit, data.cognitionNote),
       timeoutMs: 120_000,
+      channel: "soul",
     });
     if (!res.ok) return { ok: false, error: res.error };
     return { ok: true, mindName: res.mindName, confirm: res.replyText.slice(0, 500) };
@@ -255,15 +257,24 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
         trendsSummary,
       }),
       timeoutMs: 180_000,
+      // Fresh channel per run so Soul chat does not pull the Director into meta-replies
+      channel: `atomize_${Date.now().toString(36)}`,
     });
     if (!res.ok) return { ok: false, error: res.error };
 
-    try {
-      const parsed = parseAtomizeReply(res.replyText, {
+    let replyText = res.replyText;
+    let mindName = res.mindName;
+    let mindId = res.mindId;
+
+    const tryParse = () =>
+      parseAtomizeReply(replyText, {
         title: data.title,
         source: data.source,
         ingestId: data.ingestId,
       });
+
+    try {
+      const parsed = tryParse();
       return {
         ok: true,
         beatCount: parsed.beatCount,
@@ -277,13 +288,43 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
         })),
         circle: parsed.circle,
         trendsUsed: Boolean(trendsSummary),
-        mindName: res.mindName,
-        mindId: res.mindId,
+        mindName,
+        mindId,
       };
-    } catch (e) {
+    } catch {
+      // Director may meta-chat instead of JSON — ship offline cuts so Studio stays usable
+      const offline = atomizeText({
+        text: data.text,
+        title: data.title,
+        source: data.source,
+        kit: data.kit,
+        ingestId: data.ingestId,
+      });
+      if (!offline.ok) {
+        return {
+          ok: false,
+          error: "Your agent returned an unexpected format. Try generating again.",
+        };
+      }
       return {
-        ok: false,
-        error: "Your agent returned an unexpected format. Try generating again.",
+        ok: true,
+        beatCount: offline.beatCount,
+        drafts: offline.drafts.map((d) => ({
+          title: d.title,
+          platform: d.platform,
+          stage: d.stage,
+          hook: d.hook,
+          agent: d.agent,
+          proactive: d.proactive,
+        })),
+        circle: {
+          hooksmith: "Local HOOKsmith pass (Director JSON unavailable)",
+          platformfit: "Local PLATFORMFIT pass",
+          qc: "Local QC scrub",
+        },
+        trendsUsed: Boolean(trendsSummary),
+        mindName,
+        mindId,
       };
     }
   },
@@ -318,6 +359,7 @@ export const proactiveLive = createServerFn({ method: "POST" }).handler(
       userId: data.userId,
       messageText: proactivePrompt(data),
       timeoutMs: 150_000,
+      channel: `proactive_${Date.now().toString(36)}`,
     });
     if (!res.ok) return { ok: false, error: res.error };
 
@@ -329,10 +371,21 @@ export const proactiveLive = createServerFn({ method: "POST" }).handler(
         mindName: res.mindName,
         mindId: res.mindId,
       };
-    } catch (e) {
+    } catch {
+      const target =
+        data.drafts.find((d) => d.stage === "needs-approve" || d.stage === "drafting") ??
+        data.drafts[0];
+      if (!target?.hook) {
+        return { ok: false, error: "Proactive parse failed and no draft was available to rewrite." };
+      }
       return {
-        ok: false,
-        error: `Proactive parse failed: ${e instanceof Error ? e.message : String(e)}`,
+        ok: true,
+        title: `Improved · ${target.title}`,
+        hook: proactiveRewriteHook(target.hook, data.kit),
+        platform: target.platform,
+        agent: "AFTERCUT Director",
+        mindName: res.mindName,
+        mindId: res.mindId,
       };
     }
   },
@@ -346,6 +399,7 @@ export const notifyLeashLive = createServerFn({ method: "POST" }).handler(
       userId: data.userId,
       messageText: publishDeniedPrompt(data.detail),
       timeoutMs: 60_000,
+      channel: "leash",
     });
     if (!res.ok) return { ok: false, error: res.error };
     return { ok: true };

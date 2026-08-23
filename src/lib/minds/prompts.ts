@@ -31,25 +31,10 @@ export function atomizePrompt(input: {
   trendsSummary?: string;
 }): string {
   return [
-    "You are the AFTERCUT Mind Circle running as ONE Director with three specialist passes.",
-    "OUTPUT RULES (hard): Reply with ONLY one JSON object. No HTML. No <p>. No greeting. No markdown outside optional ```json fence.",
-    "Simulate the Circle pipeline in order, then emit drafts:",
-    "  1) HOOKsmith — strongest first lines / CTAs only",
-    "  2) PLATFORMFIT — native Shorts vs X vs LinkedIn vs newsletter voice",
-    "  3) QC — scrub do-not-say + reject same-caption cross-posts",
-    "Atomize this long-form into platform-native drafts using the Soul kit below.",
-    "Hard rules — production, no shortcuts:",
-    "- Stay in brand voice; scrub every do-not-say phrase from every hook/caption.",
-    "- Platforms allowed: shorts | x | linkedin | newsletter only.",
-    "- NATIVE ≠ cross-post: each platform draft must use different length, hook shape, and CTA framing. NEVER copy-paste the same caption across platforms.",
-    "  · shorts: spoken first-line hook ≤90 chars energy, on-screen punch implied, no LinkedIn essay.",
-    "  · x: ≤200 chars, one claim, optional 1–2 hashtags max, no corporate padding.",
-    "  · linkedin: professional lead + lesson, 1–3 short lines, no TikTok slang.",
-    "  · newsletter: subject-style open + 1 preview sentence teaser.",
-    "- stages: one source card stage ingested; others drafting or needs-approve.",
-    "- agents on drafts: HOOKsmith | PLATFORMFIT | QC | AFTERCUT Director",
-    "- No markdown outside a single JSON object.",
-    "- Reply with ONLY this JSON shape:",
+    "TASK: Atomize long-form into platform drafts.",
+    "Your reply MUST begin with the character { and MUST be ONLY a JSON object. Zero prose before or after.",
+    "Do not mention threads, prompts, schemas, or prior messages.",
+    "Schema:",
     `{
   "beatCount": <number>,
   "circle": {
@@ -67,9 +52,12 @@ export function atomizePrompt(input: {
     }
   ]
 }`,
-    "- circle.hooksmith / platformfit / qc = 1–2 sentence pass receipts (what that role did).",
-    "- Produce 1 ingested source draft + 4–8 platform cuts from real beats in the text (cover all platforms at least once when content allows).",
-    "- QC: if a ban phrase slips into a hook, rewrite that hook before answering.",
+    "Rules:",
+    "- Stay in brand voice; scrub every do-not-say phrase from every hook.",
+    "- Native drafts: Shorts ≤90 chars energy; X ≤200 one claim; LinkedIn lesson lines; newsletter subject+preview.",
+    "- Never identical captions across platforms.",
+    "- Produce 1 ingested source draft + 4–8 platform cuts covering all platforms when possible.",
+    "- agents: HOOKsmith | PLATFORMFIT | QC | AFTERCUT Director",
     "",
     "SOUL KIT:",
     JSON.stringify(
@@ -85,15 +73,13 @@ export function atomizePrompt(input: {
       2,
     ),
     "",
-    input.trendsSummary
-      ? ["LIVE TREND CONTEXT (use lightly — do not invent facts not in LONG-FORM):", input.trendsSummary, ""].join(
-          "\n",
-        )
-      : "",
-    `INGEST title: ${input.title}`,
-    `INGEST source label: ${input.source}`,
+    `SOURCE title: ${input.title}`,
+    `SOURCE type: ${input.source}`,
+    input.trendsSummary ? `TRENDS:\n${input.trendsSummary}` : "",
     "LONG-FORM:",
-    input.text.slice(0, 24_000),
+    input.text,
+    "",
+    "BEGIN JSON NOW.",
   ]
     .filter(Boolean)
     .join("\n");
