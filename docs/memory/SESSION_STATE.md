@@ -25,7 +25,8 @@ Apply: https://dorahacks.io/hackathon/creativeminds/detail
 
 | Check | Result |
 |---|---|
-| `npm run minds-smoke` | **ok** · Director · cog **1174.54** · mindId `6bf0483e-…df11` |
+| `npm run minds-smoke` | **ok** · Director enabled · cog **1171+** · pinned mindId |
+| Cloud film E2E (local) | **7/9 beats** on video · require-auth Vite fix · atomize/proactive Mind parse flaky under repeated demo probes |
 | `npm test` | **4/4 pass** |
 | Production `/` + `/privacy` | **HTTP 200** |
 | Vercel prod deploy | **cd2fa56** (Resend SDK) via GitHub |
