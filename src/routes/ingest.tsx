@@ -72,8 +72,11 @@ function Ingest() {
             </Link>
           ) : null}
           <PrimaryButton
-            onClick={() => {
-              const res = addIngest({ text, title: title || undefined, source });
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              const res = await addIngest({ text, title: title || undefined, source });
+              setBusy(false);
               if (!res.ok) {
                 flash(res.error, true);
                 return;
