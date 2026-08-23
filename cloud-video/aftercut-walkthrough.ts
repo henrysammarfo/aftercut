@@ -110,12 +110,15 @@ async function main() {
 
   // Beat 6 — Publish denied
   await page.getByRole("button", { name: /publish all now/i }).click();
-  await page.getByText(/publishing blocked|bulk publish blocked/i).waitFor({ timeout: 10000 });
+  await page.getByText("Publishing blocked").first().waitFor({ timeout: 10000 });
   await pause(2500);
 
   // Beat 7 — Day-2 follow-up
   await page.getByRole("button", { name: /improve weakest hook/i }).click();
-  await page.getByText(/updated draft|needs approval|improving/i).waitFor({ timeout: 90000 });
+  await page
+    .getByText(/updated draft|needs approval|improving|Improved/i)
+    .first()
+    .waitFor({ timeout: 90000 });
   await pause(2000);
 
   // Beat 8 — Timeline
