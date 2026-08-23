@@ -26,7 +26,7 @@ Apply: https://dorahacks.io/hackathon/creativeminds/detail
 | Check | Result |
 |---|---|
 | `npm run minds-smoke` | **ok** · Director enabled · cog **1171+** · pinned mindId |
-| Cloud film E2E (local) | First pass: window not maximized, no zoom, cursor idle · atomize/proactive non-JSON · see [`FILM_BUGS.md`](FILM_BUGS.md) · reshoot in progress |
+| Cloud film E2E (local) | Reshoot: F11 + 125% zoom + hover cursor. Atomize still failed → empty Studio. Video: `aftercut-film-studio-circle.mp4`. Full list: [`FILM_BUGS.md`](FILM_BUGS.md) |
 | `npm test` | **4/4 pass** |
 | Production `/` + `/privacy` | **HTTP 200** |
 | Vercel prod deploy | **cd2fa56** (Resend SDK) via GitHub |

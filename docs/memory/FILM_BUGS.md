@@ -48,3 +48,25 @@ Unverified: whether Director would return valid JSON on a cold conversation with
 6. Unique signup email `film+cloud{unix}@example.com`.
 7. Do **not** seed `localStorage` drafts unless the film explicitly labels it as a fallback.
 8. Wait for Soul sync / Generate drafts / Improve weakest hook (up to 90s). If Mind returns prose, leave the real error on camera — do not fake cards.
+
+## Reshoot (2026-08-23 later) — presentation vs product
+
+Presentation (fixed vs first pass):
+
+- **F11 fullscreen** — no wallpaper/dock in landing, brand-kit, studio, timeline, circle.
+- **125% zoom** + extra zoom into status badge, Publish blocked, Day-2 error, Director card.
+- **Cursor hovered** Get started, Create account, Save, Generate drafts, Publish all now, Improve weakest hook, Activity, Agent team.
+- Full landing→ingest recording **died** (ffmpeg I/O after ~21 min). Studio→circle take saved: `aftercut-film-studio-circle.mp4` (~11 min).
+
+Still broken on camera (honest, not seeded):
+
+| # | Beat | What judges would see |
+|---|---|---|
+| R1 | Generate drafts | Hung **Generating…** past 90s, then failed. Studio stayed **No drafts yet**. |
+| R2 | Publish all now | **Publishing blocked — Nothing ready to publish — your queue is empty** (empty-queue leash, not “5 drafts need approval”). |
+| R3 | Improve weakest hook | **Proactive parse failed: Mind proactive reply missing hook** |
+| R4 | Circle transcript | Director: soul sync is a “verbatim duplicate” / “seventeenth fresh thread”; Soul kit treated as reset. |
+| R5 | CTA field | Saved as `replywithyourlong-form` (no spaces) — comma-split input, easy to mash. |
+| R6 | Setup bar | Stays **2/5** (Brand voice + Approval guard). First import never completes without a successful atomize. |
+| R7 | Status badge | Truncates to `1126 CREDI...` in the 64px sidebar at 125% zoom. |
+
