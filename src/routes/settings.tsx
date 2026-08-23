@@ -1,9 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppShell, GlassCard, PrimaryButton } from "@/components/app/AppShell";
 import { authClient } from "@/lib/auth-client";
 import { requireAuth } from "@/lib/require-auth";
 import { fetchPublishAnalytics, saveConnectedAccount } from "@/lib/social/publish";
+import {
+  cloudInviteStudioMember,
+  fetchEmailStatus,
+  fetchStudioInvites,
+} from "@/lib/tenant-cloud";
 import { friendlyError } from "@/lib/display";
 
 export const Route = createFileRoute("/settings")({
@@ -21,6 +26,11 @@ function SettingsPage() {
   const [err, setErr] = useState(false);
   const [xToken, setXToken] = useState("");
   const [liToken, setLiToken] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [resendOk, setResendOk] = useState<boolean | null>(null);
+  const [invites, setInvites] = useState<
+    Array<{ id: string; email: string; role: string; status: string }>
+  >([]);
   const [analytics, setAnalytics] = useState<
     Array<{ platform: string; hook: string | null; publishedAt?: string }>
   >([]);
@@ -30,10 +40,19 @@ function SettingsPage() {
     setErr(isErr);
   };
 
+  useEffect(() => {
+    void fetchEmailStatus()
+      .then((s) => setResendOk(s.resendConfigured))
+      .catch(() => setResendOk(false));
+    void fetchStudioInvites()
+      .then(setInvites)
+      .catch(() => setInvites([]));
+  }, []);
+
   return (
     <AppShell
       title="Settings"
-      subtitle="Connected accounts, publish tokens, and post analytics. Key setup: docs/KEYS_SETUP.md in the repo."
+      subtitle="Accounts, invites, email, and publish analytics."
       showSetupProgress={false}
       actions={
         <PrimaryButton
@@ -61,6 +80,74 @@ function SettingsPage() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <GlassCard>
+          <h2 className="text-sm font-semibold">Password reset email</h2>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Resend delivers forgot-password and studio invite emails.
+            {resendOk === null
+              ? " Checking…"
+              : resendOk
+                ? " Configured."
+                : " Not configured — set RESEND_API_KEY + RESEND_FROM on the host."}
+          </p>
+          <Link to="/forgot-password" className="mt-3 inline-block text-xs underline">
+            Test forgot-password flow →
+          </Link>
+        </GlassCard>
+
+        <GlassCard>
+          <h2 className="text-sm font-semibold">Agency seats</h2>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Invite collaborators by email. They sign up with that address to join.
+          </p>
+          <form
+            className="mt-3 flex gap-2"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              try {
+                const res = await cloudInviteStudioMember({
+                  data: { email: inviteEmail.trim() },
+                });
+                flash(
+                  res.emailed
+                    ? `Invited ${res.invite.email}.`
+                    : `Invite saved for ${res.invite.email}${res.emailError ? ` — ${res.emailError}` : ""}`,
+                  !res.emailed,
+                );
+                setInviteEmail("");
+                const rows = await fetchStudioInvites();
+                setInvites(rows);
+              } catch (e) {
+                flash(friendlyError(e instanceof Error ? e.message : String(e)), true);
+              }
+            }}
+          >
+            <input
+              className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs"
+              type="email"
+              required
+              placeholder="teammate@studio.com"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+            />
+            <button
+              type="submit"
+              className="rounded-full bg-white/10 px-4 py-2 text-xs hover:bg-white/15"
+            >
+              Invite
+            </button>
+          </form>
+          {invites.length > 0 ? (
+            <ul className="mt-3 space-y-1 text-[11px] text-muted-foreground">
+              {invites.map((i) => (
+                <li key={i.id}>
+                  {i.email} · {i.role} · {i.status}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </GlassCard>
+
+        <GlassCard>
           <h2 className="text-sm font-semibold">Google (Calendar + YouTube)</h2>
           <p className="mt-2 text-xs text-muted-foreground">
             Schedule approved posts to Google Calendar using the official Calendar API. Connect via
@@ -69,7 +156,9 @@ function SettingsPage() {
           <button
             type="button"
             className="mt-4 rounded-full bg-white/10 px-4 py-2 text-xs hover:bg-white/15"
-            onClick={() => void authClient.signIn.social({ provider: "google", callbackURL: "/settings" })}
+            onClick={() =>
+              void authClient.signIn.social({ provider: "google", callbackURL: "/settings" })
+            }
           >
             Connect Google
           </button>
@@ -107,8 +196,8 @@ function SettingsPage() {
         <GlassCard>
           <h2 className="text-sm font-semibold">LinkedIn (publish)</h2>
           <p className="mt-2 text-xs text-muted-foreground">
-            Paste a LinkedIn OAuth access token with w_member_social scope. Uses the official UGC Posts
-            API.
+            Paste a LinkedIn OAuth access token with w_member_social scope. Uses the official UGC
+            Posts API.
           </p>
           <input
             className="mt-3 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs"
@@ -133,10 +222,9 @@ function SettingsPage() {
         <GlassCard>
           <h2 className="text-sm font-semibold">Telegram ingest</h2>
           <p className="mt-2 text-xs text-muted-foreground">
-            Point your bot webhook to{" "}
-            <code className="rounded bg-white/10 px-1">/api/webhooks/telegram</code> with header{" "}
-            <code className="rounded bg-white/10 px-1">X-Telegram-Bot-Api-Secret-Token</code>.
-            Messages ≥48 chars auto-import.
+            Webhook:{" "}
+            <code className="rounded bg-white/10 px-1">/api/webhooks/telegram</code>. Messages ≥48
+            chars auto-import after signup + TELEGRAM_DEFAULT_USER_ID.
           </p>
           <Link to="/ingest" className="mt-4 inline-block text-xs underline">
             Open Import →

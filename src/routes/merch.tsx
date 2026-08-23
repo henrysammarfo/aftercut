@@ -103,6 +103,29 @@ function Merch() {
           </GlassCard>
         ))}
       </div>
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <GlassCard>
+          <h2 className="text-sm font-semibold">Shop the mark</h2>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Hoodies and tees via Gumroad (no custom checkout). Set{" "}
+            <code className="rounded bg-white/10 px-1">VITE_GUMROAD_URL</code> to your product link.
+          </p>
+          {import.meta.env.VITE_GUMROAD_URL ? (
+            <a
+              href={String(import.meta.env.VITE_GUMROAD_URL)}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-4 inline-flex rounded-full bg-white/10 px-4 py-2 text-xs hover:bg-white/15"
+            >
+              Open merch store →
+            </a>
+          ) : (
+            <p className="mt-4 text-xs text-muted-foreground">
+              Store link not set yet — brand kit above is ready for production.
+            </p>
+          )}
+        </GlassCard>
+      </div>
     </AppShell>
   );
 }

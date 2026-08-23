@@ -123,6 +123,110 @@ export async function listBrands(userId: string) {
   return db.select().from(schema.brand).where(eq(schema.brand.userId, userId));
 }
 
+function slugify(name: string): string {
+  const base = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 40);
+  return base || `brand-${crypto.randomUUID().slice(0, 6)}`;
+}
+
+export async function createBrand(userId: string, name: string) {
+  if (!hasDatabase()) throw new Error("Database required.");
+  const db = getDb();
+  const trimmed = name.trim();
+  if (!trimmed) throw new Error("Brand name is required.");
+  let slug = slugify(trimmed);
+  const clash = await db
+    .select()
+    .from(schema.brand)
+    .where(and(eq(schema.brand.userId, userId), eq(schema.brand.slug, slug)))
+    .limit(1);
+  if (clash[0]) slug = `${slug}-${crypto.randomUUID().slice(0, 4)}`;
+
+  await db
+    .update(schema.brand)
+    .set({ isDefault: false, updatedAt: new Date() })
+    .where(eq(schema.brand.userId, userId));
+
+  const id = `br_${crypto.randomUUID().slice(0, 12)}`;
+  const row = {
+    id,
+    userId,
+    name: trimmed,
+    slug,
+    isDefault: true,
+    data: emptyTenant(userId),
+  };
+  await db.insert(schema.brand).values(row);
+  return row;
+}
+
+export async function switchBrand(userId: string, brandId: string) {
+  if (!hasDatabase()) throw new Error("Database required.");
+  const db = getDb();
+  const rows = await db
+    .select()
+    .from(schema.brand)
+    .where(and(eq(schema.brand.userId, userId), eq(schema.brand.id, brandId)))
+    .limit(1);
+  if (!rows[0]) throw new Error("Brand not found.");
+  await db
+    .update(schema.brand)
+    .set({ isDefault: false, updatedAt: new Date() })
+    .where(eq(schema.brand.userId, userId));
+  await db
+    .update(schema.brand)
+    .set({ isDefault: true, updatedAt: new Date() })
+    .where(and(eq(schema.brand.userId, userId), eq(schema.brand.id, brandId)));
+  return loadBrandTenant(userId, brandId);
+}
+
+export async function listStudioInvites(ownerUserId: string) {
+  if (!hasDatabase()) return [];
+  const db = getDb();
+  return db
+    .select()
+    .from(schema.studioInvite)
+    .where(eq(schema.studioInvite.ownerUserId, ownerUserId))
+    .orderBy(desc(schema.studioInvite.createdAt));
+}
+
+export async function createStudioInvite(ownerUserId: string, email: string, role = "editor") {
+  if (!hasDatabase()) throw new Error("Database required.");
+  const normalized = email.trim().toLowerCase();
+  if (!normalized.includes("@")) throw new Error("Valid email required.");
+  const db = getDb();
+  const id = `inv_${crypto.randomUUID().slice(0, 12)}`;
+  const existing = await db
+    .select()
+    .from(schema.studioInvite)
+    .where(
+      and(
+        eq(schema.studioInvite.ownerUserId, ownerUserId),
+        eq(schema.studioInvite.email, normalized),
+      ),
+    )
+    .limit(1);
+  if (existing[0]) {
+    await db
+      .update(schema.studioInvite)
+      .set({ status: "pending", role, updatedAt: new Date() })
+      .where(eq(schema.studioInvite.id, existing[0].id));
+    return existing[0];
+  }
+  const row = {
+    id,
+    ownerUserId,
+    email: normalized,
+    role,
+    status: "pending",
+  };
+  await db.insert(schema.studioInvite).values(row);
+  return row;
+}
+
 export async function recordPublishEvent(input: {
   userId: string;
   brandId?: string;

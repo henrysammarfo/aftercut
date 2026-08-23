@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
 import { getDb, hasDatabase, schema } from "@/db";
+import { sendResetEmail } from "@/lib/email";
 
 function baseUrl(): string {
   const vercel = process.env.VERCEL_URL?.trim();
@@ -10,28 +11,6 @@ function baseUrl(): string {
     (vercel ? `https://${vercel.replace(/^https?:\/\//, "")}` : "") ||
     "http://localhost:5173"
   );
-}
-
-async function sendResetEmail(to: string, url: string) {
-  const key = process.env.RESEND_API_KEY?.trim();
-  if (!key) {
-    console.info("[aftercut] Password reset (no RESEND_API_KEY):", to, url);
-    return;
-  }
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: process.env.RESEND_FROM ?? "AFTERCUT <onboarding@resend.dev>",
-      to: [to],
-      subject: "Reset your AFTERCUT password",
-      html: `<p>Reset your password:</p><p><a href="${url}">${url}</a></p><p>If you didn't request this, ignore this email.</p>`,
-    }),
-  });
-  if (!res.ok) console.error("[aftercut] Resend failed", res.status, await res.text());
 }
 
 let _auth: ReturnType<typeof betterAuth> | null = null;
@@ -44,7 +23,12 @@ export function getAuth() {
     _auth = betterAuth({
       secret: process.env.BETTER_AUTH_SECRET ?? "dev-only-change-me",
       baseURL: baseUrl(),
-      trustedOrigins: [baseUrl(), "http://localhost:5173", "http://127.0.0.1:5173"],
+      trustedOrigins: [
+        baseUrl(),
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://aftercut-sandy.vercel.app",
+      ],
       database: drizzleAdapter(getDb(), {
         provider: "pg",
         schema: {

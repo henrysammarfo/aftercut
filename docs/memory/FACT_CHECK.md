@@ -1,61 +1,76 @@
 # FACT CHECK — Creative Minds Jam #1 (AFTERCUT)
 
-> Verified against official paste + live Builder API probe **2026-08-22**.  
-> Unverified claims stay marked.
+> Last pass: **2026-08-23**. Unverified claims stay marked.  
+> Sources: jam paste · live `npm run minds-smoke` · production HTTP · Animoca announcement URL (fetch may time out — do not invent new deadlines).
 
 ## Jam (official paste — treat as source)
 
 | Claim | Status |
 |---|---|
-| Deadline **28 Aug 2026, 23:59 HKT** | Verified (user paste + creativemindsjam timeline) |
-| Prize pool **$10,000** | Verified (paste) |
+| Deadline **28 Aug 2026** (submission) | **Verified** — [Animoca announcement](https://www.animocabrands.com/announcement/the-sandbox-and-animoca-brands-launch-creative-minds-jam-1-hong-kong-usd10000-agentic-ai-competition) timeline: *28 August: Submission deadline*. Time-of-day **23:59 HKT** from jam paste / DoraHacks (Animoca page does not restate HKT clock). |
+| Prize pool **$10,000** | Verified (paste + Animoca announcement title) |
 | Track prizes $1,200 / $600 · Grand $2,300 · Student $1,300 | Verified (paste) |
 | Tracks: growth · **repurposing** · moderation | Verified — AFTERCUT = repurposing |
 | Must: working product · Mind integral · persistence · video 1.5–2 min · repo+docs | Verified |
 | Single- **or** multi-agent OK | Verified |
 | Cognition boost discretionary · one Mind/team | Verified |
-| Minds Investment Programme · jam mentions potential ~$250k | Verified (paste). Programme hub also cites up to **US$10M aggregate** allocation — do not invent per-deal amounts |
+| Minds Investment Programme · jam mentions potential ~$250k | Verified (paste). Programme hub also cites up to **US$10M aggregate** — do not invent per-deal amounts |
 | Open Campus community partner | Verified (paste) |
-| Apply via DoraHacks / Apply Now | Verified (paste + dorahacks link in SESSION_STATE) |
+| Apply via DoraHacks | Verified — https://dorahacks.io/hackathon/creativeminds/detail |
 
-## Minds SDK (`@animocabrands/minds-client-lib@0.1.3` — latest as of probe)
+## Production URL (2026-08-23 live)
+
+| Check | Result |
+|---|---|
+| https://aftercut-sandy.vercel.app/ | **HTTP 200** |
+| https://aftercut-sandy.vercel.app/privacy | **HTTP 200** |
+| Neon schema | `db:push` applied (auth + brand + connected_account + publish_event + studio_invite) |
+| Cloud mode | Needs `DATABASE_URL` + `BETTER_AUTH_SECRET` (set on Vercel) |
+
+## Minds SDK (`@animocabrands/minds-client-lib@0.1.3`)
 
 | Surface | Used by AFTERCUT |
 |---|---|
-| listMinds / getMind / cognition balance | Yes |
-| ensureConversation / sendMessage / waitForReply | Yes (Soul · atomize · proactive · leash) |
+| listMinds / getMind / cognition | Yes |
+| ensureConversation / sendMessage / waitForReply | Yes |
 | getLatestHistoryFingerprint | Yes |
-| **getHistory** | **Yes (new)** — Circle transcript |
-| **listEquippedSkills / Apps · equipApps** | **Yes (new)** — Circle + creator stack |
-| **getCognitionUsageByTool** | **Yes (new)** — Circle tools strip |
-| **getCircle / listConversations** | **Yes (new)** |
-| bazaar.listApps / listSkills | Probe + equip IDs |
-| subscribeEvents / SSE custom | Not needed (waitForReply covers) |
-| updateMindStatus | Not exposed in UI (Mind stays enabled) |
+| getHistory | Yes — Circle transcript |
+| listEquippedSkills / Apps · equipApps | Yes |
+| getCognitionUsageByTool | Yes |
+| getCircle / listConversations | Yes |
+| bazaar.listApps / listSkills | Probe + equip |
 
-## Live Director probe (2026-08-22)
+## Live Director probe (2026-08-23)
 
 ```
+ok: true
 name: AFTERCUT.Director
 mindId: 6bf0483e-f36b-1410-8466-00039ce7df11
-cognition: ~1187
-telegramBotId: 8840245437 (linked)
-wallet: 0x5e28Fe9b… (present)
-skills: Mastermind_Companion, Mastermind_Dormancy_Resync
-apps: (equip VoiceTranscribe + YouTube Research Scout)
-tools day: LLM_Turn, SKILL_LoadPlaybook
-Builder Circle API = human collaborators by email — not multi-Mind slots
+isEnabled: true
+cognition: 1168.61
+telegramBotId: 8840245437 (Minds-linked; BotFather token registered to AFTERCUT webhook)
+npm run minds-smoke
 ```
 
-## Product truth
+## Product truth (2026-08-23)
 
 | Item | Truth |
 |---|---|
-| HOOKsmith / PLATFORMFIT / QC | Director **passes** + Memory receipts (jam allows single-agent) |
-| Telegram → Studio auto-ingest | Bot linked; Studio still accepts paste (webhook = stretch) |
+| HOOKsmith / PLATFORMFIT / QC | Director **passes** + Memory receipts (single-agent OK for jam) |
+| Cloud auth / Neon / Better Auth | **Live** on Vercel |
+| Studio publish X + LinkedIn | **In product** — needs user tokens in Settings |
+| Google Calendar | **In product** — Connect Google in Settings |
+| Telegram → Studio ingest | Webhook **set** on production URL; **blocked** until signup + `TELEGRAM_DEFAULT_USER_ID` |
+| Multi-brand switcher | **Shipped** (sidebar) |
+| Agency email invites | **Shipped** (Settings; email needs Resend) |
+| Password reset | `/forgot-password` + `/reset-password` — real email needs `RESEND_API_KEY` |
+| Merch commerce | Gumroad link hook (`VITE_GUMROAD_URL`) — no Stripe |
 | Stripe | **Dropped** for jam |
-| Cloud auth / social OAuth | Stretch after Mind depth + film — not dropped forever |
+| Demo film 1.5–2 min | **Open — #1 submit blocker** |
 
 ## Bug found + fix
 
-Mind sometimes replies with HTML `<p>` chit-chat. Parse now strips HTML; prompts demand JSON/plain only.
+| Issue | Fix |
+|---|---|
+| Mind HTML chit-chat in atomize | Parse strips HTML; prompts demand JSON/plain |
+| Prod 500 `sessionSchema.loose is not a function` | Zod upgraded to **v4** (Better Auth requires it) |

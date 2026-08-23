@@ -37,6 +37,7 @@ import {
   cloudApplyLiveAtomize,
   cloudApplyLiveProactive,
   cloudApproveDraft,
+  cloudCreateBrand,
   cloudDenyPublishAll,
   cloudExportTenant,
   cloudImportTenant,
@@ -45,6 +46,8 @@ import {
   cloudSaveBrandKit,
   cloudSetCognitionNote,
   cloudSetDraftStage,
+  cloudSwitchBrand,
+  fetchBrands,
   fetchCloudTenant,
   fetchProductConfig,
 } from "./tenant-cloud";
@@ -64,10 +67,20 @@ type OpOk = { ok: true };
 type OpFail = { ok: false; error: string };
 type AsyncOp = Promise<OpOk | OpFail>;
 
+export type BrandSummary = {
+  id: string;
+  name: string;
+  slug: string;
+  isDefault: boolean;
+};
+
 type AuthContextValue = {
   ready: boolean;
   session: Session | null;
   tenant: TenantState | null;
+  brands: BrandSummary[];
+  activeBrandId: string | null;
+  brandName: string | null;
   productMode: "live" | "cloud";
   cloudStorage: boolean;
   mindStatus: LiveStatusResult | null;
@@ -82,6 +95,8 @@ type AuthContextValue = {
   }) => Promise<{ ok: boolean; error?: string }>;
   signOut: () => Promise<void>;
   refreshTenant: () => Promise<void>;
+  switchBrand: (brandId: string) => AsyncOp;
+  createBrand: (name: string) => AsyncOp;
   saveBrandKit: (kit: BrandKit) => AsyncOp;
   setCognitionNote: (note: string) => void;
   addIngest: (input: {
@@ -105,6 +120,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [tenant, setTenant] = useState<TenantState | null>(null);
+  const [brands, setBrands] = useState<BrandSummary[]>([]);
+  const [activeBrandId, setActiveBrandId] = useState<string | null>(null);
+  const [brandName, setBrandName] = useState<string | null>(null);
   const [mindStatus, setMindStatus] = useState<LiveStatusResult | null>(null);
   const [mindLoading, setMindLoading] = useState(false);
   const [cloudStorage, setCloudStorage] = useState(false);
@@ -136,10 +154,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (cloudStorage) {
         const t = await fetchCloudTenant();
         setTenant(t.state);
+        setActiveBrandId(t.brandId);
+        setBrandName(t.brandName);
+        try {
+          const list = await fetchBrands();
+          setBrands(list);
+        } catch {
+          setBrands([{ id: t.brandId, name: t.brandName, slug: "default", isDefault: true }]);
+        }
         return t.state;
       }
       const state = loadTenant(userId);
       setTenant(state);
+      setActiveBrandId("local");
+      setBrandName("Local");
+      setBrands([]);
       return state;
     },
     [cloudStorage],
@@ -189,6 +218,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ready,
       session,
       tenant,
+      brands,
+      activeBrandId,
+      brandName,
       productMode: cloudStorage ? "cloud" : "live",
       cloudStorage,
       mindStatus,
@@ -235,12 +267,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(null);
         setBridgeSession(null);
         setTenant(null);
+        setBrands([]);
+        setActiveBrandId(null);
+        setBrandName(null);
       },
       refreshTenant,
+      switchBrand: async (brandId) => {
+        if (!cloudStorage) return { ok: false, error: "Cloud mode required for multi-brand." };
+        try {
+          const res = await cloudSwitchBrand({ data: { brandId } });
+          setTenant(res.state);
+          setActiveBrandId(res.brandId);
+          setBrandName(res.brandName);
+          const list = await fetchBrands();
+          setBrands(list);
+          return { ok: true };
+        } catch (e) {
+          return { ok: false, error: friendlyError(e instanceof Error ? e.message : String(e)) };
+        }
+      },
+      createBrand: async (name) => {
+        if (!cloudStorage) return { ok: false, error: "Cloud mode required for multi-brand." };
+        try {
+          const res = await cloudCreateBrand({ data: { name } });
+          setTenant(res.state);
+          setActiveBrandId(res.brand.id);
+          setBrandName(res.brand.name);
+          const list = await fetchBrands();
+          setBrands(list);
+          return { ok: true };
+        } catch (e) {
+          return { ok: false, error: friendlyError(e instanceof Error ? e.message : String(e)) };
+        }
+      },
       saveBrandKit: async (kit) => {
         if (!session) return { ok: false, error: "Sign in first." };
         const res = cloudStorage
-          ? await cloudSaveBrandKit({ data: { kit } })
+          ? await cloudSaveBrandKit({ data: { kit, brandId: activeBrandId ?? undefined } })
           : storeSaveBrandKit(session.userId, kit);
         if (!res.ok) return { ok: false, error: friendlyError("message" in res ? res.message : "Save failed") };
         setTenant(res.state);
@@ -260,7 +323,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         if (cloudStorage) {
           const synced = await cloudMarkSoulSynced({
-            data: { mindName: live.mindName, confirm: live.confirm },
+            data: {
+              mindName: live.mindName,
+              confirm: live.confirm,
+              brandId: activeBrandId ?? undefined,
+            },
           });
           setTenant(synced.state);
         } else {
@@ -272,7 +339,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCognitionNote: (note) => {
         if (!session) return;
         if (cloudStorage) {
-          void cloudSetCognitionNote({ data: { note } }).then((r) => setTenant(r.state));
+          void cloudSetCognitionNote({ data: { note, brandId: activeBrandId ?? undefined } }).then(
+            (r) => setTenant(r.state),
+          );
         } else {
           setTenant(storeSetCognitionNote(session.userId, note));
         }
@@ -280,7 +349,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       addIngest: async (input) => {
         if (!session) return { ok: false, error: "Sign in first." };
         if (cloudStorage) {
-          const res = await cloudAddIngest({ data: input });
+          const res = await cloudAddIngest({
+            data: { ...input, brandId: activeBrandId ?? undefined },
+          });
           if (!res.ok) return { ok: false, error: friendlyError(res.message) };
           setTenant(res.state);
           return { ok: true };
@@ -322,6 +393,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           drafts: live.drafts,
           circle: live.circle,
           trendsUsed: live.trendsUsed,
+          brandId: activeBrandId ?? undefined,
         };
 
         if (cloudStorage) {
@@ -336,7 +408,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setDraftStage: async (draftId, stage) => {
         if (!session) return { ok: false, error: "Sign in first." };
         const res = cloudStorage
-          ? await cloudSetDraftStage({ data: { draftId, stage } })
+          ? await cloudSetDraftStage({
+              data: { draftId, stage, brandId: activeBrandId ?? undefined },
+            })
           : storeSetDraftStage(session.userId, draftId, stage);
         setTenant(res.state);
         if (!res.ok) return { ok: false, error: friendlyError(res.error) };
@@ -345,7 +419,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       approveDraft: async (draftId) => {
         if (!session) return { ok: false, error: "Sign in first." };
         const res = cloudStorage
-          ? await cloudApproveDraft({ data: { draftId } })
+          ? await cloudApproveDraft({ data: { draftId, brandId: activeBrandId ?? undefined } })
           : storeApproveDraft(session.userId, draftId);
         setTenant(res.state);
         if (!res.ok) return { ok: false, error: friendlyError(res.error) };
@@ -354,7 +428,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       rejectDraft: async (draftId) => {
         if (!session) return { ok: false, error: "Sign in first." };
         const res = cloudStorage
-          ? await cloudRejectDraft({ data: { draftId } })
+          ? await cloudRejectDraft({ data: { draftId, brandId: activeBrandId ?? undefined } })
           : storeRejectDraft(session.userId, draftId);
         setTenant(res.state);
         if (!res.ok) return { ok: false, error: friendlyError(res.error) };
@@ -363,7 +437,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       denyPublishAll: async () => {
         if (!session) return { detail: "Sign in first." };
         const out = cloudStorage
-          ? await cloudDenyPublishAll({ data: {} })
+          ? await cloudDenyPublishAll({ data: { brandId: activeBrandId ?? undefined } })
           : storeDenyPublishAll(session.userId);
         setTenant(out.state);
         void notifyLeashLive({ data: { userId: session.userId, detail: out.detail } });
@@ -400,6 +474,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           agent: live.agent,
           mindName: live.mindName,
           mindId: live.mindId,
+          brandId: activeBrandId ?? undefined,
         };
 
         if (cloudStorage) {
@@ -422,7 +497,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       importTenant: async (json) => {
         if (!session) return { ok: false, error: "Sign in first." };
         const res = cloudStorage
-          ? await cloudImportTenant({ data: { json } })
+          ? await cloudImportTenant({ data: { json, brandId: activeBrandId ?? undefined } })
           : storeImport(session.userId, json);
         if (!res.ok) return { ok: false, error: friendlyError(res.message) };
         setTenant(res.state);
@@ -433,6 +508,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ready,
       session,
       tenant,
+      brands,
+      activeBrandId,
+      brandName,
       cloudStorage,
       mindStatus,
       mindLoading,

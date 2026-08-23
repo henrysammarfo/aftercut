@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Logo } from "@/components/brand/Logo";
 import { authClient } from "@/lib/auth-client";
+import { fetchEmailStatus } from "@/lib/tenant-cloud";
 
 export const Route = createFileRoute("/forgot-password")({
   head: () => ({ meta: [{ title: "Reset password — AFTERCUT" }] }),
@@ -15,6 +16,13 @@ function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resendOk, setResendOk] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    void fetchEmailStatus()
+      .then((s) => setResendOk(s.resendConfigured))
+      .catch(() => setResendOk(false));
+  }, []);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -26,15 +34,23 @@ function ForgotPasswordPage() {
         <p className="mt-2 text-center text-sm text-muted-foreground">
           We&apos;ll email you a link to choose a new password.
         </p>
+        {resendOk === false ? (
+          <p className="mt-4 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-2 text-xs text-amber-100/90">
+            Email delivery is not configured on this host yet (RESEND_API_KEY). You can still
+            request a link — it may only appear in server logs until Resend is set.
+          </p>
+        ) : null}
         {sent ? (
           <p className="mt-8 rounded-xl bg-white/10 px-4 py-3 text-sm text-muted-foreground">
-            Check your inbox for the reset link.
+            If that email has an account, check your inbox for the reset link. Open it to choose a
+            new password.
           </p>
         ) : (
           <form
             className="mt-8 space-y-4"
             onSubmit={async (e) => {
               e.preventDefault();
+              setError(null);
               const res = await authClient.forgetPassword({
                 email: email.trim(),
                 redirectTo: `${window.location.origin}/reset-password`,

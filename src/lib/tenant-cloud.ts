@@ -25,7 +25,17 @@ import {
   takeServerTenant,
   type TenantState,
 } from "@/lib/tenant-store";
-import { loadBrandTenant, saveBrandTenant, ensureDefaultBrand } from "@/lib/tenant-db";
+import {
+  loadBrandTenant,
+  saveBrandTenant,
+  ensureDefaultBrand,
+  listBrands,
+  createBrand,
+  switchBrand,
+  listStudioInvites,
+  createStudioInvite,
+} from "@/lib/tenant-db";
+import { sendInviteEmail } from "@/lib/email";
 
 async function requireUserId(): Promise<string> {
   if (!hasDatabase()) throw new Error("Cloud storage is not configured.");
@@ -204,4 +214,81 @@ export const migrateLocalTenant = createServerFn({ method: "POST" }).handler(asy
     await saveBrandTenant(userId, loaded.brandId, state);
   }
   return res.ok ? { ok: true as const, state: state! } : { ok: false as const, error: res.message };
+});
+
+export const fetchBrands = createServerFn({ method: "GET" }).handler(async () => {
+  const userId = await requireUserId();
+  await ensureDefaultBrand(userId);
+  const rows = await listBrands(userId);
+  return rows.map((b) => ({
+    id: b.id,
+    name: b.name,
+    slug: b.slug,
+    isDefault: b.isDefault,
+  }));
+});
+
+export const cloudCreateBrand = createServerFn({ method: "POST" }).handler(async (ctx) => {
+  const userId = await requireUserId();
+  const { name } = (ctx.data ?? ctx) as { name: string };
+  const row = await createBrand(userId, name);
+  const loaded = await loadBrandTenant(userId, row.id);
+  return {
+    ok: true as const,
+    brand: { id: row.id, name: row.name, slug: row.slug, isDefault: true },
+    state: loaded.state,
+  };
+});
+
+export const cloudSwitchBrand = createServerFn({ method: "POST" }).handler(async (ctx) => {
+  const userId = await requireUserId();
+  const { brandId } = (ctx.data ?? ctx) as { brandId: string };
+  const loaded = await switchBrand(userId, brandId);
+  return {
+    ok: true as const,
+    brandId: loaded.brandId,
+    brandName: loaded.brandName,
+    state: loaded.state,
+  };
+});
+
+export const fetchEmailStatus = createServerFn({ method: "GET" }).handler(async () => {
+  const { resendConfigured } = await import("@/lib/email");
+  return { resendConfigured: resendConfigured() };
+});
+
+export const fetchStudioInvites = createServerFn({ method: "GET" }).handler(async () => {
+  const userId = await requireUserId();
+  const rows = await listStudioInvites(userId);
+  return rows.map((r) => ({
+    id: r.id,
+    email: r.email,
+    role: r.role,
+    status: r.status,
+    createdAt: r.createdAt?.toISOString?.() ?? String(r.createdAt),
+  }));
+});
+
+export const cloudInviteStudioMember = createServerFn({ method: "POST" }).handler(async (ctx) => {
+  const userId = await requireUserId();
+  const { email, role } = (ctx.data ?? ctx) as { email: string; role?: string };
+  const row = await createStudioInvite(userId, email, role ?? "editor");
+  const headers = getRequestHeaders();
+  const session = await getAuth().api.getSession({ headers });
+  const inviter = session?.user?.name || session?.user?.email || "A creator";
+  const base =
+    process.env.BETTER_AUTH_URL?.trim() ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://aftercut-sandy.vercel.app");
+  const mail = await sendInviteEmail(row.email, inviter, `${base.replace(/\/$/, "")}/signup`);
+  return {
+    ok: true as const,
+    invite: {
+      id: row.id,
+      email: row.email,
+      role: row.role,
+      status: row.status,
+    },
+    emailed: mail.ok,
+    emailError: mail.ok ? undefined : mail.error,
+  };
 });

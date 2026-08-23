@@ -19,6 +19,8 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as MerchRouteImport } from './routes/merch'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PitchRouteImport } from './routes/pitch'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as StudioRouteImport } from './routes/studio'
@@ -76,6 +78,16 @@ const PitchRoute = PitchRouteImport.update({
   path: '/pitch',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -118,6 +130,8 @@ export interface FileRoutesByFullPath {
   '/merch': typeof MerchRoute
   '/onboarding': typeof OnboardingRoute
   '/pitch': typeof PitchRoute
+  '/privacy': typeof PrivacyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/studio': typeof StudioRoute
@@ -136,6 +150,8 @@ export interface FileRoutesByTo {
   '/merch': typeof MerchRoute
   '/onboarding': typeof OnboardingRoute
   '/pitch': typeof PitchRoute
+  '/privacy': typeof PrivacyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/studio': typeof StudioRoute
@@ -155,6 +171,8 @@ export interface FileRoutesById {
   '/merch': typeof MerchRoute
   '/onboarding': typeof OnboardingRoute
   '/pitch': typeof PitchRoute
+  '/privacy': typeof PrivacyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/studio': typeof StudioRoute
@@ -175,6 +193,8 @@ export interface FileRouteTypes {
     | '/merch'
     | '/onboarding'
     | '/pitch'
+    | '/privacy'
+    | '/reset-password'
     | '/settings'
     | '/signup'
     | '/studio'
@@ -193,6 +213,8 @@ export interface FileRouteTypes {
     | '/merch'
     | '/onboarding'
     | '/pitch'
+    | '/privacy'
+    | '/reset-password'
     | '/settings'
     | '/signup'
     | '/studio'
@@ -211,6 +233,8 @@ export interface FileRouteTypes {
     | '/merch'
     | '/onboarding'
     | '/pitch'
+    | '/privacy'
+    | '/reset-password'
     | '/settings'
     | '/signup'
     | '/studio'
@@ -230,6 +254,8 @@ export interface RootRouteChildren {
   MerchRoute: typeof MerchRoute
   OnboardingRoute: typeof OnboardingRoute
   PitchRoute: typeof PitchRoute
+  PrivacyRoute: typeof PrivacyRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
   StudioRoute: typeof StudioRoute
@@ -310,6 +336,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PitchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -366,6 +406,8 @@ const rootRouteChildren: RootRouteChildren = {
   MerchRoute: MerchRoute,
   OnboardingRoute: OnboardingRoute,
   PitchRoute: PitchRoute,
+  PrivacyRoute: PrivacyRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
   StudioRoute: StudioRoute,

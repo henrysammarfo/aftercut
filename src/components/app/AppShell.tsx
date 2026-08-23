@@ -14,6 +14,7 @@ import {
   Settings,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
+import { BrandSwitcher } from "@/components/app/BrandSwitcher";
 import { useAuth } from "@/lib/auth";
 import { SetupProgress } from "@/components/app/SetupProgress";
 import { friendlyError, mindLabel } from "@/lib/display";
@@ -104,6 +105,7 @@ export function AppShell({
           </nav>
 
           <div className="mt-8 hidden space-y-4 lg:block">
+            <BrandSwitcher />
             <div className="rounded-2xl bg-white/[0.06] p-4 backdrop-blur-lg">
               <p className="text-xs text-muted-foreground">Signed in</p>
               <p className="mt-1 truncate text-sm font-medium">

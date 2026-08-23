@@ -109,6 +109,26 @@ export const connectedAccount = pgTable(
   ],
 );
 
+/** Agency / studio seat invites (email) */
+export const studioInvite = pgTable(
+  "studio_invite",
+  {
+    id: text("id").primaryKey(),
+    ownerUserId: text("owner_user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    role: text("role").notNull().default("editor"),
+    status: text("status").notNull().default("pending"), // pending | accepted | revoked
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("invite_owner_idx").on(t.ownerUserId),
+    uniqueIndex("invite_owner_email_idx").on(t.ownerUserId, t.email),
+  ],
+);
+
 /** Publish analytics — what actually went live */
 export const publishEvent = pgTable(
   "publish_event",

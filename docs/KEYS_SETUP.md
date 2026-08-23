@@ -17,8 +17,10 @@ Accurate steps for every integration AFTERCUT uses. No Stripe. No GitHub Actions
 
 1. Generate secret: `openssl rand -base64 32`
 2. Set `BETTER_AUTH_SECRET` to that value.
-3. Set `BETTER_AUTH_URL` to your public app URL, e.g. `https://aftercut.vercel.app` (no trailing slash).
+3. Set `BETTER_AUTH_URL` to your public app URL, e.g. `https://aftercut-sandy.vercel.app` (no trailing slash).
 4. Add the same URL to Vercel **Environment Variables** for Production + Preview.
+
+**Live production (2026-08-23):** https://aftercut-sandy.vercel.app  
 
 Cloud mode activates when **both** `DATABASE_URL` and `BETTER_AUTH_SECRET` are set.
 

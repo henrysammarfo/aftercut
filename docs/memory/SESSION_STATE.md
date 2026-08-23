@@ -3,68 +3,62 @@
 ## Lock
 
 - **Product:** AFTERCUT  
-- **Mode:** **LIVE** hellominds Builder API  
-- **Deadline:** **2026-08-28 23:59 HKT** (DoraHacks Creative Minds Jam #1)  
+- **Mode:** **LIVE** hellominds Builder API + **cloud** on Vercel  
+- **Deadline:** **2026-08-28 23:59 HKT** (Creative Minds Jam #1) — see [`FACT_CHECK.md`](FACT_CHECK.md)  
+- **Production:** https://aftercut-sandy.vercel.app  
 - **API:** `api.build.hellominds.ai` · `X-Api-Key`  
-- **Keys:** `.env.local` has `MINDS_BUILDER_API_KEY` + `MINDS_DIRECTOR_MIND_ID` (gitignored)  
+- **Keys:** `.env.local` gitignored · Vercel env for prod  
 - **Repo:** https://github.com/henrysammarfo/aftercut  
-- **MVP freeze:** [`docs/MVP_FREEZE.md`](MVP_FREEZE.md) — jam ~85% · fundraise MVP closing gaps  
+- **Docs:** [`PRODUCTION.md`](../PRODUCTION.md) · [`KEYS_SETUP.md`](../KEYS_SETUP.md) · [`AFTERCUT_BIBLE.md`](../AFTERCUT_BIBLE.md)
 
 ## Submit must-haves (official)
 
-1. Working product · Mind **integral** (not optional)  
-2. Persistence: memory / continuity / autonomous follow-up  
-3. Creator-economy track fit (content repurposing)  
+1. Working product · Mind **integral**  
+2. Persistence / continuity / autonomous follow-up  
+3. Creator-economy track (repurposing)  
 4. Demo video **1.5–2 min**  
 5. Code repo + technical docs  
 
 Apply: https://dorahacks.io/hackathon/creativeminds/detail  
 
-## Live smoke (2026-08-22)
+## Live smoke (2026-08-23)
 
-```
-ok: true
-director: AFTERCUT.Director
-mindId: 6bf0483e-f36b-1410-8466-00039ce7df11
-isEnabled: true
-cognition: 1187.58
-npx tsx scripts/minds-smoke.ts
-```
-
-## Fundraise MVP progress (2026-08-22 night)
-
-| Item | Status |
+| Check | Result |
 |---|---|
-| Honest MVP freeze doc | **done** |
-| Circle pass receipts (HOOK→PLATFORM→QC) in Memory | **shipped** |
-| Tavily trends inject into atomize | **shipped** |
-| `/onboarding` guided loop | **shipped** |
-| Studio copy-pack (clipboard + download) | **shipped** |
-| Pitch waitlist + pricing + honest scope | **shipped** |
-| Full SDK depth (history · skills · apps · usage · circle humans) | **shipped** |
-| Equipped VoiceTranscribe + YouTube Research Scout | **live on Director** |
-| HTML Mind-reply parse harden | **shipped** |
-| Fact check vs jam paste | [`FACT_CHECK.md`](FACT_CHECK.md) |
-| Demo film | **open — #1 blocker to win** |
-| DoraHacks apply | **open — after film** |
-| Stripe | **dropped for jam** |
-| Cloud auth / social OAuth / TG webhook | **stretch → production batch in repo** (Studio publish + Calendar + `docs/KEYS_SETUP.md`) |
+| `npm run minds-smoke` | **ok** · Director · cog **1168.61** · mindId `6bf0483e-…df11` |
+| Production `/` + `/privacy` | **HTTP 200** |
+| Telegram webhook | set → `/api/webhooks/telegram` · bot `8840245437` |
+| Neon users | **0** until first signup → TG ingest blocked |
+| Film / DoraHacks apply | **open** |
 
-## Ship ladder (this week — AFTERCUT only)
+### Shipped this batch (repo + deploy)
+
+- Multi-brand switcher (sidebar)  
+- `/reset-password` + Resend status polish  
+- Agency invite-by-email (Settings)  
+- Merch Gumroad hook (`VITE_GUMROAD_URL`)  
+- Zod 4 fix for Better Auth prod 500  
+
+### Ops still open
+
+1. Signup on live → set `TELEGRAM_DEFAULT_USER_ID` + redeploy  
+2. Settings: X token · LinkedIn · Connect Google  
+3. `RESEND_API_KEY` + `RESEND_FROM` on Vercel  
+4. Optional `VITE_GUMROAD_URL`  
+5. Demo film → apply  
+
+## Ship ladder
 
 | # | Item | Status |
 |---|---|---|
-| 1 | minds-smoke green | **done** (cog 1187) |
-| 2 | Fundraise MVP surface (onboarding · circle · trends · copy-pack · pitch) | **in repo** |
-| 3 | Demo film (Computer Use) · `node cloud-video/film.mjs` | **open — #1 blocker to win** |
-| 4 | Pitch page `/pitch` + `docs/FILM_DEMO.md` walk | ready |
-| 5 | Tech docs (`docs/AFTERCUT_BIBLE.md` · `docs/TECH.md` · `docs/MVP_FREEZE.md`) | ready |
-| 6 | DoraHacks application form | **open — after film** |
+| 1 | minds-smoke green | **done** |
+| 2 | Fundraise MVP surface | **in repo** |
+| 3 | Cloud + social + calendar + brands | **deployed** |
+| 4 | Demo film | **#1 blocker** |
+| 5 | DoraHacks apply | after film |
 
-**Judging lock:** win on Minds depth + filmed persistence (Day0–Day2). **Stripe dropped.** Cloud auth / OAuth / TG webhook = stretch after Mind depth + film.
-
-**Moat line:** *Opus clips once. AFTERCUT remembers your DNA and keeps cutting overnight.*
+**Moat:** *Opus clips once. AFTERCUT remembers your DNA and keeps cutting overnight.*
 
 ## Not this chat
 
-SCOUT / LOCKIN / FENN → `scoutbot` only. TOOLLAW → other chat. Do not mix.
+SCOUT / LOCKIN / FENN → `scoutbot` only. TOOLLAW → other chat.

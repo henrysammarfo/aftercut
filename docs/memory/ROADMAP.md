@@ -1,19 +1,30 @@
 # ROADMAP — AFTERCUT + portfolio
 
-> SCOUT Aug 10–24 live mandatory · AFTERCUT submit **Aug 28 2026**.
+> Fact-checked sequence. SCOUT trades through **Aug 24**. AFTERCUT submit **Aug 28 2026, 23:59 HKT**.
 
-## Parallel now
+## Locked sequence
 
 | When | Focus |
 |---|---|
-| **Now until Aug 10 AM** | AFTERCUT live Mind demo spine · film package |
-| **Aug 10 AM (lock)** | SCOUT: TST → paper off → day1 → day1:live — **no skip** |
-| **Aug 10–24** | SCOUT trade + AFTERCUT nights/spare capacity |
-| **By Aug 28** | AFTERCUT DoraHacks: video + repo + working Mind |
+| **Now – Aug 24** | SCOUT desk live (do not unhalt SCOUT from AFTERCUT chat) |
+| **Now – Aug 28** | AFTERCUT production URL + film + DoraHacks apply |
+| **After Aug 28** | China/scholarship wait · next briefs only when Henry pastes |
 
-## AFTERCUT open
+## AFTERCUT open (2026-08-23)
 
-1. Browser E2E film path (kit → atomize → leash → day2) — use `/onboarding`  
-2. Confirm minds-smoke green every machine  
-3. Submit packaging + DoraHacks  
-4. Post-jam: cloud auth/DB · social OAuth · Stripe (see `docs/MVP_FREEZE.md`)  
+| # | Item | Status |
+|---|---|---|
+| 1 | Live product https://aftercut-sandy.vercel.app | **up** |
+| 2 | Cloud auth · Studio publish · Calendar · multi-brand · invites | **in repo + deployed** |
+| 3 | Sign up → `TELEGRAM_DEFAULT_USER_ID` · Settings tokens · Resend keys | **ops** |
+| 4 | Demo film 1.5–2 min (`cloud-video` / `docs/FILM_DEMO.md`) | **#1 blocker** |
+| 5 | DoraHacks apply | after film |
+| 6 | Secret rotation (keys pasted in chat) | after smoke |
+
+## Docs to keep honest
+
+- `docs/memory/SESSION_STATE.md` — current status  
+- `docs/memory/FACT_CHECK.md` — verified claims only  
+- `docs/PRODUCTION.md` · `docs/KEYS_SETUP.md` · `docs/AFTERCUT_BIBLE.md`
+
+Do **not** invent jam deadlines, prizes, or Minds API behavior — re-check live before changing FACT_CHECK.
