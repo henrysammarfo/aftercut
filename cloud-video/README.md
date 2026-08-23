@@ -86,6 +86,17 @@ $env:CLOUD_PROMPT_FILE = "C:\Users\jessi\Desktop\aftercut\cloud-video\presets\my
 node C:\Users\jessi\Desktop\aftercut\cloud-video\launch.mjs
 ```
 
+## Magmos film artifacts (committed)
+
+Recorded walkthrough lives in-repo (not just Cursor Artifacts):
+
+```
+cloud-video/artifacts/magmos/magmos-live-walkthrough.mp4
+cloud-video/artifacts/magmos/screenshots/
+```
+
+Site: https://magmoslabs.vercel.app · preview via `MAGMOS_FILM_URL` env (never commit the token).
+
 ## Output
 
 Script prints JSON with:
