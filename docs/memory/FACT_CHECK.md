@@ -62,8 +62,9 @@ npm run minds-smoke
 | Google Calendar | **In product** — Connect Google in Settings |
 | Telegram → Studio ingest | Webhook **set** on production URL; **blocked** until signup + `TELEGRAM_DEFAULT_USER_ID` |
 | Multi-brand switcher | **Shipped** (sidebar) |
-| Agency email invites | **Shipped** (Settings; email needs Resend) |
-| Password reset | `/forgot-password` + `/reset-password` — real email needs `RESEND_API_KEY` |
+| Agency email invites | **Shipped** (Settings + Resend SDK) |
+| Password reset | `/forgot-password` + `/reset-password` — Resend SDK live (smoke id `96cbd50b-…`) |
+| Overnight / ship / cognition email | **Live** on Vercel deploy (Resend SDK + env) |
 | Merch commerce | Gumroad link hook (`VITE_GUMROAD_URL`) — no Stripe |
 | Stripe | **Dropped** for jam |
 | Demo film 1.5–2 min | **Open — #1 submit blocker** |

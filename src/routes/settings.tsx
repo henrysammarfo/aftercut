@@ -82,7 +82,7 @@ function SettingsPage() {
         <GlassCard>
           <h2 className="text-sm font-semibold">Password reset email</h2>
           <p className="mt-2 text-xs text-muted-foreground">
-            Resend delivers forgot-password and studio invite emails.
+            Resend delivers password reset, welcome, invites, overnight hook alerts, ship receipts, and cognition warnings.
             {resendOk === null
               ? " Checking…"
               : resendOk

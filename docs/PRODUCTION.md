@@ -22,7 +22,7 @@
 
 - [x] `DATABASE_URL` + `BETTER_AUTH_SECRET` + `BETTER_AUTH_URL`
 - [x] `MINDS_BUILDER_API_KEY`
-- [ ] `RESEND_API_KEY` + `RESEND_FROM` (password reset + invites)
+- [x] `RESEND_API_KEY` + `RESEND_FROM` (SDK: reset · welcome · invite · overnight · ship · cognition)
 - [x] `GOOGLE_CLIENT_ID` / `SECRET`
 - [x] `TELEGRAM_WEBHOOK_SECRET` (webhook set)
 - [ ] `TELEGRAM_DEFAULT_USER_ID` (after first signup)
@@ -34,7 +34,7 @@
 ### P0 — you / ops
 - [ ] Sign up on live → set `TELEGRAM_DEFAULT_USER_ID` → redeploy
 - [ ] Paste X (+ LinkedIn) tokens in Settings; Connect Google
-- [ ] Add Resend keys for real reset/invite email
+- [x] Resend keys on Vercel + official SDK wired (6 email paths)
 - [ ] Smoke: import → generate → publish / calendar
 
 ### P1 — done in repo

@@ -38,14 +38,15 @@ Apply: https://dorahacks.io/hackathon/creativeminds/detail
 - Agency invite-by-email (Settings)  
 - Merch Gumroad hook (`VITE_GUMROAD_URL`)  
 - Zod 4 fix for Better Auth prod 500  
+- **Resend official SDK** — welcome · reset · invite · overnight hook · ship receipt · cognition low  
 
 ### Ops still open
 
 1. Signup on live → set `TELEGRAM_DEFAULT_USER_ID` + redeploy  
 2. Settings: X token · LinkedIn · Connect Google  
-3. `RESEND_API_KEY` + `RESEND_FROM` on Vercel  
-4. Optional `VITE_GUMROAD_URL`  
-5. Demo film → apply  
+3. Optional `VITE_GUMROAD_URL`  
+4. Demo film → apply  
+5. Rotate Resend key (was pasted in chat) + verify custom domain for `RESEND_FROM`  
 
 ## Ship ladder
 

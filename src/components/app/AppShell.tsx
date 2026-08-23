@@ -19,6 +19,7 @@ import { useAuth } from "@/lib/auth";
 import { SetupProgress } from "@/components/app/SetupProgress";
 import { friendlyError, mindLabel } from "@/lib/display";
 import { cognitionWarningLevel } from "@/lib/minds/retry";
+import { notifyCognitionLow } from "@/lib/tenant-cloud";
 
 const nav = [
   { to: "/onboarding" as const, label: "Get started", icon: ListChecks },
@@ -54,6 +55,21 @@ export function AppShell({
   useEffect(() => {
     setNote(tenant?.cognitionNote ?? "");
   }, [tenant?.cognitionNote]);
+
+  useEffect(() => {
+    if (!session?.email || !mindStatus?.ok) return;
+    if (cognitionWarningLevel(mindStatus.cognition) !== "critical") return;
+    if (typeof mindStatus.cognition !== "number") return;
+    const day = new Date().toISOString().slice(0, 10);
+    const key = `aftercut_cog_email_${session.userId}_${day}`;
+    try {
+      if (localStorage.getItem(key)) return;
+      localStorage.setItem(key, "1");
+    } catch {
+      return;
+    }
+    void notifyCognitionLow({ data: { cognition: mindStatus.cognition } });
+  }, [session?.email, session?.userId, mindStatus?.ok, mindStatus?.cognition]);
 
   const mindBadge = mindStatus?.ok
     ? `${mindLabel(mindStatus.mindName)}${mindStatus.cognition != null ? ` · ${Math.round(mindStatus.cognition)} credits` : ""}`

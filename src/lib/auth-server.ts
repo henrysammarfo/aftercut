@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
 import { getDb, hasDatabase, schema } from "@/db";
-import { sendResetEmail } from "@/lib/email";
+import { sendResetEmail, sendWelcomeEmail } from "@/lib/email";
 
 function baseUrl(): string {
   const vercel = process.env.VERCEL_URL?.trim();
@@ -60,6 +60,15 @@ export function getAuth() {
               },
             }
           : {}),
+      },
+      databaseHooks: {
+        user: {
+          create: {
+            after: async (user) => {
+              void sendWelcomeEmail(user.email, user.name);
+            },
+          },
+        },
       },
     });
   }

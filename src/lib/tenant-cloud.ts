@@ -35,7 +35,7 @@ import {
   listStudioInvites,
   createStudioInvite,
 } from "@/lib/tenant-db";
-import { sendInviteEmail } from "@/lib/email";
+import { sendInviteEmail, sendOvernightHookEmail, sendCognitionLowEmail } from "@/lib/email";
 
 async function requireUserId(): Promise<string> {
   if (!hasDatabase()) throw new Error("Cloud storage is not configured.");
@@ -159,12 +159,23 @@ export const cloudApplyLiveAtomize = createServerFn({ method: "POST" }).handler(
 
 export const cloudApplyLiveProactive = createServerFn({ method: "POST" }).handler(async (ctx) => {
   const userId = await requireUserId();
+  const headers = getRequestHeaders();
+  const session = await getAuth().api.getSession({ headers });
   const input = (ctx.data ?? ctx) as Parameters<typeof applyLiveProactive>[1] & { brandId?: string };
   const { brandId, ...proactiveInput } = input;
   const { state } = await withBrandMutation(userId, brandId, (uid) => {
     applyLiveProactive(uid, proactiveInput);
     return { ok: true as const };
   });
+  const email = session?.user?.email;
+  if (email && proactiveInput.hook) {
+    void sendOvernightHookEmail({
+      to: email,
+      title: proactiveInput.title,
+      hook: proactiveInput.hook,
+      platform: proactiveInput.platform,
+    });
+  }
   return { ok: true as const, state };
 });
 
@@ -291,4 +302,18 @@ export const cloudInviteStudioMember = createServerFn({ method: "POST" }).handle
     emailed: mail.ok,
     emailError: mail.ok ? undefined : mail.error,
   };
+});
+
+/** Once-per-day cognition critical alert (client debounce + server send). */
+export const notifyCognitionLow = createServerFn({ method: "POST" }).handler(async (ctx) => {
+  const userId = await requireUserId();
+  const { cognition } = (ctx.data ?? ctx) as { cognition: number };
+  const headers = getRequestHeaders();
+  const session = await getAuth().api.getSession({ headers });
+  const email = session?.user?.email;
+  if (!email) return { ok: false as const, error: "No email on account." };
+  const mail = await sendCognitionLowEmail(email, cognition);
+  return mail.ok
+    ? { ok: true as const, id: mail.id }
+    : { ok: false as const, error: mail.error };
 });

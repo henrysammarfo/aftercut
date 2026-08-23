@@ -7,14 +7,15 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 
 import { cloudAuthEnabled, getAuth } from "@/lib/auth-server";
+import { sendShipReceiptEmail } from "@/lib/email";
 import { recordPublishEvent } from "@/lib/tenant-db";
 import { getProviderToken } from "@/lib/social/tokens";
 
-async function requireUserId() {
+async function requireUser() {
   if (!cloudAuthEnabled()) throw new Error("Cloud storage required. Set DATABASE_URL on your host.");
   const session = await getAuth().api.getSession({ headers: getRequestHeaders() });
   if (!session?.user?.id) throw new Error("Sign in to continue.");
-  return session.user.id;
+  return { id: session.user.id, email: session.user.email };
 }
 
 function defaultStart(): Date {
@@ -25,7 +26,7 @@ function defaultStart(): Date {
 }
 
 export const scheduleToGoogleCalendar = createServerFn({ method: "POST" }).handler(async (ctx) => {
-  const userId = await requireUserId();
+  const user = await requireUser();
   const input = (ctx as {
     data?: {
       title: string;
@@ -46,7 +47,7 @@ export const scheduleToGoogleCalendar = createServerFn({ method: "POST" }).handl
     timeZone?: string;
   });
 
-  const token = await getProviderToken(userId, "google");
+  const token = await getProviderToken(user.id, "google");
   if (!token) {
     return {
       ok: false as const,
@@ -89,7 +90,7 @@ export const scheduleToGoogleCalendar = createServerFn({ method: "POST" }).handl
   }
 
   await recordPublishEvent({
-    userId,
+    userId: user.id,
     brandId: input.brandId,
     draftId: input.draftId,
     platform: "google_calendar",
@@ -98,11 +99,20 @@ export const scheduleToGoogleCalendar = createServerFn({ method: "POST" }).handl
     meta: { htmlLink: json.htmlLink, scheduledStart: start.toISOString() },
   });
 
+  if (user.email) {
+    void sendShipReceiptEmail({
+      to: user.email,
+      platform: "google_calendar",
+      hook: input.title,
+      externalId: json.id,
+    });
+  }
+
   return { ok: true as const, eventId: json.id, htmlLink: json.htmlLink };
 });
 
 export const fetchConnectionStatus = createServerFn({ method: "GET" }).handler(async () => {
-  const userId = await requireUserId();
+  const user = await requireUser();
   const { getConnectionStatus } = await import("@/lib/social/tokens");
-  return getConnectionStatus(userId);
+  return getConnectionStatus(user.id);
 });

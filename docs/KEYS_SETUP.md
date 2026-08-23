@@ -32,12 +32,23 @@ Cloud mode activates when **both** `DATABASE_URL` and `BETTER_AUTH_SECRET` are s
 4. Optional: `minds list` or smoke script → pin UUID as `MINDS_DIRECTOR_MIND_ID`
 5. Verify: `npm run minds-smoke`
 
-### Resend — password reset (`RESEND_API_KEY`, `RESEND_FROM`)
+### Resend — transactional email (`RESEND_API_KEY`, `RESEND_FROM`)
 
-1. [https://resend.com](https://resend.com) → create account → **API Keys** → create key
-2. Add and verify your sending domain (or use `onboarding@resend.dev` for testing only)
-3. `RESEND_FROM=AFTERCUT <hello@yourdomain.com>`
-4. Without Resend, reset links print to server logs (dev only).
+Official **`resend` Node SDK** (`src/lib/email.ts`). Paths:
+
+| Email | Trigger |
+|---|---|
+| Password reset | Better Auth `sendResetPassword` |
+| Welcome | `databaseHooks.user.create.after` |
+| Studio invite | Settings → Agency seats |
+| Overnight hook | Cloud proactive rewrite (Needs approval) |
+| Ship receipt | X / LinkedIn / Google Calendar success |
+| Cognition low | AppShell when credits critical (once/day) |
+
+1. [https://resend.com](https://resend.com) → **API Keys** → create key → `RESEND_API_KEY`
+2. Verify a domain, or use `RESEND_FROM=AFTERCUT <onboarding@resend.dev>` for testing
+3. Without Resend, reset links print to server logs (dev only)
+4. **Rotate** any key pasted in chat before going fully public
 
 ### Tavily — trend context (`TAVILY_API_KEY`, optional)
 
@@ -163,7 +174,7 @@ Or push to `main` via Lovable sync if connected.
 | `BETTER_AUTH_URL` | Production | OAuth callbacks |
 | `MINDS_BUILDER_API_KEY` | Yes | Agent atomize/proactive |
 | `MINDS_DIRECTOR_MIND_ID` | Optional | Pin Director |
-| `RESEND_API_KEY` | Recommended | Password reset email |
+| `RESEND_API_KEY` | Recommended | Reset · welcome · invite · overnight · ship · cognition |
 | `GOOGLE_CLIENT_ID/SECRET` | For Calendar | Google OAuth |
 | `TAVILY_API_KEY` | Optional | Trend context |
 | `TELEGRAM_WEBHOOK_SECRET` | For TG import | Webhook auth |
