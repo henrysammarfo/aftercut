@@ -31,7 +31,7 @@ Apply: https://dorahacks.io/hackathon/creativeminds/detail
 | Vercel prod deploy | **cd2fa56** (Resend SDK) via GitHub |
 | Telegram webhook | set → `/api/webhooks/telegram` · bot `8840245437` |
 | Neon users | **0** until first signup → TG ingest blocked |
-| Film / DoraHacks apply | **open** |
+| Film / DoraHacks apply | **re-shoot live** — agent `bc-ec1f97e7…` (v2 seamless) |
 
 ### Shipped this batch (repo + deploy)
 
