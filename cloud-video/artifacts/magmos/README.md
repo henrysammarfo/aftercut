@@ -7,7 +7,7 @@
 
 | File | Description |
 |---|---|
-| `magmos-live-walkthrough.mp4` | ~10 min UI tour (marketing → Wallet → Get started → Pay → Savings → Admin) |
+| `magmos-live-walkthrough.mp4` | ~4 min UI tour (marketing → Wallet → Get started → Pay → Savings → Admin) |
 | `screenshots/magmos-landing-hero.png` | Public landing hero |
 | `screenshots/magmos-wallet-ux.png` | Wallet dashboard (preview mode) |
 | `screenshots/magmos-get-started-checklist.png` | 6/6 setup checklist |
