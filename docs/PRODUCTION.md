@@ -46,7 +46,7 @@
 - [x] Merch Gumroad hook
 
 ### P2
-- [ ] DoraHacks film
+- [ ] DoraHacks film — `CURSOR_API_KEY` → `npm run cloud:film` (Computer Use + video Artifact)
 - [ ] Secret rotation after jam
 
 ## Explicitly out of scope

@@ -175,6 +175,8 @@ Or push to `main` via Lovable sync if connected.
 | `MINDS_BUILDER_API_KEY` | Yes | Agent atomize/proactive |
 | `MINDS_DIRECTOR_MIND_ID` | Optional | Pin Director |
 | `RESEND_API_KEY` | Recommended | Reset · welcome · invite · overnight · ship · cognition |
+| `TOKEN_ENCRYPTION_KEY` | Optional | Extra layer for OAuth tokens at rest (falls back to `BETTER_AUTH_SECRET`) |
+| `CURSOR_API_KEY` | Film only | Cloud Agent demo video — `npm run cloud:film` |
 | `GOOGLE_CLIENT_ID/SECRET` | For Calendar | Google OAuth |
 | `TAVILY_API_KEY` | Optional | Trend context |
 | `TELEGRAM_WEBHOOK_SECRET` | For TG import | Webhook auth |
