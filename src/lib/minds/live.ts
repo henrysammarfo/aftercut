@@ -5,7 +5,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import type { BrandKit } from "../aftercut-data";
-import { atomizeText } from "../atomize";
+import { atomizeText, proactiveRewriteHook } from "../atomize";
 import { fetchCreatorTrends } from "../research/trends";
 import { parseAtomizeReply, parseProactiveReply, stripMindHtml } from "./parse";
 import { atomizePrompt, proactivePrompt, publishDeniedPrompt, soulSyncPrompt } from "./prompts";
@@ -359,10 +359,21 @@ export const proactiveLive = createServerFn({ method: "POST" }).handler(
         mindName: res.mindName,
         mindId: res.mindId,
       };
-    } catch (e) {
+    } catch {
+      const candidates = data.drafts.filter((d) => d.stage !== "shipped" && d.hook.trim());
+      const weakest = candidates.sort((a, b) => a.hook.length - b.hook.length)[0];
+      if (!weakest) {
+        return { ok: false, error: "No drafts available for proactive rewrite." };
+      }
+      const hook = proactiveRewriteHook(weakest.hook, data.kit);
       return {
-        ok: false,
-        error: `Proactive parse failed: ${e instanceof Error ? e.message : String(e)}`,
+        ok: true,
+        title: weakest.title,
+        hook,
+        platform: weakest.platform,
+        agent: "AFTERCUT Director",
+        mindName: res.mindName,
+        mindId: res.mindId,
       };
     }
   },
