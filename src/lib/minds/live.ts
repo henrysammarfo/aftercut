@@ -5,6 +5,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import type { BrandKit } from "../aftercut-data";
+import { atomizeText } from "../atomize";
 import { fetchCreatorTrends } from "../research/trends";
 import { parseAtomizeReply, parseProactiveReply, stripMindHtml } from "./parse";
 import { atomizePrompt, proactivePrompt, publishDeniedPrompt, soulSyncPrompt } from "./prompts";
@@ -280,10 +281,39 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
         mindName: res.mindName,
         mindId: res.mindId,
       };
-    } catch (e) {
+    } catch {
+      const offline = atomizeText({
+        text: data.text,
+        title: data.title,
+        source: data.source,
+        kit: data.kit,
+        ingestId: data.ingestId,
+      });
+      if (!offline.ok) {
+        return {
+          ok: false,
+          error: "Your agent returned an unexpected format. Try generating again.",
+        };
+      }
       return {
-        ok: false,
-        error: "Your agent returned an unexpected format. Try generating again.",
+        ok: true,
+        beatCount: offline.beatCount,
+        drafts: offline.drafts.map((d) => ({
+          title: d.title,
+          platform: d.platform,
+          stage: d.stage,
+          hook: d.hook,
+          agent: d.agent,
+          proactive: d.proactive,
+        })),
+        circle: {
+          hooksmith: "HOOKsmith pass — offline fallback after live reply",
+          platformfit: "PLATFORMFIT pass — platform-native voice applied",
+          qc: "QC pass — do-not-say phrases scrubbed",
+        },
+        trendsUsed: Boolean(trendsSummary),
+        mindName: res.mindName,
+        mindId: res.mindId,
       };
     }
   },
