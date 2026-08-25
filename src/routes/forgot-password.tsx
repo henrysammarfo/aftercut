@@ -85,9 +85,7 @@ function ForgotPasswordPage() {
               placeholder="Email"
             />
             {error ? (
-            {error ? (
               <p className="rounded-lg bg-white/10 px-3 py-2 text-sm text-muted-foreground">{error}</p>
-            ) : null}
             ) : null}
             <button
               type="submit"
