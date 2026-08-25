@@ -116,6 +116,26 @@ export async function sendWelcomeEmail(to: string, name?: string | null) {
   });
 }
 
+/** First-100 creator beta — no card, pricing waits. */
+export async function sendWaitlistEmail(to: string) {
+  const base = appBaseUrl();
+  return sendResendEmail({
+    to,
+    subject: "You're on the AFTERCUT first-100 list",
+    html: shell(
+      "You're in the first 100",
+      `<p>Dump a VOD. Your agent already knows your voice. Pricing stays off until this beta fills.</p>
+       <p>Open the studio anytime — brand voice, import, then overnight cuts.</p>`,
+      { label: "Open the studio", href: `${base}/signup` },
+    ),
+    text: `You're on the AFTERCUT first-100 list. Start: ${base}/signup`,
+    tags: [
+      { name: "category", value: "lifecycle" },
+      { name: "kind", value: "waitlist" },
+    ],
+  });
+}
+
 /** Agency / collaborator invite */
 export async function sendInviteEmail(to: string, inviterName: string, signupUrl: string) {
   return sendResendEmail({

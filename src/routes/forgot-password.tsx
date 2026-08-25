@@ -4,6 +4,7 @@ import { z } from "zod";
 import { Logo } from "@/components/brand/Logo";
 import { authClient } from "@/lib/auth-client";
 import { fetchEmailStatus } from "@/lib/tenant-cloud";
+import { notifyError, notifySuccess } from "@/lib/notify";
 
 export const Route = createFileRoute("/forgot-password")({
   head: () => ({ meta: [{ title: "Reset password — AFTERCUT" }] }),
@@ -58,14 +59,21 @@ function ForgotPasswordPage() {
               );
               if (!emailParsed.ok) {
                 setError(emailParsed.error);
+                notifyError(emailParsed.error);
                 return;
               }
               const res = await authClient.requestPasswordReset({
                 email: emailParsed.data.email,
                 redirectTo: `${window.location.origin}/reset-password`,
               });
-              if (res.error) setError(res.error.message ?? "Could not send reset email.");
-              else setSent(true);
+              if (res.error) {
+                const msg = res.error.message ?? "Could not send reset email.";
+                setError(msg);
+                notifyError(msg);
+              } else {
+                setSent(true);
+                notifySuccess("Check your inbox for the reset link.");
+              }
             }}
           >
             <input
@@ -77,7 +85,9 @@ function ForgotPasswordPage() {
               placeholder="Email"
             />
             {error ? (
-              <p className="rounded-lg bg-destructive/15 px-3 py-2 text-sm text-destructive">{error}</p>
+            {error ? (
+              <p className="rounded-lg bg-white/10 px-3 py-2 text-sm text-muted-foreground">{error}</p>
+            ) : null}
             ) : null}
             <button
               type="submit"

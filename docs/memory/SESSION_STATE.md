@@ -65,6 +65,7 @@ Apply: https://dorahacks.io/hackathon/creativeminds/detail
 - **100-creator beta** — landing + `/pitch` waitlist first; pricing labeled after beta.
 - Deeper Minds: visual-dump atomize rule (no invented quotes). Circle equip path unchanged.
 - Film / DoraHacks — still **open** (#1 submit blocker).
+- **Live:** https://aftercut-sandy.vercel.app (shipped 2026-08-25)
 
 Portfolio: Scout closed · five product locks named · AFTERCUT polish in progress.
 

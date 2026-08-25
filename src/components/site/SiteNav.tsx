@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth";
 const links = [
   { label: "How it works", href: "/#how" },
   { label: "Approval guard", href: "/#guard" },
-  { label: "Pricing", to: "/pitch" as const },
+  { label: "First 100", to: "/pitch" as const },
 ];
 
 export function SiteNav({ tone = "responsive" }: { tone?: "responsive" | "light" }) {

@@ -15,7 +15,7 @@
 | # | Item | Status |
 |---|---|---|
 | 1 | Live product https://aftercut-sandy.vercel.app | **up** |
-| 2 | Media ingest + toasts + first-100 waitlist | **in repo** (deploy after Henry push) |
+| 2 | Media ingest + toasts + first-100 waitlist | **live on production** (0022c63+) |
 | 3 | Cloud auth · Studio publish · Calendar · multi-brand · invites | **in repo + deployed** |
 | 4 | Sign up → `TELEGRAM_DEFAULT_USER_ID` · Settings tokens · Resend keys | **ops** |
 | 5 | Demo film 1.5–2 min (`cloud-video` / `docs/FILM_DEMO.md`) | **#1 blocker** |

@@ -5,6 +5,7 @@ import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/lib/auth";
 import { redirectIfAuthed } from "@/lib/require-auth";
 import { parseOrError, signInSchema } from "@/lib/validation";
+import { notifyError } from "@/lib/notify";
 
 const searchSchema = z.object({
   next: z.string().optional(),
@@ -57,10 +58,15 @@ function LoginPage() {
             const parsed = parseOrError(signInSchema, { email: email.trim(), password });
             if (!parsed.ok) {
               setError(parsed.error);
+              notifyError(parsed.error);
               return;
             }
             const res = await signIn(parsed.data.email, parsed.data.password);
-            if (!res.ok) setError(res.error || "Sign in failed");
+            if (!res.ok) {
+              const msg = res.error || "Sign in failed";
+              setError(msg);
+              notifyError(msg);
+            }
             else void navigate({ to: safeNext(next) });
           }}
         >
@@ -81,11 +87,11 @@ function LoginPage() {
             className={field}
             placeholder="Password"
           />
-          {error ? (
-            <p className="rounded-lg bg-destructive/15 px-3 py-2 text-sm text-destructive">
-              {error}
-            </p>
-          ) : null}
+            {error ? (
+              <p className="rounded-lg bg-white/10 px-3 py-2 text-sm text-muted-foreground">
+                {error}
+              </p>
+            ) : null}
           <button
             type="submit"
             className="w-full rounded-full px-5 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90"

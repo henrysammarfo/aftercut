@@ -35,8 +35,8 @@ import {
   listStudioInvites,
   createStudioInvite,
 } from "@/lib/tenant-db";
-import { sendInviteEmail, sendOvernightHookEmail, sendCognitionLowEmail } from "@/lib/email";
-import { inviteEmailSchema, ingestSchema, parseOrError } from "@/lib/validation";
+import { sendInviteEmail, sendOvernightHookEmail, sendCognitionLowEmail, sendWaitlistEmail } from "@/lib/email";
+import { inviteEmailSchema, ingestSchema, parseOrError, emailSchema } from "@/lib/validation";
 
 async function requireUserId(): Promise<string> {
   if (!hasDatabase()) throw new Error("Cloud storage is not configured.");
@@ -325,4 +325,15 @@ export const notifyCognitionLow = createServerFn({ method: "POST" }).handler(asy
   return mail.ok
     ? { ok: true as const, id: mail.id }
     : { ok: false as const, error: mail.error };
+});
+
+/** Public first-100 waitlist — email confirm if Resend is configured. */
+export const cloudJoinWaitlist = createServerFn({ method: "POST" }).handler(async (ctx) => {
+  const raw = (ctx.data ?? ctx) as { email?: string };
+  const parsed = parseOrError(emailSchema, raw.email);
+  if (!parsed.ok) return { ok: false as const, error: parsed.error };
+  const mail = await sendWaitlistEmail(parsed.data);
+  return mail.ok
+    ? { ok: true as const, emailed: true as const }
+    : { ok: true as const, emailed: false as const, emailError: mail.error };
 });

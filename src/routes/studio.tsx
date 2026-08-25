@@ -267,7 +267,7 @@ function Studio() {
         <GlassCard>
           <p className="text-sm font-medium">No drafts yet</p>
           <p className="mt-2 text-xs text-muted-foreground">
-            Import content to generate drafts — everything here comes from your uploads.
+            Drop a video or still on Import — drafts here come from that dump, not a blank canvas.
           </p>
           <Link
             to="/ingest"

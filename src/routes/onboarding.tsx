@@ -1,13 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { AppShell, GlassCard, PrimaryButton } from "@/components/app/AppShell";
 import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
-import { emptyBrandKit, type BrandKit } from "@/lib/aftercut-data";
+import { emptyBrandKit, type BrandKit, type IngestMedia } from "@/lib/aftercut-data";
 import { kitIsReady } from "@/lib/atomize";
 import { friendlyError, mindLabel } from "@/lib/display";
+import { fileToIngestMedia, formatMediaBrief } from "@/lib/media-ingest";
 import { notifyBusy, notifyError, notifyIdle, notifySuccess, notifyWarn } from "@/lib/notify";
-import { Check, ChevronRight } from "lucide-react";
+import { Check, ChevronRight, UploadCloud } from "lucide-react";
 
 export const Route = createFileRoute("/onboarding")({
   beforeLoad: async () => {
@@ -44,6 +45,8 @@ function Onboarding() {
   const [kit, setKit] = useState<BrandKit>(() => tenant?.brandKit ?? emptyBrandKit());
   const [example, setExample] = useState("");
   const [ingestText, setIngestText] = useState("");
+  const [media, setMedia] = useState<IngestMedia | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const steps = useMemo(() => {
     const kitDone = kitIsReady(tenant?.brandKit ?? emptyBrandKit());
@@ -152,11 +155,46 @@ function Onboarding() {
         <GlassCard className="mb-4">
           <h2 className="text-sm font-semibold">2 · Generate platform drafts</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Paste a transcript or drop a file on Import. You get Shorts, X, LinkedIn and newsletter cuts.
+            Drop a video or still, or paste a transcript. You get Shorts, X, LinkedIn and newsletter cuts.
           </p>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="video/*,image/*,.mp4,.webm,.mov,.png,.jpg,.jpeg,.webp"
+            className="sr-only"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (!file) return;
+              const id = notifyBusy("Reading file…");
+              try {
+                const next = await fileToIngestMedia(file);
+                setMedia(next);
+                notifyIdle(id);
+                notifySuccess("File ready. Add a caption below if you have one, then generate.");
+              } catch (err) {
+                notifyIdle(id);
+                notifyError(err instanceof Error ? err.message : "Could not read that file.");
+              }
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="mt-4 flex w-full flex-col items-center rounded-2xl border border-dashed border-white/15 px-4 py-6 text-center hover:border-white/25"
+          >
+            {media?.posterDataUrl ? (
+              <img src={media.posterDataUrl} alt="" className="mb-2 max-h-20 rounded-md object-cover" />
+            ) : (
+              <UploadCloud className="h-6 w-6 text-muted-foreground" />
+            )}
+            <p className="mt-2 text-sm font-medium">
+              {media ? media.filename : "Drop a video or still"}
+            </p>
+          </button>
           <textarea
             className={`${field} mt-4 min-h-[140px]`}
-            placeholder="Paste your long-form content…"
+            placeholder={media ? "Optional caption or transcript…" : "Or paste your long-form content…"}
             value={ingestText}
             onChange={(e) => setIngestText(e.target.value)}
           />
@@ -164,16 +202,17 @@ function Onboarding() {
             <PrimaryButton
               disabled={busy}
               onClick={async () => {
-                if (ingestText.trim().length < 40) {
-                  flash("Paste at least 40 characters of content.", true);
+                if (!media && ingestText.trim().length < 40) {
+                  flash("Paste at least 40 characters, or drop a file.", true);
                   return;
                 }
                 setBusy(true);
                 const add = await Promise.resolve(
                   addIngest({
-                    title: "First import",
-                    text: ingestText.trim(),
-                    source: "Import",
+                    title: media?.filename || "First import",
+                    text: media ? formatMediaBrief(media, ingestText) : ingestText.trim(),
+                    source: media ? (media.kind === "video" ? "Video upload" : "Image upload") : "Import",
+                    media: media ?? undefined,
                   }),
                 );
                 if (!add.ok) {

@@ -4,6 +4,7 @@ import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/lib/auth";
 import { redirectIfAuthed } from "@/lib/require-auth";
 import { parseOrError, signupSchema } from "@/lib/validation";
+import { notifyError, notifySuccess } from "@/lib/notify";
 
 export const Route = createFileRoute("/signup")({
   beforeLoad: async () => {
@@ -52,11 +53,18 @@ function SignupPage() {
             });
             if (!parsed.ok) {
               setError(parsed.error);
+              notifyError(parsed.error);
               return;
             }
             const res = await signUp(parsed.data);
-            if (!res.ok) setError(res.error || "Sign up failed");
-            else void navigate({ to: "/onboarding" });
+            if (!res.ok) {
+              const msg = res.error || "Sign up failed";
+              setError(msg);
+              notifyError(msg);
+            } else {
+              notifySuccess("Studio ready — teach your brand voice next.");
+              void navigate({ to: "/onboarding" });
+            }
           }}
         >
           <input
@@ -83,11 +91,11 @@ function SignupPage() {
             className={field}
             placeholder="Password (8+)"
           />
-          {error ? (
-            <p className="rounded-lg bg-destructive/15 px-3 py-2 text-sm text-destructive">
-              {error}
-            </p>
-          ) : null}
+            {error ? (
+              <p className="rounded-lg bg-white/10 px-3 py-2 text-sm text-muted-foreground">
+                {error}
+              </p>
+            ) : null}
           <button
             type="submit"
             className="w-full rounded-full px-5 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90"

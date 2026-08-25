@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatBytes, formatDuration, formatMediaBrief, isMediaBrief } from "../src/lib/media-ingest";
+import { formatBytes, formatDuration, formatMediaBrief, isMediaBrief, looksLikeYoutubeUrl } from "../src/lib/media-ingest";
 
 describe("media ingest brief", () => {
   it("builds a Director-ready video brief without inventing quotes", () => {
@@ -36,5 +36,12 @@ describe("media ingest brief", () => {
   it("formats sizes", () => {
     expect(formatBytes(512)).toBe("512 B");
     expect(formatDuration(65)).toBe("1m 5s");
+  });
+});
+
+describe("youtube URL detect", () => {
+  it("flags watch links", () => {
+    expect(looksLikeYoutubeUrl("https://youtu.be/abcdefghijk")).toBe(true);
+    expect(looksLikeYoutubeUrl("just a transcript")).toBe(false);
   });
 });

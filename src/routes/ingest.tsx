@@ -4,7 +4,7 @@ import { AppShell, GlassCard, PrimaryButton } from "@/components/app/AppShell";
 import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
 import { mindLabel } from "@/lib/display";
-import { fileToIngestMedia, formatBytes, formatDuration, formatMediaBrief } from "@/lib/media-ingest";
+import { fileToIngestMedia, formatBytes, formatDuration, formatMediaBrief, looksLikeYoutubeUrl } from "@/lib/media-ingest";
 import { notifyBusy, notifyError, notifyIdle, notifySuccess, notifyWarn } from "@/lib/notify";
 import type { IngestMedia } from "@/lib/aftercut-data";
 import { UploadCloud, Send, Link2, FileText, ImageIcon, Film } from "lucide-react";
@@ -229,7 +229,11 @@ function Ingest() {
           <textarea
             rows={8}
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => {
+              const next = e.target.value;
+              setText(next);
+              if (!media && looksLikeYoutubeUrl(next)) setSource("YouTube notes");
+            }}
             placeholder={
               media
                 ? "Optional caption or transcript to go with the file…"

@@ -54,6 +54,12 @@ export function isMediaBrief(text: string): boolean {
   return text.trimStart().startsWith("[MEDIA ingest]");
 }
 
+export function looksLikeYoutubeUrl(text: string): boolean {
+  return /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)[\w-]{6,}/i.test(
+    text.trim(),
+  );
+}
+
 function canvasToPoster(canvas: HTMLCanvasElement): string | undefined {
   let q = 0.72;
   let url = canvas.toDataURL("image/jpeg", q);

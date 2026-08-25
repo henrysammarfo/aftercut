@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { joinCreatorWaitlist, CREATOR_BETA_CAP } from "@/lib/waitlist";
+import { cloudJoinWaitlist } from "@/lib/tenant-cloud";
 import { notifyError, notifySuccess } from "@/lib/notify";
 
 export function WaitlistForm({
@@ -12,7 +13,7 @@ export function WaitlistForm({
   const [email, setEmail] = useState("");
   const [joined, setJoined] = useState(false);
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const res = joinCreatorWaitlist(email);
     if (!res.ok) {
@@ -25,6 +26,11 @@ export function WaitlistForm({
         ? `You're in the first ${CREATOR_BETA_CAP} creators.`
         : "You're on the list — we'll open seats as the beta fills.",
     );
+    try {
+      await cloudJoinWaitlist({ data: { email } });
+    } catch {
+      /* local list still counts */
+    }
   };
 
   return (
