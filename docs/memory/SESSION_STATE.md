@@ -58,7 +58,15 @@ Apply: https://dorahacks.io/hackathon/creativeminds/detail
 - **AES-256-GCM** encryption for OAuth tokens in `connected_account`  
 - Password min **8** chars on signup/sign-in/reset  
 
-## Ship ladder
+### Henry feedback queue (do AFTER scout close + ideation — 2026-08-25)
+
+- Image / video upload for ingest (product clarity vs transcript-only).  
+- Deeper **Minds** Builder SDK use — hit limits, creative integrations, not thin wrapper.  
+- Toast / pro notifications instead of harsh red banners.  
+- Path: **100-creator beta** → then pricing.  
+- Keep jam film / apply status honest.  
+
+Portfolio order: Scout stopped → hackathon ideation → AFTERCUT polish last. See scoutbot `docs/memory/HACKATHON_IDEATION.md`.
 
 | # | Item | Status |
 |---|---|---|
