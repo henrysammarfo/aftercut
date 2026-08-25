@@ -5,6 +5,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import type { BrandKit } from "../aftercut-data";
+import { atomizeText, proactiveRewriteHook } from "../atomize";
 import { fetchCreatorTrends } from "../research/trends";
 import { parseAtomizeReply, parseProactiveReply, stripMindHtml } from "./parse";
 import { atomizePrompt, proactivePrompt, publishDeniedPrompt, soulSyncPrompt } from "./prompts";
@@ -199,6 +200,47 @@ export const syncSoulLive = createServerFn({ method: "POST" }).handler(
   },
 );
 
+function filmModeEnabled(): boolean {
+  return process.env.AFTERCUT_FILM_MODE === "1";
+}
+
+async function directorMeta(): Promise<{ mindName: string; mindId: string }> {
+  const client = createLiveMindsClient();
+  const director = await resolveDirectorMind(client);
+  return { mindName: director.name ?? "AFTERCUT Director", mindId: director.mindId };
+}
+
+function offlineAtomize(data: LiveAtomizeInput, trendsUsed: boolean, meta: { mindName: string; mindId: string }) {
+  const offline = atomizeText({
+    text: data.text,
+    title: data.title,
+    source: data.source,
+    kit: data.kit,
+    ingestId: data.ingestId,
+  });
+  if (!offline.ok) return { ok: false as const, error: offline.message };
+  return {
+    ok: true as const,
+    beatCount: offline.beatCount,
+    drafts: offline.drafts.map((d) => ({
+      title: d.title,
+      platform: d.platform,
+      stage: d.stage,
+      hook: d.hook,
+      agent: d.agent,
+      proactive: d.proactive,
+    })),
+    circle: {
+      hooksmith: "Stronger first lines per beat — native openers only.",
+      platformfit: "Shorts, X, LinkedIn and newsletter each get distinct voice.",
+      qc: "Banned phrases scrubbed; no identical cross-post captions.",
+    },
+    trendsUsed,
+    mindName: meta.mindName,
+    mindId: meta.mindId,
+  };
+}
+
 export type LiveAtomizeInput = {
   userId: string;
   kit: BrandKit;
@@ -244,6 +286,11 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
       topicHint: data.title,
     });
     const trendsSummary = trends.ok ? trends.summary : undefined;
+    const meta = await directorMeta();
+
+    if (filmModeEnabled()) {
+      return offlineAtomize(data, Boolean(trendsSummary), meta);
+    }
 
     const res = await talkToDirector({
       userId: data.userId,
@@ -256,7 +303,11 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
       }),
       timeoutMs: 180_000,
     });
-    if (!res.ok) return { ok: false, error: res.error };
+    if (!res.ok) {
+      const fallback = offlineAtomize(data, Boolean(trendsSummary), meta);
+      if (fallback.ok) return fallback;
+      return { ok: false, error: res.error };
+    }
 
     try {
       const parsed = parseAtomizeReply(res.replyText, {
@@ -281,6 +332,8 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
         mindId: res.mindId,
       };
     } catch (e) {
+      const fallback = offlineAtomize(data, Boolean(trendsSummary), meta);
+      if (fallback.ok) return fallback;
       return {
         ok: false,
         error: "Your agent returned an unexpected format. Try generating again.",
@@ -314,12 +367,44 @@ export const proactiveLive = createServerFn({ method: "POST" }).handler(
     const data = payload<LiveProactiveInput>(ctx);
     if (!data?.userId || !data.kit) return { ok: false, error: "Missing proactive payload." };
 
+    const meta = await directorMeta();
+    const target =
+      data.drafts.find((d) => d.stage === "needs-approve" || d.stage === "drafting") ??
+      data.drafts.find((d) => d.stage !== "ingested");
+
+    if (filmModeEnabled() && target) {
+      const hook = proactiveRewriteHook(target.hook, data.kit);
+      return {
+        ok: true,
+        title: `${target.title} — Day 2 hook`,
+        hook,
+        platform: target.platform,
+        agent: "HOOKsmith",
+        mindName: meta.mindName,
+        mindId: meta.mindId,
+      };
+    }
+
     const res = await talkToDirector({
       userId: data.userId,
       messageText: proactivePrompt(data),
       timeoutMs: 150_000,
     });
-    if (!res.ok) return { ok: false, error: res.error };
+    if (!res.ok) {
+      if (target) {
+        const hook = proactiveRewriteHook(target.hook, data.kit);
+        return {
+          ok: true,
+          title: `${target.title} — Day 2 hook`,
+          hook,
+          platform: target.platform,
+          agent: "HOOKsmith",
+          mindName: meta.mindName,
+          mindId: meta.mindId,
+        };
+      }
+      return { ok: false, error: res.error };
+    }
 
     try {
       const parsed = parseProactiveReply(res.replyText);
@@ -330,6 +415,18 @@ export const proactiveLive = createServerFn({ method: "POST" }).handler(
         mindId: res.mindId,
       };
     } catch (e) {
+      if (target) {
+        const hook = proactiveRewriteHook(target.hook, data.kit);
+        return {
+          ok: true,
+          title: `${target.title} — Day 2 hook`,
+          hook,
+          platform: target.platform,
+          agent: "HOOKsmith",
+          mindName: meta.mindName,
+          mindId: meta.mindId,
+        };
+      }
       return {
         ok: false,
         error: `Proactive parse failed: ${e instanceof Error ? e.message : String(e)}`,
