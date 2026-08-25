@@ -31,7 +31,7 @@ const nav = [
   { to: "/circle" as const, label: "Agent team", icon: Users },
   { to: "/settings" as const, label: "Settings", icon: Settings },
   { to: "/merch" as const, label: "Brand assets", icon: Shirt },
-  { to: "/pitch" as const, label: "Pricing", icon: Sparkles },
+      { to: "/pitch" as const, label: "First 100", icon: Sparkles },
 ];
 
 export function AppShell({

@@ -21,6 +21,7 @@
 | 5 | Demo film 1.5–2 min (`cloud-video` / `docs/FILM_DEMO.md`) | **#1 blocker** |
 | 6 | DoraHacks apply | after film |
 | 7 | Secret rotation (keys pasted in chat) | after smoke |
+| 8 | Day 2 reopen · dump & generate · YouTube notes · Neon waitlist | **this ship** |
 
 ## Docs to keep honest
 

@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
 import { agentLabel, mindLabel, phaseLabel } from "@/lib/display";
 import { notifyBusy, notifyError, notifyIdle, notifySuccess, notifyWarn } from "@/lib/notify";
-import { ArrowUpRight, ShieldAlert, Brain, HardDrive } from "lucide-react";
+import { ArrowUpRight, ShieldAlert, Brain, HardDrive, Sunrise, Inbox } from "lucide-react";
 import { useRef } from "react";
 
 export const Route = createFileRoute("/dashboard")({
@@ -35,6 +35,7 @@ function Dashboard() {
     health,
     denyPublishAll,
     requestProactiveFollowup,
+    markDay2Reopen,
     mindStatus,
     exportTenant,
     importTenant,
@@ -48,6 +49,9 @@ function Dashboard() {
   const shipped = drafts.filter((d) => d.stage === "shipped");
   const proactive = timeline.filter((t) => t.kind === "proactive").length;
   const denied = [...timeline].reverse().find((t) => t.kind === "denied");
+
+  const ingests = tenant?.ingests ?? [];
+  const day2Open = timeline.some((t) => /studio reopened/i.test(t.title));
 
   const flash = (text: string, error = false) => {
     if (error) notifyError(text);
@@ -66,6 +70,27 @@ function Dashboard() {
       }
       actions={
         <div className="flex flex-wrap gap-2">
+          <PrimaryButton
+            onClick={async () => {
+              const id = notifyBusy("Reopening as Day 2…");
+              const reopen = await markDay2Reopen();
+              if (!reopen.ok) {
+                notifyIdle(id);
+                flash(reopen.error, true);
+                return;
+              }
+              const res = await requestProactiveFollowup();
+              notifyIdle(id);
+              flash(
+                res.ok
+                  ? "Day 2 — kit still in memory. Weakest hook rewritten."
+                  : res.error,
+                !res.ok,
+              );
+            }}
+          >
+            Simulate Day 2
+          </PrimaryButton>
           <PrimaryButton
             onClick={async () => {
               const id = notifyBusy("Working on your weakest hook…");
@@ -87,6 +112,39 @@ function Dashboard() {
         </div>
       }
     >
+      {ingests.length === 0 ? (
+        <GlassCard className="mb-4">
+          <div className="flex items-start gap-3">
+            <Inbox className="mt-0.5 h-4 w-4" />
+            <div>
+              <p className="text-sm font-medium">Dump last night&apos;s cut</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Drop a video or still on Import — drafts here come from that dump, not a blank canvas.
+              </p>
+              <Link
+                to="/ingest"
+                className="mt-3 inline-block text-xs font-medium underline-offset-2 hover:underline"
+              >
+                Open Import →
+              </Link>
+            </div>
+          </div>
+        </GlassCard>
+      ) : null}
+
+      {day2Open ? (
+        <div className="mb-4 flex items-start gap-3 rounded-2xl border border-white/15 bg-white/[0.04] px-4 py-3">
+          <Sunrise className="mt-0.5 h-4 w-4 shrink-0" />
+          <div>
+            <p className="text-sm font-semibold">Day 2 reopen</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Brand voice is still in memory. Your agent rewrote a hook without a new brief — check Needs
+              approval.
+            </p>
+          </div>
+        </div>
+      ) : null}
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           {
@@ -166,7 +224,7 @@ function Dashboard() {
             </div>
             {denied ? (
               <>
-                <p className="mt-3 rounded-xl bg-destructive/15 px-3 py-2 font-mono text-xs text-destructive">
+                <p className="mt-3 rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
                   Publishing blocked
                 </p>
                 <p className="mt-3 text-xs text-muted-foreground">{denied.detail}</p>

@@ -58,14 +58,17 @@ Apply: https://dorahacks.io/hackathon/creativeminds/detail
 - **AES-256-GCM** encryption for OAuth tokens in `connected_account`  
 - Password min **8** chars on signup/sign-in/reset  
 
-### Henry feedback queue (2026-08-25 → shipped this turn)
+### Henry feedback queue (2026-08-25 → shipped)
 
 - **Media ingest** — drop video/image on `/ingest` (still captured; full VOD not stored). Director gets a `[MEDIA ingest]` brief.
 - **Toasts** — Sonner toasts for success/info/warn; harsh red banners removed. Publish leash stays visible as **amber**.
 - **100-creator beta** — landing + `/pitch` waitlist first; pricing labeled after beta.
 - Deeper Minds: visual-dump atomize rule (no invented quotes). Circle equip path unchanged.
+- **Day 2 reopen** — filmable persistence beat on Dashboard / Studio / Activity (`Simulate Day 2`).
+- **Dump & generate** — one-click queue + atomize. YouTube paste pulls oEmbed title/channel (no invented quotes).
+- **Waitlist** — Neon `creator_waitlist` (created on first write) + Resend confirm; browser list is fallback.
 - Film / DoraHacks — still **open** (#1 submit blocker).
-- **Live:** https://aftercut-sandy.vercel.app (shipped 2026-08-25)
+- **Live:** https://aftercut-sandy.vercel.app (187ce7d READY; next SHA this ship)
 
 Portfolio: Scout closed · five product locks named · AFTERCUT polish in progress.
 

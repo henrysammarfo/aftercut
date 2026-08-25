@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatBytes, formatDuration, formatMediaBrief, isMediaBrief, looksLikeYoutubeUrl } from "../src/lib/media-ingest";
+import { formatBytes, formatDuration, formatMediaBrief, formatYoutubeBrief, isMediaBrief, isYoutubeBrief, looksLikeYoutubeUrl } from "../src/lib/media-ingest";
 
 describe("media ingest brief", () => {
   it("builds a Director-ready video brief without inventing quotes", () => {
@@ -40,8 +40,21 @@ describe("media ingest brief", () => {
 });
 
 describe("youtube URL detect", () => {
-  it("flags watch links", () => {
+  it("flags watch, shorts, and youtu.be links", () => {
     expect(looksLikeYoutubeUrl("https://youtu.be/abcdefghijk")).toBe(true);
+    expect(looksLikeYoutubeUrl("https://www.youtube.com/shorts/abcdefghijk")).toBe(true);
     expect(looksLikeYoutubeUrl("just a transcript")).toBe(false);
+  });
+
+  it("builds a Director brief without inventing quotes", () => {
+    const text = formatYoutubeBrief(
+      { url: "https://youtu.be/abcdefghijk", title: "Late night VOD", author: "Ada" },
+      "hook was the cold open",
+    );
+    expect(isYoutubeBrief(text)).toBe(true);
+    expect(text).toMatch(/Late night VOD/);
+    expect(text).toMatch(/Ada/);
+    expect(text).toMatch(/Do not invent spoken quotes/);
+    expect(text).toContain("hook was the cold open");
   });
 });

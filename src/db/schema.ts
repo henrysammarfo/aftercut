@@ -148,3 +148,9 @@ export const publishEvent = pgTable(
   },
   (t) => [index("publish_user_idx").on(t.userId)],
 );
+
+/** Public first-100 creator beta — emails, not tenant JSON. */
+export const creatorWaitlist = pgTable("creator_waitlist", {
+  email: text("email").primaryKey(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});

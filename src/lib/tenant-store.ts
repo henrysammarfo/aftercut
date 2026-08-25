@@ -23,7 +23,13 @@ import {
   normalizeCaption,
   scrubDoNotSay,
 } from "./atomize";
-import { formatMediaBrief } from "./media-ingest";
+import {
+  extractYoutubeUrl,
+  formatMediaBrief,
+  formatYoutubeBrief,
+  isYoutubeBrief,
+  looksLikeYoutubeUrl,
+} from "./media-ingest";
 
 export type TenantState = {
   userId: string;
@@ -224,8 +230,12 @@ export function addIngest(
   if (input.media && (text.length < 48 || !text.includes("[MEDIA ingest]"))) {
     text = formatMediaBrief(input.media, text);
   }
+  if (!hasMedia && looksLikeYoutubeUrl(text) && !isYoutubeBrief(text)) {
+    const url = extractYoutubeUrl(text) ?? text;
+    text = formatYoutubeBrief({ url }, text);
+  }
   if (!hasMedia && text.length < 48) {
-    return { ok: false, message: "Paste at least 48 characters, or drop an image / video." };
+    return { ok: false, message: "Paste at least 48 characters, drop a file, or paste a YouTube URL." };
   }
   if (text.length > 80_000) {
     return { ok: false, message: "Content is too long (80,000 character limit)." };
@@ -631,6 +641,25 @@ export function applyLiveProactive(
         "Hook improved",
         `Updated: “${scrubbedHook.slice(0, 80)}${scrubbedHook.length > 80 ? "…" : ""}”`,
         "proactive",
+      ),
+    ),
+  });
+}
+
+/** Filmable persistence beat — studio reopened, kit still in memory. */
+export function markDay2Reopen(userId: string, mindName?: string): TenantState {
+  const state = loadTenant(userId);
+  const brand = state.brandKit.name.trim() || "this brand";
+  return persist({
+    ...state,
+    timeline: pushEvents(
+      state.timeline,
+      event(
+        "Follow-up",
+        mindName?.trim() || "AFTERCUT Director",
+        "Studio reopened — kit still in memory",
+        `Day 2: ${brand} voice, examples, and banned phrases are still here. No re-brief needed.`,
+        "memory",
       ),
     ),
   });

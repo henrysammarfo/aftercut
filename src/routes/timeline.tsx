@@ -1,10 +1,10 @@
-import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell, GlassCard, PrimaryButton } from "@/components/app/AppShell";
 import { circle } from "@/lib/aftercut-data";
 import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
 import { agentLabel, phaseLabel } from "@/lib/display";
+import { notifyBusy, notifyError, notifyIdle, notifySuccess } from "@/lib/notify";
 import { Brain, Zap, Bell, ShieldAlert } from "lucide-react";
 
 export const Route = createFileRoute("/timeline")({
@@ -31,8 +31,7 @@ const icons = {
 } as const;
 
 function Timeline() {
-  const { tenant, requestProactiveFollowup } = useAuth();
-  const [msg, setMsg] = useState<string | null>(null);
+  const { tenant, requestProactiveFollowup, markDay2Reopen } = useAuth();
   const timeline = tenant?.timeline ?? [];
 
   return (
@@ -40,23 +39,38 @@ function Timeline() {
       title="Activity"
       subtitle="A running log of what your agent remembers and does for you."
       actions={
-        <PrimaryButton
-          onClick={async () => {
-            setMsg("Working on your weakest hook…");
-            const res = await requestProactiveFollowup();
-            setMsg(res.ok ? "Draft updated — see Studio." : res.error);
-          }}
-        >
-          Improve weakest hook
-        </PrimaryButton>
+        <div className="flex flex-wrap gap-2">
+          <PrimaryButton
+            onClick={async () => {
+              const id = notifyBusy("Reopening as Day 2…");
+              const reopen = await markDay2Reopen();
+              if (!reopen.ok) {
+                notifyIdle(id);
+                notifyError(reopen.error);
+                return;
+              }
+              const res = await requestProactiveFollowup();
+              notifyIdle(id);
+              if (res.ok) notifySuccess("Day 2 — kit still in memory. See Studio.");
+              else notifyError(res.error);
+            }}
+          >
+            Simulate Day 2
+          </PrimaryButton>
+          <PrimaryButton
+            onClick={async () => {
+              const id = notifyBusy("Working on your weakest hook…");
+              const res = await requestProactiveFollowup();
+              notifyIdle(id);
+              if (res.ok) notifySuccess("Draft updated — see Studio.");
+              else notifyError(res.error);
+            }}
+          >
+            Improve weakest hook
+          </PrimaryButton>
+        </div>
       }
     >
-      {msg ? (
-        <p className="mb-4 rounded-xl bg-white/10 px-4 py-2 text-xs text-muted-foreground">
-          {msg}
-        </p>
-      ) : null}
-
       <div className="grid gap-4 lg:grid-cols-3">
         <GlassCard className="lg:col-span-2">
           {timeline.length === 0 ? (

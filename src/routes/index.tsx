@@ -47,7 +47,7 @@ const days = [
     day: "Step 3",
     title: "Wake up to better hooks",
     detail:
-      "Your agent improves weak drafts overnight and queues them for your approval — no re-brief.",
+      "Reopen the studio — the kit is still there. Your agent improves weak drafts overnight and queues them for approval.",
   },
 ];
 

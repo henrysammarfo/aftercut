@@ -68,8 +68,9 @@ npm run minds-smoke
 | Merch commerce | Gumroad link hook (`VITE_GUMROAD_URL`) — no Stripe |
 | Stripe | **Dropped** for jam |
 | Demo film 1.5–2 min | **Open — #1 submit blocker** |
-| Image / video ingest | **In repo 2026-08-25** — dropzone + poster still; full VOD not stored in tenant JSON |
-| First 100 creators waitlist | **In repo** — browser `localStorage` only (not a server list) |
+| Image / video ingest | **Live 2026-08-25** — dropzone + poster still; full VOD not stored in tenant JSON |
+| First 100 creators waitlist | **Live** — Neon `creator_waitlist` (created on first write if missing) + browser fallback. Not a hard cap of 100. |
+| Day 2 persistence demo | **In product** — Simulate Day 2 writes a memory receipt then rewrites the weakest hook |
 
 ## Bug found + fix
 

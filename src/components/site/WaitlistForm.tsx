@@ -21,16 +21,24 @@ export function WaitlistForm({
       return;
     }
     setJoined(true);
+    try {
+      const cloud = await cloudJoinWaitlist({ data: { email } });
+      if (cloud.ok) {
+        notifySuccess(
+          cloud.duplicate
+            ? "You're already on the list."
+            : `You're in the first ${CREATOR_BETA_CAP} creators.`,
+        );
+        return;
+      }
+    } catch {
+      /* fall through to local confirmation */
+    }
     notifySuccess(
       res.count <= CREATOR_BETA_CAP
         ? `You're in the first ${CREATOR_BETA_CAP} creators.`
         : "You're on the list — we'll open seats as the beta fills.",
     );
-    try {
-      await cloudJoinWaitlist({ data: { email } });
-    } catch {
-      /* local list still counts */
-    }
   };
 
   return (

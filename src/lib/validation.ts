@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { looksLikeYoutubeUrl } from "@/lib/media-ingest";
 
 export const emailSchema = z.string().trim().email("Enter a valid email.").max(254);
 export const passwordSchema = z
@@ -43,8 +44,8 @@ export const ingestSchema = z
     source: z.string().trim().max(100).optional(),
     media: ingestMediaSchema.optional(),
   })
-  .refine((v) => Boolean(v.media) || v.text.trim().length >= 20, {
-    message: "Paste at least a few sentences, or drop a file.",
+  .refine((v) => Boolean(v.media) || looksLikeYoutubeUrl(v.text ?? "") || (v.text ?? "").trim().length >= 20, {
+    message: "Paste at least a few sentences, a YouTube URL, or drop a file.",
   });
 
 export const publishTextSchema = z.object({

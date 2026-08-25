@@ -24,6 +24,7 @@ import {
   exportTenantJson as storeExport,
   importTenantJson as storeImport,
   loadTenant,
+  markDay2Reopen as storeMarkDay2Reopen,
   markSoulSyncedLive,
   rejectDraft as storeRejectDraft,
   saveBrandKit as storeSaveBrandKit,
@@ -41,6 +42,7 @@ import {
   cloudDenyPublishAll,
   cloudExportTenant,
   cloudImportTenant,
+  cloudMarkDay2Reopen,
   cloudMarkSoulSynced,
   cloudRejectDraft,
   cloudSaveBrandKit,
@@ -104,12 +106,13 @@ type AuthContextValue = {
     text: string;
     source?: string;
     media?: import("./aftercut-data").IngestMedia;
-  }) => OpOk | OpFail | Promise<OpOk | OpFail>;
+  }) => Promise<{ ok: true; ingestId: string } | OpFail>;
   atomizeIngest: (ingestId?: string) => AsyncOp;
   setDraftStage: (draftId: string, stage: Stage) => OpOk | OpFail | Promise<OpOk | OpFail>;
   approveDraft: (draftId: string) => OpOk | OpFail | Promise<OpOk | OpFail>;
   rejectDraft: (draftId: string) => OpOk | OpFail | Promise<OpOk | OpFail>;
   denyPublishAll: () => Promise<{ detail: string }>;
+  markDay2Reopen: () => AsyncOp;
   requestProactiveFollowup: () => AsyncOp;
   exportTenant: () => Promise<string | null>;
   importTenant: (json: string) => OpOk | OpFail | Promise<OpOk | OpFail>;
@@ -355,12 +358,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
           if (!res.ok) return { ok: false, error: friendlyError(res.message) };
           setTenant(res.state);
-          return { ok: true };
+          return { ok: true, ingestId: res.ingestId };
         }
         const res = storeAddIngest(session.userId, input);
         if (!res.ok) return { ok: false, error: friendlyError(res.message) };
         setTenant(res.state);
-        return { ok: true };
+        return { ok: true, ingestId: res.ingestId };
       },
       atomizeIngest: async (ingestId) => {
         if (!session) return { ok: false, error: "Sign in first." };
@@ -443,6 +446,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setTenant(out.state);
         void notifyLeashLive({ data: { userId: session.userId, detail: out.detail } });
         return { detail: out.detail };
+      },
+      markDay2Reopen: async () => {
+        if (!session) return { ok: false, error: "Sign in first." };
+        const mindName = mindStatus?.ok ? mindStatus.mindName : undefined;
+        if (cloudStorage) {
+          const updated = await cloudMarkDay2Reopen({
+            data: { mindName, brandId: activeBrandId ?? undefined },
+          });
+          setTenant(updated.state);
+        } else {
+          setTenant(storeMarkDay2Reopen(session.userId, mindName));
+        }
+        return { ok: true };
       },
       requestProactiveFollowup: async () => {
         if (!session) return { ok: false, error: "Sign in first." };

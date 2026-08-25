@@ -54,10 +54,42 @@ export function isMediaBrief(text: string): boolean {
   return text.trimStart().startsWith("[MEDIA ingest]");
 }
 
+const YT_URL_RE =
+  /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=[\w-]+(?:[^\s]*)?|embed\/[\w-]+|shorts\/[\w-]+|live\/[\w-]+)|youtu\.be\/[\w-]+)/i;
+
+export function extractYoutubeUrl(text: string): string | null {
+  const m = text.match(YT_URL_RE);
+  if (!m) return null;
+  let url = m[0].replace(/[),.;]+$/, "");
+  if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
+  return url;
+}
+
 export function looksLikeYoutubeUrl(text: string): boolean {
-  return /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)[\w-]{6,}/i.test(
-    text.trim(),
-  );
+  return extractYoutubeUrl(text) != null;
+}
+
+export function isYoutubeBrief(text: string): boolean {
+  return text.trimStart().startsWith("[YOUTUBE ingest]");
+}
+
+/** Text the Director sees for a pasted YouTube URL — title/channel only, no invented quotes. */
+export function formatYoutubeBrief(
+  meta: { url: string; title?: string; author?: string },
+  extraText = "",
+): string {
+  const notes = extraText
+    .replace(YT_URL_RE, "")
+    .trim();
+  const lines = [
+    "[YOUTUBE ingest]",
+    `url: ${meta.url}`,
+    `title: ${meta.title?.trim() || "(title unavailable)"}`,
+    meta.author?.trim() ? `channel: ${meta.author.trim()}` : null,
+    "Creator dumped a YouTube URL into AFTERCUT. Atomize from the title, channel, and any notes below. Do not invent spoken quotes unless they appear below.",
+    notes ? "Caption / notes:" : "No extra notes provided.",
+  ].filter((line): line is string => Boolean(line));
+  return notes ? `${lines.join("\n")}\n\n${notes}` : lines.join("\n");
 }
 
 function canvasToPoster(canvas: HTMLCanvasElement): string | undefined {

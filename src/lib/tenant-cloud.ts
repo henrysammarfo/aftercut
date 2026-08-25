@@ -16,6 +16,7 @@ import {
   denyPublishAll,
   exportTenantJson,
   importTenantJson,
+  markDay2Reopen,
   markSoulSyncedLive,
   primeServerTenant,
   rejectDraft,
@@ -25,6 +26,9 @@ import {
   takeServerTenant,
   type TenantState,
 } from "@/lib/tenant-store";
+import { persistCreatorWaitlist } from "@/lib/waitlist-db";
+import { extractYoutubeUrl, formatYoutubeBrief } from "@/lib/media-ingest";
+import { fetchYoutubeOembed } from "@/lib/youtube-oembed";
 import {
   loadBrandTenant,
   saveBrandTenant,
@@ -160,6 +164,28 @@ export const cloudApplyLiveAtomize = createServerFn({ method: "POST" }).handler(
     return { ok: true as const };
   });
   return { ok: true as const, state };
+});
+
+export const cloudMarkDay2Reopen = createServerFn({ method: "POST" }).handler(async (ctx) => {
+  const userId = await requireUserId();
+  const { mindName, brandId } = (ctx.data ?? ctx) as { mindName?: string; brandId?: string };
+  const { state } = await withBrandMutation(userId, brandId, (uid) => {
+    markDay2Reopen(uid, mindName);
+    return { ok: true as const };
+  });
+  return { ok: true as const, state };
+});
+
+export const cloudYoutubeNotes = createServerFn({ method: "POST" }).handler(async (ctx) => {
+  await requireUserId();
+  const raw = (ctx.data ?? ctx) as { text?: string };
+  const text = typeof raw.text === "string" ? raw.text : "";
+  const url = extractYoutubeUrl(text);
+  if (!url) return { ok: false as const, error: "Paste a YouTube URL." };
+  const meta = await fetchYoutubeOembed(url);
+  const brief = formatYoutubeBrief(meta, text);
+  const title = meta.title?.trim() || undefined;
+  return { ok: true as const, brief, title, url };
 });
 
 export const cloudApplyLiveProactive = createServerFn({ method: "POST" }).handler(async (ctx) => {
@@ -327,13 +353,18 @@ export const notifyCognitionLow = createServerFn({ method: "POST" }).handler(asy
     : { ok: false as const, error: mail.error };
 });
 
-/** Public first-100 waitlist — email confirm if Resend is configured. */
+/** Public first-100 waitlist — Neon list + optional Resend confirm. */
 export const cloudJoinWaitlist = createServerFn({ method: "POST" }).handler(async (ctx) => {
   const raw = (ctx.data ?? ctx) as { email?: string };
   const parsed = parseOrError(emailSchema, raw.email);
   if (!parsed.ok) return { ok: false as const, error: parsed.error };
+  const stored = await persistCreatorWaitlist(parsed.data);
   const mail = await sendWaitlistEmail(parsed.data);
-  return mail.ok
-    ? { ok: true as const, emailed: true as const }
-    : { ok: true as const, emailed: false as const, emailError: mail.error };
+  return {
+    ok: true as const,
+    saved: stored.saved,
+    duplicate: stored.duplicate,
+    emailed: mail.ok,
+    emailError: mail.ok ? undefined : mail.error,
+  };
 });

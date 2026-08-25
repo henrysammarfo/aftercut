@@ -4,8 +4,9 @@ import { AppShell, GlassCard, PrimaryButton } from "@/components/app/AppShell";
 import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
 import { mindLabel } from "@/lib/display";
-import { fileToIngestMedia, formatBytes, formatDuration, formatMediaBrief, looksLikeYoutubeUrl } from "@/lib/media-ingest";
+import { fileToIngestMedia, formatBytes, formatDuration, formatMediaBrief, isYoutubeBrief, looksLikeYoutubeUrl } from "@/lib/media-ingest";
 import { notifyBusy, notifyError, notifyIdle, notifySuccess, notifyWarn } from "@/lib/notify";
+import { cloudYoutubeNotes } from "@/lib/tenant-cloud";
 import type { IngestMedia } from "@/lib/aftercut-data";
 import { UploadCloud, Send, Link2, FileText, ImageIcon, Film } from "lucide-react";
 
@@ -72,26 +73,49 @@ function Ingest() {
     }
   };
 
-  const queue = async () => {
-    const payloadText = media ? formatMediaBrief(media, text) : text;
+  const preparePayload = async (): Promise<{ text: string; nextTitle?: string; nextSource: string }> => {
+    if (media) return { text: formatMediaBrief(media, text), nextTitle: title || undefined, nextSource: source };
+    if (isYoutubeBrief(text) || !looksLikeYoutubeUrl(text)) {
+      return { text, nextTitle: title || undefined, nextSource: source };
+    }
+    try {
+      const res = await cloudYoutubeNotes({ data: { text } });
+      if (res.ok) {
+        const nextTitle = title || res.title;
+        setTitle((t) => t || res.title || t);
+        setSource("YouTube notes");
+        setText(res.brief);
+        return { text: res.brief, nextTitle, nextSource: "YouTube notes" };
+      }
+    } catch {
+      /* URL still queues as notes */
+    }
+    return { text, nextTitle: title || undefined, nextSource: source };
+  };
+
+  const enqueue = async (silent: boolean) => {
+    const payload = await preparePayload();
     const res = await Promise.resolve(
       addIngest({
-        text: payloadText,
-        title: title || undefined,
-        source,
+        text: payload.text,
+        title: payload.nextTitle,
+        source: payload.nextSource,
         media: media ?? undefined,
       }),
     );
     if (!res.ok) {
       notifyWarn(res.error);
-      return;
+      return null;
     }
     setText("");
     setTitle("");
     setMedia(null);
     setStudioCta(false);
-    notifySuccess("Added to queue. Generate drafts when ready.");
+    if (!silent) notifySuccess("Added to queue. Generate drafts when ready.");
+    return res.ingestId;
   };
+
+  const queue = async () => enqueue(false);
 
   const generate = async (ingestId?: string) => {
     setBusy(true);
@@ -106,6 +130,16 @@ function Ingest() {
     }
     setStudioCta(true);
     notifySuccess("Drafts ready — open Studio to review.");
+  };
+
+  const dumpAndGenerate = async () => {
+    const ingestId = await enqueue(true);
+    if (!ingestId) return;
+    if (!health?.kitReady) {
+      notifyWarn("Queued. Save brand voice, then generate drafts.");
+      return;
+    }
+    await generate(ingestId);
   };
 
   return (
@@ -129,11 +163,11 @@ function Ingest() {
           ) : null}
           <PrimaryButton onClick={() => void queue()}>Add to queue</PrimaryButton>
           <PrimaryButton
-            disabled={!health?.kitReady || busy}
-            title={health?.kitReady ? undefined : "Save your brand voice first"}
-            onClick={() => void generate()}
+            disabled={busy}
+            title={!health?.kitReady ? "Queues now — generate after you save brand voice" : undefined}
+            onClick={() => void dumpAndGenerate()}
           >
-            {busy ? "Generating…" : "Generate drafts"}
+            {busy ? "Generating…" : "Dump & generate"}
           </PrimaryButton>
         </div>
       }
@@ -160,9 +194,16 @@ function Ingest() {
               e.target.value = "";
             }}
           />
-          <button
-            type="button"
+          <div
+            role="button"
+            tabIndex={0}
             onClick={() => fileRef.current?.click()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                fileRef.current?.click();
+              }
+            }}
             onDragOver={(e) => {
               e.preventDefault();
               setDragOver(true);
@@ -173,7 +214,7 @@ function Ingest() {
               setDragOver(false);
               void onFiles(e.dataTransfer.files);
             }}
-            className={`flex min-h-40 w-full flex-col items-center justify-center rounded-2xl border border-dashed px-4 py-6 text-center transition-colors ${
+            className={`flex min-h-40 w-full cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed px-4 py-6 text-center transition-colors ${
               dragOver ? "border-white/40 bg-white/[0.08]" : "border-white/15 bg-white/[0.02] hover:border-white/25"
             }`}
           >
@@ -198,6 +239,17 @@ function Ingest() {
                   {media.kind === "video" ? " · still captured, file not stored" : ""}
                 </p>
                 <p className="mt-2 text-[11px] text-muted-foreground">Click or drop to replace</p>
+                <button
+                  type="button"
+                  className="mt-2 text-[11px] underline-offset-2 hover:underline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMedia(null);
+                    setSource("Transcript paste");
+                  }}
+                >
+                  Remove file
+                </button>
               </>
             ) : (
               <>
@@ -207,7 +259,7 @@ function Ingest() {
                 </p>
               </>
             )}
-          </button>
+          </div>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -237,7 +289,7 @@ function Ingest() {
             placeholder={
               media
                 ? "Optional caption or transcript to go with the file…"
-                : "Or paste a transcript if you don’t have a file…"
+                : "Paste a transcript, or a YouTube URL — we pull title + channel, not invented quotes."
             }
             className="mt-3 w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm outline-none placeholder:text-muted-foreground focus:border-white/25"
           />

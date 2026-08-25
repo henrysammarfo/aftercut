@@ -58,6 +58,7 @@ function Studio() {
     rejectDraft,
     denyPublishAll,
     requestProactiveFollowup,
+    markDay2Reopen,
   } = useAuth();
   const [denied, setDenied] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -210,6 +211,30 @@ function Studio() {
           <PrimaryButton disabled={items.length === 0} onClick={downloadPack}>
             <Download className="mr-1.5 h-3.5 w-3.5" />
             Download file
+          </PrimaryButton>
+          <PrimaryButton
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              const id = notifyBusy("Reopening as Day 2…");
+              const reopen = await markDay2Reopen();
+              if (!reopen.ok) {
+                notifyIdle(id);
+                flash(reopen.error, "err");
+                setBusy(false);
+                return;
+              }
+              const res = await requestProactiveFollowup();
+              notifyIdle(id);
+              flash(
+                res.ok ? "Day 2 — kit still in memory. Check Needs approval." : res.error ?? "Failed",
+                res.ok ? "ok" : "err",
+              );
+              setBusy(false);
+            }}
+          >
+            <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+            Simulate Day 2
           </PrimaryButton>
           <PrimaryButton
             disabled={busy}
