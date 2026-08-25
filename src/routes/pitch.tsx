@@ -1,16 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { AppShell, GlassCard, PrimaryButton } from "@/components/app/AppShell";
+import { AppShell, GlassCard } from "@/components/app/AppShell";
+import { WaitlistForm } from "@/components/site/WaitlistForm";
 import { ArrowUpRight } from "lucide-react";
 
 export const Route = createFileRoute("/pitch")({
   head: () => ({
     meta: [
-      { title: "Pricing — AFTERCUT" },
+      { title: "First 100 creators — AFTERCUT" },
       {
         name: "description",
         content:
-          "Plans for creators who want an agent that remembers their brand and keeps repurposing overnight.",
+          "Free beta for the first 100 creators. Pricing opens after — an agent that remembers your brand and keeps repurposing overnight.",
       },
     ],
   }),
@@ -38,13 +38,10 @@ const pricing = [
 ];
 
 function Pitch() {
-  const [email, setEmail] = useState("");
-  const [joined, setJoined] = useState(false);
-
   return (
     <AppShell
-      title="Simple pricing for serious creators"
-      subtitle="An AI repurposing studio that remembers your voice — built on Minds by Animoca."
+      title="First 100 creators — free beta"
+      subtitle="Pricing waits until the beta fills. An AI studio that remembers your voice — built on Minds by Animoca."
       showSetupProgress={false}
       actions={
         <Link
@@ -52,7 +49,7 @@ function Pitch() {
           className="rounded-full px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
           style={{ background: "linear-gradient(to bottom, #2B2B2B, #101010)" }}
         >
-          Start free
+          Open the studio
         </Link>
       }
     >
@@ -71,7 +68,7 @@ function Pitch() {
           <h2 className="text-sm font-semibold">Included today</h2>
           <ul className="mt-4 flex flex-col gap-2 text-xs text-muted-foreground">
             <li>Brand voice memory</li>
-            <li>Import &amp; generate drafts</li>
+            <li>Video / image import &amp; drafts</li>
             <li>Approval before publish</li>
             <li>Caption export</li>
             <li>Activity history</li>
@@ -89,8 +86,17 @@ function Pitch() {
       </div>
 
       <GlassCard className="mt-4">
-        <h2 className="text-sm font-semibold">Plans</h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <h2 className="text-sm font-semibold">Join the first 100</h2>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Free beta now. Plans below are what we charge after those seats fill — not today.
+        </p>
+        <div className="mt-4">
+          <WaitlistForm compact />
+        </div>
+        <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          After beta
+        </h3>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
           {pricing.map(([name, price, detail]) => (
             <div key={name} className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">{name}</p>
@@ -99,32 +105,6 @@ function Pitch() {
             </div>
           ))}
         </div>
-        <form
-          className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (!email.trim().includes("@")) return;
-            try {
-              const key = "aftercut_waitlist_v1";
-              const prev = JSON.parse(localStorage.getItem(key) || "[]") as string[];
-              const next = [...new Set([...prev, email.trim().toLowerCase()])];
-              localStorage.setItem(key, JSON.stringify(next));
-            } catch {
-              /* ignore */
-            }
-            setJoined(true);
-          }}
-        >
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email for early access"
-            className="w-full flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm outline-none focus:border-white/25"
-          />
-          <PrimaryButton type="submit">{joined ? "You're on the list" : "Join waitlist"}</PrimaryButton>
-        </form>
       </GlassCard>
 
       <GlassCard className="mt-4">

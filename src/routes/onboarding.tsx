@@ -6,6 +6,7 @@ import { requireAuth } from "@/lib/require-auth";
 import { emptyBrandKit, type BrandKit } from "@/lib/aftercut-data";
 import { kitIsReady } from "@/lib/atomize";
 import { friendlyError, mindLabel } from "@/lib/display";
+import { notifyBusy, notifyError, notifyIdle, notifySuccess, notifyWarn } from "@/lib/notify";
 import { Check, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/onboarding")({
@@ -39,8 +40,6 @@ function Onboarding() {
   } = useAuth();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
-  const [err, setErr] = useState(false);
 
   const [kit, setKit] = useState<BrandKit>(() => tenant?.brandKit ?? emptyBrandKit());
   const [example, setExample] = useState("");
@@ -61,8 +60,8 @@ function Onboarding() {
   }, [tenant]);
 
   const flash = (text: string, isError = false) => {
-    setMsg(text);
-    setErr(isError);
+    if (isError) notifyError(text);
+    else notifySuccess(text);
   };
 
   const active = steps.find((s) => !s.done)?.id ?? 5;
@@ -73,18 +72,6 @@ function Onboarding() {
       subtitle="Four quick steps — then your agent runs while you sleep."
       showSetupProgress={false}
     >
-      {msg ? (
-        <p
-          className={`mb-4 rounded-xl px-4 py-2 text-xs ${
-            err
-              ? "border border-red-500/25 bg-red-500/10 text-red-200/90"
-              : "bg-white/10 text-muted-foreground"
-          }`}
-        >
-          {msg}
-        </p>
-      ) : null}
-
       <div className="mb-6 flex flex-wrap gap-2">
         {steps.map((s) => (
           <div
@@ -165,7 +152,7 @@ function Onboarding() {
         <GlassCard className="mb-4">
           <h2 className="text-sm font-semibold">2 · Generate platform drafts</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Paste a transcript or stream notes. You get Shorts, X, LinkedIn and newsletter cuts.
+            Paste a transcript or drop a file on Import. You get Shorts, X, LinkedIn and newsletter cuts.
           </p>
           <textarea
             className={`${field} mt-4 min-h-[140px]`}
@@ -182,18 +169,21 @@ function Onboarding() {
                   return;
                 }
                 setBusy(true);
-                const add = addIngest({
-                  title: "First import",
-                  text: ingestText.trim(),
-                  source: "Import",
-                });
+                const add = await Promise.resolve(
+                  addIngest({
+                    title: "First import",
+                    text: ingestText.trim(),
+                    source: "Import",
+                  }),
+                );
                 if (!add.ok) {
                   flash(add.error, true);
                   setBusy(false);
                   return;
                 }
-                flash("Generating drafts — this can take a few minutes…");
+                const id = notifyBusy("Generating drafts — this can take a few minutes…");
                 const res = await atomizeIngest();
+                notifyIdle(id);
                 flash(
                   res.ok ? "Drafts ready — open Studio to review." : res.error,
                   !res.ok,
@@ -219,7 +209,7 @@ function Onboarding() {
               onClick={async () => {
                 setBusy(true);
                 const res = await denyPublishAll();
-                flash(res.detail);
+                notifyWarn(res.detail);
                 setBusy(false);
               }}
             >
@@ -240,8 +230,9 @@ function Onboarding() {
               disabled={busy}
               onClick={async () => {
                 setBusy(true);
-                flash("Improving your weakest hook…");
+                const id = notifyBusy("Improving your weakest hook…");
                 const res = await requestProactiveFollowup();
+                notifyIdle(id);
                 flash(
                   res.ok ? "Updated draft waiting in Studio → Needs approval." : res.error,
                   !res.ok,

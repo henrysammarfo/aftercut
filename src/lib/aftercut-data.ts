@@ -64,6 +64,18 @@ export type ShipEntry = {
   ts: string;
 };
 
+export type IngestMedia = {
+  kind: "image" | "video";
+  filename: string;
+  mime: string;
+  size: number;
+  durationSec?: number;
+  width?: number;
+  height?: number;
+  /** Compressed JPEG still — never the full video file. */
+  posterDataUrl?: string;
+};
+
 export type IngestRecord = {
   id: string;
   title: string;
@@ -72,6 +84,7 @@ export type IngestRecord = {
   createdAt: string;
   status: "queued" | "atomized";
   beatCount: number;
+  media?: IngestMedia;
 };
 
 export function emptyBrandKit(): BrandKit {

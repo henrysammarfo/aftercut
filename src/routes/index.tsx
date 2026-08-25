@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteNav } from "@/components/site/SiteNav";
+import { WaitlistForm } from "@/components/site/WaitlistForm";
 import { circle } from "@/lib/aftercut-data";
 import { absoluteUrl, OG_IMAGE_PATH } from "@/lib/site-meta";
 import { ShieldAlert, Moon, Sunrise, Sun } from "lucide-react";
@@ -39,7 +40,7 @@ const days = [
     day: "Step 2",
     title: "Import long-form content",
     detail:
-      "Paste a transcript, stream notes or Telegram text. Get Shorts, X, LinkedIn and newsletter drafts.",
+      "Drop a video or still, or paste a transcript. Get Shorts, X, LinkedIn and newsletter drafts.",
   },
   {
     icon: Sun,
@@ -215,8 +216,8 @@ function Index() {
               <div className="flex items-center gap-2 text-sm font-semibold">
                 <ShieldAlert className="h-4 w-4" /> Approval required
               </div>
-              <p className="mt-4 rounded-xl bg-destructive/15 px-4 py-3 font-mono text-sm text-destructive">
-                Publishing blocked
+              <p className="mt-4 rounded-xl bg-amber-500/15 px-4 py-3 font-mono text-sm text-amber-100">
+                Publishing blocked — approval required
               </p>
               <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
                 Autonomous drafting, human publishing. Nothing goes live without your sign-off.
@@ -229,30 +230,31 @@ function Index() {
       {/* CTA */}
       <section className="border-t border-white/10 px-5 py-20 sm:px-8 lg:px-12">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            First 100 creators
+          </p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
             Teach the kit. Dump the stream. Sleep.
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground sm:text-base">
-            Start with your brand. Import your content. Review drafts in the morning.
+            Free beta for the first 100 creators. Pricing opens after that — not before.
           </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <WaitlistForm />
+          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               to="/signup"
               className="rounded-full px-8 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90"
               style={{ background: "linear-gradient(to bottom, #2B2B2B, #101010)" }}
             >
-              Create free account
+              Open the studio
             </Link>
             <Link
               to="/pitch"
               className="rounded-full border border-white/15 px-8 py-3 text-sm font-medium text-foreground transition-colors hover:bg-white/5"
             >
-              View pricing
+              What comes after beta
             </Link>
           </div>
-          <p className="mt-6 text-xs text-muted-foreground">
-            From $29/mo · Export captions for CapCut · Ship to X, LinkedIn and Calendar from Studio
-          </p>
         </div>
       </section>
 

@@ -68,6 +68,8 @@ npm run minds-smoke
 | Merch commerce | Gumroad link hook (`VITE_GUMROAD_URL`) — no Stripe |
 | Stripe | **Dropped** for jam |
 | Demo film 1.5–2 min | **Open — #1 submit blocker** |
+| Image / video ingest | **In repo 2026-08-25** — dropzone + poster still; full VOD not stored in tenant JSON |
+| First 100 creators waitlist | **In repo** — browser `localStorage` only (not a server list) |
 
 ## Bug found + fix
 

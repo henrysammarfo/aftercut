@@ -23,6 +23,7 @@ import {
   normalizeCaption,
   scrubDoNotSay,
 } from "./atomize";
+import { formatMediaBrief } from "./media-ingest";
 
 export type TenantState = {
   userId: string;
@@ -215,12 +216,16 @@ export type AddIngestResult =
 
 export function addIngest(
   userId: string,
-  input: { title?: string; text: string; source?: string },
+  input: { title?: string; text: string; source?: string; media?: IngestRecord["media"] },
 ): AddIngestResult {
   const state = loadTenant(userId);
-  const text = input.text.trim();
-  if (text.length < 48) {
-    return { ok: false, message: "Paste at least 48 characters of content." };
+  let text = input.text.trim();
+  const hasMedia = Boolean(input.media);
+  if (input.media && (text.length < 48 || !text.includes("[MEDIA ingest]"))) {
+    text = formatMediaBrief(input.media, text);
+  }
+  if (!hasMedia && text.length < 48) {
+    return { ok: false, message: "Paste at least 48 characters, or drop an image / video." };
   }
   if (text.length > 80_000) {
     return { ok: false, message: "Content is too long (80,000 character limit)." };
@@ -228,15 +233,23 @@ export function addIngest(
 
   const title =
     input.title?.trim() ||
+    input.media?.filename ||
     text.slice(0, 48).replace(/\s+/g, " ") + (text.length > 48 ? "…" : "");
   const ingest: IngestRecord = {
     id: `ing_${crypto.randomUUID().slice(0, 8)}`,
     title,
     text,
-    source: input.source?.trim() || "Transcript paste",
+    source:
+      input.source?.trim() ||
+      (input.media?.kind === "video"
+        ? "Video upload"
+        : input.media?.kind === "image"
+          ? "Image upload"
+          : "Transcript paste"),
     createdAt: new Date().toISOString(),
     status: "queued",
     beatCount: 0,
+    media: input.media,
   };
 
   const next = persist({
@@ -248,7 +261,9 @@ export function addIngest(
         "Content",
         "Import",
         "Content received",
-        `${ingest.source}: "${ingest.title}" added (${text.length} characters).`,
+        ingest.media
+          ? `${ingest.source}: "${ingest.title}" (${ingest.media.kind} · ${text.length} characters).`
+          : `${ingest.source}: "${ingest.title}" added (${text.length} characters).`,
         "action",
       ),
     ),

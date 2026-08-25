@@ -10,16 +10,17 @@
 | **Now – Aug 28** | AFTERCUT production URL + film + DoraHacks apply |
 | **After Aug 28** | China/scholarship wait · next briefs only when Henry pastes |
 
-## AFTERCUT open (2026-08-23)
+## AFTERCUT open (2026-08-25)
 
 | # | Item | Status |
 |---|---|---|
 | 1 | Live product https://aftercut-sandy.vercel.app | **up** |
-| 2 | Cloud auth · Studio publish · Calendar · multi-brand · invites | **in repo + deployed** |
-| 3 | Sign up → `TELEGRAM_DEFAULT_USER_ID` · Settings tokens · Resend keys | **ops** |
-| 4 | Demo film 1.5–2 min (`cloud-video` / `docs/FILM_DEMO.md`) | **#1 blocker** |
-| 5 | DoraHacks apply | after film |
-| 6 | Secret rotation (keys pasted in chat) | after smoke |
+| 2 | Media ingest + toasts + first-100 waitlist | **in repo** (deploy after Henry push) |
+| 3 | Cloud auth · Studio publish · Calendar · multi-brand · invites | **in repo + deployed** |
+| 4 | Sign up → `TELEGRAM_DEFAULT_USER_ID` · Settings tokens · Resend keys | **ops** |
+| 5 | Demo film 1.5–2 min (`cloud-video` / `docs/FILM_DEMO.md`) | **#1 blocker** |
+| 6 | DoraHacks apply | after film |
+| 7 | Secret rotation (keys pasted in chat) | after smoke |
 
 ## Docs to keep honest
 

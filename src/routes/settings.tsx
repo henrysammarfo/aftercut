@@ -10,6 +10,7 @@ import {
   fetchStudioInvites,
 } from "@/lib/tenant-cloud";
 import { friendlyError } from "@/lib/display";
+import { notifyError, notifySuccess, notifyWarn } from "@/lib/notify";
 
 export const Route = createFileRoute("/settings")({
   beforeLoad: async () => {
@@ -22,8 +23,10 @@ export const Route = createFileRoute("/settings")({
 });
 
 function SettingsPage() {
-  const [msg, setMsg] = useState<string | null>(null);
-  const [err, setErr] = useState(false);
+  const flash = (text: string, isErr = false) => {
+    if (isErr) notifyError(text);
+    else notifySuccess(text);
+  };
   const [xToken, setXToken] = useState("");
   const [liToken, setLiToken] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
@@ -34,11 +37,6 @@ function SettingsPage() {
   const [analytics, setAnalytics] = useState<
     Array<{ platform: string; hook: string | null; publishedAt?: string }>
   >([]);
-
-  const flash = (text: string, isErr = false) => {
-    setMsg(text);
-    setErr(isErr);
-  };
 
   useEffect(() => {
     void fetchEmailStatus()
@@ -70,14 +68,6 @@ function SettingsPage() {
         </PrimaryButton>
       }
     >
-      {msg ? (
-        <p
-          className={`mb-4 rounded-xl px-4 py-2 text-xs ${err ? "border border-red-500/25 bg-red-500/10 text-red-200/90" : "bg-white/10 text-muted-foreground"}`}
-        >
-          {msg}
-        </p>
-      ) : null}
-
       <div className="grid gap-4 lg:grid-cols-2">
         <GlassCard>
           <h2 className="text-sm font-semibold">Password reset email</h2>
@@ -107,12 +97,13 @@ function SettingsPage() {
                 const res = await cloudInviteStudioMember({
                   data: { email: inviteEmail.trim() },
                 });
-                flash(
-                  res.emailed
-                    ? `Invited ${res.invite.email}.`
-                    : `Invite saved for ${res.invite.email}${res.emailError ? ` — ${res.emailError}` : ""}`,
-                  !res.emailed,
-                );
+                if (res.emailed) {
+                  notifySuccess(`Invited ${res.invite.email}.`);
+                } else {
+                  notifyWarn(
+                    `Invite saved for ${res.invite.email}${res.emailError ? ` — ${res.emailError}` : ""}`,
+                  );
+                }
                 setInviteEmail("");
                 const rows = await fetchStudioInvites();
                 setInvites(rows);

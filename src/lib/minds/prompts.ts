@@ -69,6 +69,9 @@ export function atomizePrompt(input: {
 }`,
     "- circle.hooksmith / platformfit / qc = 1–2 sentence pass receipts (what that role did).",
     "- Produce 1 ingested source draft + 4–8 platform cuts from real beats in the text (cover all platforms at least once when content allows).",
+    input.text.includes("[MEDIA ingest]")
+      ? "- MEDIA DUMP: treat this as a visual source (VOD or still), not a transcript-only job. Thumbnail-first Shorts; still-energy X; lesson LinkedIn; newsletter teaser. Never invent spoken quotes unless they appear in LONG-FORM."
+      : "",
     "- QC: if a ban phrase slips into a hook, rewrite that hook before answering.",
     "",
     "SOUL KIT:",

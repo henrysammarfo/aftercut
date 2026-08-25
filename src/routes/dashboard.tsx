@@ -4,8 +4,9 @@ import { circle, platformLabel } from "@/lib/aftercut-data";
 import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
 import { agentLabel, mindLabel, phaseLabel } from "@/lib/display";
+import { notifyBusy, notifyError, notifyIdle, notifySuccess, notifyWarn } from "@/lib/notify";
 import { ArrowUpRight, ShieldAlert, Brain, HardDrive } from "lucide-react";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {
@@ -38,8 +39,6 @@ function Dashboard() {
     exportTenant,
     importTenant,
   } = useAuth();
-  const [msg, setMsg] = useState<string | null>(null);
-  const [isErr, setIsErr] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const drafts = tenant?.drafts ?? [];
@@ -51,8 +50,8 @@ function Dashboard() {
   const denied = [...timeline].reverse().find((t) => t.kind === "denied");
 
   const flash = (text: string, error = false) => {
-    setMsg(text);
-    setIsErr(error);
+    if (error) notifyError(text);
+    else notifySuccess(text);
   };
 
   return (
@@ -69,8 +68,9 @@ function Dashboard() {
         <div className="flex flex-wrap gap-2">
           <PrimaryButton
             onClick={async () => {
-              flash("Working on your weakest hook…");
+              const id = notifyBusy("Working on your weakest hook…");
               const res = await requestProactiveFollowup();
+              notifyIdle(id);
               flash(res.ok ? "Hook updated — check Needs approval." : res.error, !res.ok);
             }}
           >
@@ -79,7 +79,7 @@ function Dashboard() {
           <PrimaryButton
             onClick={async () => {
               const res = await denyPublishAll();
-              flash(res.detail);
+              notifyWarn(res.detail);
             }}
           >
             Publish all now
@@ -87,18 +87,6 @@ function Dashboard() {
         </div>
       }
     >
-      {msg ? (
-        <p
-          className={`mb-4 rounded-xl px-4 py-2 text-xs ${
-            isErr
-              ? "border border-red-500/25 bg-red-500/10 text-red-200/90"
-              : "bg-white/10 text-muted-foreground"
-          }`}
-        >
-          {msg}
-        </p>
-      ) : null}
-
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           {

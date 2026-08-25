@@ -101,6 +101,7 @@ export const cloudAddIngest = createServerFn({ method: "POST" }).handler(async (
     title?: string;
     text: string;
     source?: string;
+    media?: import("./aftercut-data").IngestMedia;
     brandId?: string;
   };
   const parsed = parseOrError(ingestSchema, raw);

@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
 import { equipCreatorStack, fetchMindTranscript } from "@/lib/minds/live";
 import { agentLabel, formatToolUsage, friendlyError, mindLabel, phaseLabel } from "@/lib/display";
+import { notifyBusy, notifyError, notifyIdle, notifySuccess } from "@/lib/notify";
 import { Brain, Users, Radio, MessageSquare, Wrench } from "lucide-react";
 
 export const Route = createFileRoute("/circle")({
@@ -41,7 +42,6 @@ function CirclePage() {
     Array<{ sender: "mind" | "human"; text: string }>
   >([]);
   const [busy, setBusy] = useState(false);
-  const [note, setNote] = useState<string | null>(null);
 
   useEffect(() => {
     if (!session?.userId) return;
@@ -61,13 +61,14 @@ function CirclePage() {
           disabled={busy}
           onClick={async () => {
             setBusy(true);
-            setNote("Adding transcription and YouTube research tools…");
+            const id = notifyBusy("Adding transcription and YouTube research tools…");
             const res = await equipCreatorStack();
-            setNote(
-              res.ok
-                ? `Connected: ${res.equipped.join(", ") || "tools updated"}`
-                : friendlyError(res.error),
-            );
+            notifyIdle(id);
+            if (res.ok) {
+              notifySuccess(`Connected: ${res.equipped.join(", ") || "tools updated"}`);
+            } else {
+              notifyError(friendlyError(res.error));
+            }
             await refreshMindStatus();
             setBusy(false);
           }}
@@ -76,12 +77,6 @@ function CirclePage() {
         </PrimaryButton>
       }
     >
-      {note ? (
-        <p className="mb-4 rounded-xl bg-white/10 px-4 py-2 text-xs text-muted-foreground">
-          {note}
-        </p>
-      ) : null}
-
       <GlassCard className="mb-4">
         <div className="flex items-start gap-3">
           <Radio className="mt-0.5 h-4 w-4 shrink-0" />

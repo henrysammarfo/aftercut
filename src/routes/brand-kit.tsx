@@ -4,7 +4,7 @@ import { AppShell, GlassCard, PrimaryButton } from "@/components/app/AppShell";
 import { emptyBrandKit, platforms, platformLabel, type BrandKit } from "@/lib/aftercut-data";
 import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
-import { friendlyError } from "@/lib/display";
+import { notifyBusy, notifyError, notifyIdle, notifySuccess, notifyWarn } from "@/lib/notify";
 import { Ban, Quote, Check } from "lucide-react";
 
 export const Route = createFileRoute("/brand-kit")({
@@ -36,8 +36,6 @@ function BrandKitPage() {
   const [kit, setKit] = useState<BrandKit>(emptyBrandKit());
   const [bannedInput, setBannedInput] = useState("");
   const [saved, setSaved] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  const [hint, setHint] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -79,22 +77,21 @@ function BrandKitPage() {
             disabled={busy}
             onClick={async () => {
               setBusy(true);
-              setHint("Saving to your agent…");
+              const id = notifyBusy("Saving to your agent…");
               const filledExamples = kit.examples.filter((e) => e.trim()).length;
               const res = await saveBrandKit(kit);
+              notifyIdle(id);
               setBusy(false);
               if (!res.ok) {
-                setErr(res.error);
+                notifyError(res.error);
                 setSaved(false);
-                setHint(null);
                 return;
               }
-              setErr(null);
               setSaved(true);
               if (filledExamples === 0 || kit.ctas.length === 0) {
-                setHint("Saved. Tip: add an example post and a CTA for sharper drafts.");
+                notifyWarn("Saved. Add an example post and a CTA for sharper drafts.");
               } else {
-                setHint("Saved. Next: import long-form content.");
+                notifySuccess("Saved. Next: import a video, still, or transcript.");
               }
             }}
           >
@@ -103,15 +100,6 @@ function BrandKitPage() {
         </div>
       }
     >
-      {err ? (
-        <p className="mb-4 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-2 text-xs text-red-200/90">
-          {friendlyError(err)}
-        </p>
-      ) : null}
-      {hint ? (
-        <p className="mb-4 rounded-xl bg-white/10 px-4 py-2 text-xs text-muted-foreground">{hint}</p>
-      ) : null}
-
       <div className="grid gap-4 lg:grid-cols-3">
         <GlassCard className="lg:col-span-2">
           <h2 className="text-sm font-semibold">Voice</h2>

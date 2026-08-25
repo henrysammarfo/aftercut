@@ -58,15 +58,15 @@ Apply: https://dorahacks.io/hackathon/creativeminds/detail
 - **AES-256-GCM** encryption for OAuth tokens in `connected_account`  
 - Password min **8** chars on signup/sign-in/reset  
 
-### Henry feedback queue (do AFTER scout close + ideation — 2026-08-25)
+### Henry feedback queue (2026-08-25 → shipped this turn)
 
-- Image / video upload for ingest (product clarity vs transcript-only).  
-- Deeper **Minds** Builder SDK use — hit limits, creative integrations, not thin wrapper.  
-- Toast / pro notifications instead of harsh red banners.  
-- Path: **100-creator beta** → then pricing.  
-- Keep jam film / apply status honest.  
+- **Media ingest** — drop video/image on `/ingest` (still captured; full VOD not stored). Director gets a `[MEDIA ingest]` brief.
+- **Toasts** — Sonner toasts for success/info/warn; harsh red banners removed. Publish leash stays visible as **amber**.
+- **100-creator beta** — landing + `/pitch` waitlist first; pricing labeled after beta.
+- Deeper Minds: visual-dump atomize rule (no invented quotes). Circle equip path unchanged.
+- Film / DoraHacks — still **open** (#1 submit blocker).
 
-Portfolio order: Scout stopped → hackathon ideation → AFTERCUT polish last. See scoutbot `docs/memory/HACKATHON_IDEATION.md`.
+Portfolio: Scout closed · five product locks named · AFTERCUT polish in progress.
 
 | # | Item | Status |
 |---|---|---|

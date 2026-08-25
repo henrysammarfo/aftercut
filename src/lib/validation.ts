@@ -25,11 +25,27 @@ export const signInSchema = z.object({
 
 export const inviteEmailSchema = emailSchema;
 
-export const ingestSchema = z.object({
-  text: z.string().trim().min(20, "Paste at least a few sentences.").max(100_000),
-  title: z.string().trim().max(200).optional(),
-  source: z.string().trim().max(100).optional(),
+export const ingestMediaSchema = z.object({
+  kind: z.enum(["image", "video"]),
+  filename: z.string().trim().min(1).max(240),
+  mime: z.string().trim().max(80),
+  size: z.number().int().nonnegative(),
+  durationSec: z.number().nonnegative().optional(),
+  width: z.number().int().positive().optional(),
+  height: z.number().int().positive().optional(),
+  posterDataUrl: z.string().max(120_000).optional(),
 });
+
+export const ingestSchema = z
+  .object({
+    text: z.string().max(100_000).optional().default(""),
+    title: z.string().trim().max(200).optional(),
+    source: z.string().trim().max(100).optional(),
+    media: ingestMediaSchema.optional(),
+  })
+  .refine((v) => Boolean(v.media) || v.text.trim().length >= 20, {
+    message: "Paste at least a few sentences, or drop a file.",
+  });
 
 export const publishTextSchema = z.object({
   text: z.string().trim().min(1, "Post text is required.").max(3000),

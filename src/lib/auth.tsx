@@ -103,6 +103,7 @@ type AuthContextValue = {
     title?: string;
     text: string;
     source?: string;
+    media?: import("./aftercut-data").IngestMedia;
   }) => OpOk | OpFail | Promise<OpOk | OpFail>;
   atomizeIngest: (ingestId?: string) => AsyncOp;
   setDraftStage: (draftId: string, stage: Stage) => OpOk | OpFail | Promise<OpOk | OpFail>;

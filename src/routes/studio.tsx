@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
 import { buildShipPack } from "@/lib/ship-pack";
 import { agentLabel, friendlyError } from "@/lib/display";
+import { notifyError, notifySuccess, notifyWarn, notifyBusy, notifyIdle } from "@/lib/notify";
 import { scheduleToGoogleCalendar, fetchConnectionStatus } from "@/lib/social/calendar";
 import { publishToLinkedIn, publishToX } from "@/lib/social/publish";
 import {
@@ -59,7 +60,6 @@ function Studio() {
     requestProactiveFollowup,
   } = useAuth();
   const [denied, setDenied] = useState<string | null>(null);
-  const [shipNote, setShipNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [busyDraft, setBusyDraft] = useState<string | null>(null);
   const [connections, setConnections] = useState<Connections | null>(null);
@@ -72,26 +72,32 @@ function Studio() {
       .catch(() => setConnections(null));
   }, [cloudStorage]);
 
-  const flash = (msg: string) => setShipNote(msg);
+  const flash = (msg: string, kind: "ok" | "warn" | "err" = "ok") => {
+    if (kind === "err") notifyError(msg);
+    else if (kind === "warn") notifyWarn(msg);
+    else notifySuccess(msg);
+  };
 
   const move = async (id: string, stage: Stage) => {
     const res = await Promise.resolve(setDraftStage(id, stage));
     if (!res.ok) {
-      setShipNote(res.error);
+      flash(res.error, "err");
       return;
     }
-    setShipNote(null);
   };
 
   const markPublished = async (draftId: string) => {
     const res = await Promise.resolve(setDraftStage(draftId, "shipped"));
-    if (!res.ok) setShipNote(res.error);
+    if (!res.ok) flash(res.error, "err");
     else flash("Marked as published.");
   };
 
   const publishDraft = async (d: Draft) => {
     if (!cloudStorage) {
-      flash("Publishing requires cloud mode — set DATABASE_URL on your host. See docs/KEYS_SETUP.md");
+      flash(
+        "Publishing needs connected accounts — add them in Settings.",
+        "warn",
+      );
       return;
     }
     setBusyDraft(d.id);
@@ -103,26 +109,26 @@ function Studio() {
       } else if (d.platform === "linkedin") {
         res = await publishToLinkedIn({ data: { text, draftId: d.id } });
       } else {
-        flash("Copy captions for Shorts/newsletter — or add to Google Calendar.");
+        flash("Copy captions for Shorts/newsletter — or add to Google Calendar.", "warn");
         setBusyDraft(null);
         return;
       }
       if (!res.ok) {
-        flash(friendlyError(res.error ?? "Publish failed"));
+        flash(friendlyError(res.error ?? "Publish failed"), "err");
         setBusyDraft(null);
         return;
       }
       await markPublished(d.id);
       flash(`Published to ${platformLabel[d.platform]}.`);
     } catch (e) {
-      flash(friendlyError(e instanceof Error ? e.message : String(e)));
+      flash(friendlyError(e instanceof Error ? e.message : String(e)), "err");
     }
     setBusyDraft(null);
   };
 
   const addToCalendar = async (d: Draft, startIso?: string) => {
     if (!cloudStorage) {
-      flash("Calendar requires cloud mode — connect Google in Settings.");
+      flash("Calendar needs Google connected in Settings.", "warn");
       return;
     }
     setBusyDraft(d.id);
@@ -137,7 +143,7 @@ function Studio() {
         },
       });
       if (!res.ok) {
-        flash(friendlyError(res.error ?? "Calendar failed"));
+        flash(friendlyError(res.error ?? "Calendar failed"), "err");
       } else {
         flash(
           res.htmlLink
@@ -146,7 +152,7 @@ function Studio() {
         );
       }
     } catch (e) {
-      flash(friendlyError(e instanceof Error ? e.message : String(e)));
+      flash(friendlyError(e instanceof Error ? e.message : String(e)), "err");
     }
     setBusyDraft(null);
   };
@@ -162,7 +168,7 @@ function Studio() {
       await navigator.clipboard.writeText(pack());
       flash("Copied — paste into CapCut or your native apps.");
     } catch {
-      flash("Clipboard blocked — use Download instead.");
+      flash("Clipboard blocked — use Download instead.", "warn");
     }
   };
 
@@ -209,9 +215,10 @@ function Studio() {
             disabled={busy}
             onClick={async () => {
               setBusy(true);
-              flash("Improving your weakest hook…");
+              const id = notifyBusy("Improving your weakest hook…");
               const res = await requestProactiveFollowup();
-              flash(res.ok ? "Updated draft in Needs approval." : res.error ?? "Failed");
+              notifyIdle(id);
+              flash(res.ok ? "Updated draft in Needs approval." : res.error ?? "Failed", res.ok ? "ok" : "err");
               setBusy(false);
             }}
           >
@@ -222,6 +229,7 @@ function Studio() {
             onClick={async () => {
               const res = await denyPublishAll();
               setDenied(res.detail);
+              notifyWarn("Publishing blocked — approval required.");
             }}
           >
             Publish all now
@@ -231,21 +239,21 @@ function Studio() {
     >
       {connHint}
       {denied ? (
-        <div className="mb-4 flex items-start gap-3 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3">
-          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
+        <div className="mb-4 flex items-start gap-3 rounded-2xl border border-amber-500/25 bg-amber-500/10 px-4 py-3">
+          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-200" />
           <div>
-            <p className="text-sm font-semibold text-red-200">Publishing blocked</p>
-            <p className="mt-1 text-xs text-red-200/80">{denied}</p>
+            <p className="text-sm font-semibold text-amber-100">Publishing blocked</p>
+            <p className="mt-1 text-xs text-amber-100/80">{denied}</p>
             <div className="mt-2 flex flex-wrap gap-3">
               <Link
                 to="/timeline"
-                className="text-[11px] uppercase tracking-wide text-red-200/90 underline-offset-2 hover:underline"
+                className="text-[11px] uppercase tracking-wide text-amber-100/90 underline-offset-2 hover:underline"
               >
                 View activity →
               </Link>
               <button
                 type="button"
-                className="text-[11px] uppercase tracking-wide text-red-200/70 underline-offset-2 hover:underline"
+                className="text-[11px] uppercase tracking-wide text-amber-100/70 underline-offset-2 hover:underline"
                 onClick={() => setDenied(null)}
               >
                 Dismiss
@@ -253,12 +261,6 @@ function Studio() {
             </div>
           </div>
         </div>
-      ) : null}
-
-      {shipNote ? (
-        <p className="mb-4 rounded-xl bg-white/10 px-4 py-2 text-xs text-muted-foreground">
-          {shipNote}
-        </p>
       ) : null}
 
       {items.length === 0 ? (
@@ -313,7 +315,7 @@ function Studio() {
                           type="button"
                           onClick={async () => {
                             const res = await Promise.resolve(approveDraft(d.id));
-                            if (!res.ok) setShipNote(res.error);
+                            if (!res.ok) flash(res.error, "err");
                           }}
                           className="flex flex-1 items-center justify-center gap-1 rounded-full bg-white/10 py-1.5 text-xs hover:bg-white/20"
                         >
@@ -324,7 +326,7 @@ function Studio() {
                           title="Send back to drafting"
                           onClick={async () => {
                             const res = await Promise.resolve(rejectDraft(d.id));
-                            if (!res.ok) setShipNote(res.error);
+                            if (!res.ok) flash(res.error, "err");
                           }}
                           className="flex items-center justify-center gap-1 rounded-full bg-white/5 px-3 py-1.5 text-xs hover:bg-white/10"
                         >

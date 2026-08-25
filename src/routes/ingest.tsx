@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { AppShell, GlassCard, PrimaryButton } from "@/components/app/AppShell";
 import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
 import { mindLabel } from "@/lib/display";
-import { UploadCloud, Send, Link2, FileText } from "lucide-react";
+import { fileToIngestMedia, formatBytes, formatDuration, formatMediaBrief } from "@/lib/media-ingest";
+import { notifyBusy, notifyError, notifyIdle, notifySuccess, notifyWarn } from "@/lib/notify";
+import type { IngestMedia } from "@/lib/aftercut-data";
+import { UploadCloud, Send, Link2, FileText, ImageIcon, Film } from "lucide-react";
 
 export const Route = createFileRoute("/ingest")({
   beforeLoad: async () => {
@@ -15,12 +18,12 @@ export const Route = createFileRoute("/ingest")({
       { title: "Import — AFTERCUT" },
       {
         name: "description",
-        content: "Paste transcripts or notes and generate Shorts, X, LinkedIn and newsletter drafts.",
+        content: "Drop a video or image, or paste a transcript — then generate Shorts, X, LinkedIn and newsletter drafts.",
       },
       { property: "og:title", content: "AFTERCUT Import" },
       {
         property: "og:description",
-        content: "Turn long-form content into platform-native drafts.",
+        content: "Dump a VOD or still. Your agent already knows your voice.",
       },
     ],
   }),
@@ -28,10 +31,11 @@ export const Route = createFileRoute("/ingest")({
 });
 
 const sources = [
-  { icon: FileText, title: "Paste transcript", detail: "Full text from a stream, podcast or video" },
+  { icon: Film, title: "Drop a video", detail: "VOD, stream export, Reel, short — we grab a still" },
+  { icon: ImageIcon, title: "Drop an image", detail: "Thumbnail, carousel still, or poster frame" },
+  { icon: FileText, title: "Paste transcript", detail: "Captions or notes alongside the file" },
   { icon: Send, title: "From Telegram", detail: "Paste messages from your connected bot" },
-  { icon: Link2, title: "YouTube notes", detail: "Captions, chapters or bullet notes" },
-  { icon: UploadCloud, title: "Stream notes", detail: "Edited notes from your recording session" },
+  { icon: Link2, title: "YouTube notes", detail: "Chapters or bullet notes from a URL" },
 ];
 
 function Ingest() {
@@ -39,17 +43,69 @@ function Ingest() {
   const [text, setText] = useState("");
   const [title, setTitle] = useState("");
   const [source, setSource] = useState("Transcript paste");
-  const [notice, setNotice] = useState<string | null>(null);
-  const [isErr, setIsErr] = useState(false);
+  const [media, setMedia] = useState<IngestMedia | null>(null);
   const [studioCta, setStudioCta] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const ingests = tenant?.ingests ?? [];
 
-  const flash = (msg: string, error = false) => {
-    setNotice(msg);
-    setIsErr(error);
-    if (!error && (msg.toLowerCase().includes("drafts ready") || msg.toLowerCase().includes("open studio"))) setStudioCta(true);
+  const onFiles = async (files: FileList | File[] | null) => {
+    const file = files?.[0];
+    if (!file) return;
+    const id = notifyBusy("Reading file…");
+    try {
+      const next = await fileToIngestMedia(file);
+      setMedia(next);
+      setTitle((t) => t || file.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " "));
+      setSource(next.kind === "video" ? "Video upload" : "Image upload");
+      notifyIdle(id);
+      notifySuccess(
+        next.kind === "video"
+          ? `Video ready${next.durationSec != null ? ` · ${formatDuration(next.durationSec)}` : ""}. Add a caption if you have one.`
+          : "Image ready. Add a caption if you have one.",
+      );
+    } catch (e) {
+      notifyIdle(id);
+      notifyError(e instanceof Error ? e.message : "Could not read that file.");
+    }
+  };
+
+  const queue = async () => {
+    const payloadText = media ? formatMediaBrief(media, text) : text;
+    const res = await Promise.resolve(
+      addIngest({
+        text: payloadText,
+        title: title || undefined,
+        source,
+        media: media ?? undefined,
+      }),
+    );
+    if (!res.ok) {
+      notifyWarn(res.error);
+      return;
+    }
+    setText("");
+    setTitle("");
+    setMedia(null);
+    setStudioCta(false);
+    notifySuccess("Added to queue. Generate drafts when ready.");
+  };
+
+  const generate = async (ingestId?: string) => {
+    setBusy(true);
+    const id = notifyBusy("Generating drafts… this can take a minute.");
+    const res = await atomizeIngest(ingestId);
+    notifyIdle(id);
+    setBusy(false);
+    if (!res.ok) {
+      notifyError(res.error);
+      setStudioCta(false);
+      return;
+    }
+    setStudioCta(true);
+    notifySuccess("Drafts ready — open Studio to review.");
   };
 
   return (
@@ -57,8 +113,8 @@ function Ingest() {
       title="Import"
       subtitle={
         mindStatus?.ok
-          ? `Turn long-form into platform drafts with ${mindLabel(mindStatus.mindName)}`
-          : "Paste content, then generate Shorts, X, LinkedIn and newsletter drafts."
+          ? `Dump a VOD or still — ${mindLabel(mindStatus.mindName)} already has your voice`
+          : "Drop a video or image, or paste a transcript. Then generate platform drafts."
       }
       actions={
         <div className="flex flex-wrap gap-2">
@@ -71,36 +127,11 @@ function Ingest() {
               Open Studio →
             </Link>
           ) : null}
-          <PrimaryButton
-            onClick={() => {
-              const res = addIngest({ text, title: title || undefined, source });
-              if (!res.ok) {
-                flash(res.error, true);
-                return;
-              }
-              setText("");
-              setTitle("");
-              flash("Added to queue. Tap Generate drafts when ready.");
-              setStudioCta(false);
-            }}
-          >
-            Add to queue
-          </PrimaryButton>
+          <PrimaryButton onClick={() => void queue()}>Add to queue</PrimaryButton>
           <PrimaryButton
             disabled={!health?.kitReady || busy}
             title={health?.kitReady ? undefined : "Save your brand voice first"}
-            onClick={async () => {
-              setBusy(true);
-              flash("Generating drafts…");
-              const res = await atomizeIngest();
-              setBusy(false);
-              if (!res.ok) {
-                flash(res.error, true);
-                setStudioCta(false);
-                return;
-              }
-              flash("Drafts ready — review them in Studio.");
-            }}
+            onClick={() => void generate()}
           >
             {busy ? "Generating…" : "Generate drafts"}
           </PrimaryButton>
@@ -117,27 +148,66 @@ function Ingest() {
         </p>
       ) : null}
 
-      {notice ? (
-        <p
-          className={`mb-4 rounded-xl px-4 py-2 text-xs ${
-            isErr
-              ? "border border-red-500/25 bg-red-500/10 text-red-200/90"
-              : "bg-white/10 text-muted-foreground"
-          }`}
-        >
-          {notice}
-        </p>
-      ) : null}
-
       <div className="grid gap-4 lg:grid-cols-3">
         <GlassCard className="lg:col-span-2">
-          <div className="flex h-32 flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 text-center">
-            <UploadCloud className="h-7 w-7 text-muted-foreground" />
-            <p className="mt-3 text-sm font-medium">Paste last night&apos;s transcript</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              ≥48 characters · uses your saved brand voice
-            </p>
-          </div>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="video/*,image/*,.mp4,.webm,.mov,.m4v,.png,.jpg,.jpeg,.webp,.gif"
+            className="sr-only"
+            onChange={(e) => {
+              void onFiles(e.target.files);
+              e.target.value = "";
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOver(false);
+              void onFiles(e.dataTransfer.files);
+            }}
+            className={`flex min-h-40 w-full flex-col items-center justify-center rounded-2xl border border-dashed px-4 py-6 text-center transition-colors ${
+              dragOver ? "border-white/40 bg-white/[0.08]" : "border-white/15 bg-white/[0.02] hover:border-white/25"
+            }`}
+          >
+            {media?.posterDataUrl ? (
+              <img
+                src={media.posterDataUrl}
+                alt=""
+                className="mb-3 max-h-28 rounded-lg object-cover"
+              />
+            ) : media?.kind === "video" ? (
+              <Film className="h-7 w-7 text-muted-foreground" />
+            ) : (
+              <UploadCloud className="h-7 w-7 text-muted-foreground" />
+            )}
+            {media ? (
+              <>
+                <p className="mt-2 text-sm font-medium">{media.filename}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {media.kind === "video" ? "Video" : "Image"}
+                  {media.durationSec != null ? ` · ${formatDuration(media.durationSec)}` : ""}
+                  {` · ${formatBytes(media.size)}`}
+                  {media.kind === "video" ? " · still captured, file not stored" : ""}
+                </p>
+                <p className="mt-2 text-[11px] text-muted-foreground">Click or drop to replace</p>
+              </>
+            ) : (
+              <>
+                <p className="mt-3 text-sm font-medium">Drop last night&apos;s video or a still</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  mp4 / webm / mov / png / jpg · optional transcript below
+                </p>
+              </>
+            )}
+          </button>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -149,6 +219,8 @@ function Ingest() {
             onChange={(e) => setSource(e.target.value)}
             className="mt-3 w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm outline-none focus:border-white/25"
           >
+            <option>Video upload</option>
+            <option>Image upload</option>
             <option>Transcript paste</option>
             <option>From Telegram</option>
             <option>YouTube notes</option>
@@ -158,10 +230,16 @@ function Ingest() {
             rows={8}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Paste transcript…"
+            placeholder={
+              media
+                ? "Optional caption or transcript to go with the file…"
+                : "Or paste a transcript if you don’t have a file…"
+            }
             className="mt-3 w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm outline-none placeholder:text-muted-foreground focus:border-white/25"
           />
-          <p className="mt-2 text-[11px] text-muted-foreground">{text.trim().length} chars</p>
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            {text.trim().length} chars{media ? " · file attached" : ""}
+          </p>
         </GlassCard>
 
         <div className="flex flex-col gap-4">
@@ -188,32 +266,33 @@ function Ingest() {
               <Link to="/brand-kit" className="underline underline-offset-2">
                 Save your brand voice
               </Link>{" "}
-              then paste content above.
+              then drop a file or paste above.
             </p>
           ) : (
             ingests.map((r) => (
-              <div
-                key={r.id}
-                className="flex flex-wrap items-center justify-between gap-2"
-              >
-                <span className="text-sm">{r.title}</span>
-                <span className="text-muted-foreground">{r.source}</span>
-                <span className="text-muted-foreground">
-                  {r.beatCount ? `${r.beatCount} moments` : "—"}
-                </span>
+              <div key={r.id} className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  {r.media?.posterDataUrl ? (
+                    <img
+                      src={r.media.posterDataUrl}
+                      alt=""
+                      className="h-10 w-10 shrink-0 rounded-md object-cover"
+                    />
+                  ) : null}
+                  <div className="min-w-0">
+                    <p className="truncate text-sm">{r.title}</p>
+                    <p className="text-muted-foreground">
+                      {r.source}
+                      {r.media?.kind === "video" && r.media.durationSec != null
+                        ? ` · ${formatDuration(r.media.durationSec)}`
+                        : ""}
+                      {r.beatCount ? ` · ${r.beatCount} moments` : ""}
+                    </p>
+                  </div>
+                </div>
                 <button
                   type="button"
-                  onClick={async () => {
-                    setBusy(true);
-                    flash("Generating drafts…");
-                    const res = await atomizeIngest(r.id);
-                    setBusy(false);
-                    if (!res.ok) {
-                      flash(res.error, true);
-                      return;
-                    }
-                    flash(`Drafts ready for “${r.title}”. Open Studio.`);
-                  }}
+                  onClick={() => void generate(r.id)}
                   className="rounded-full bg-white/10 px-2.5 py-0.5 hover:bg-white/15"
                 >
                   {r.status === "atomized" ? "Generated" : "Generate"}
