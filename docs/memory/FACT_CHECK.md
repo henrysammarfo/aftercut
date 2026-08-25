@@ -67,10 +67,11 @@ npm run minds-smoke
 | Overnight / ship / cognition email | **Live** on Vercel deploy (Resend SDK + env) |
 | Merch commerce | Gumroad link hook (`VITE_GUMROAD_URL`) — no Stripe |
 | Stripe | **Dropped** for jam |
-| Demo film 1.5–2 min | **Open — #1 submit blocker** |
+| Demo film 1.5–2 min | **Shooting 2026-08-25** — Cloud Agent `bc-55d8923b-9ad5-4976-aa5e-3d0eece5e8c2`. Video not in Artifacts yet. |
 | Image / video ingest | **Live 2026-08-25** — dropzone + poster still; full VOD not stored in tenant JSON |
 | First 100 creators waitlist | **Live** — Neon `creator_waitlist` (created on first write if missing) + browser fallback. Not a hard cap of 100. |
 | Day 2 persistence demo | **In product** — Simulate Day 2 writes a memory receipt then rewrites the weakest hook |
+| Director JSON wrapper refusals | **Fixed in repo** — unique cut/Day-2 Mind channels · prose parser · offline atomize fallback so Studio still fills |
 
 ## Bug found + fix
 

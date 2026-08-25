@@ -31,7 +31,7 @@ Apply: https://dorahacks.io/hackathon/creativeminds/detail
 | Vercel prod deploy | **cd2fa56** (Resend SDK) via GitHub |
 | Telegram webhook | set → `/api/webhooks/telegram` · bot `8840245437` |
 | Neon users | **0** until first signup → TG ingest blocked |
-| Film / DoraHacks apply | **re-shoot live** — agent `bc-ec1f97e7…` (v2 seamless) |
+| Film / DoraHacks apply | **shooting now** — Cloud Agent [`bc-55d8923b…`](https://cursor.com/agents/bc-55d8923b-9ad5-4976-aa5e-3d0eece5e8c2) (composer-2.5 · Computer Use + video Artifacts) |
 
 ### Shipped this batch (repo + deploy)
 
@@ -47,7 +47,7 @@ Apply: https://dorahacks.io/hackathon/creativeminds/detail
 1. Signup on live → set `TELEGRAM_DEFAULT_USER_ID` + redeploy  
 2. Settings: X token · LinkedIn · Connect Google  
 3. Optional `VITE_GUMROAD_URL`  
-4. **Demo film** → `CURSOR_API_KEY` in shell → `npm run cloud:film`  
+4. **Demo film** → Cloud Agent launched 2026-08-25: https://cursor.com/agents/bc-55d8923b-9ad5-4976-aa5e-3d0eece5e8c2 — watch **Artifacts** for the mp4. Rotate `CURSOR_API_KEY` (pasted in chat).  
 5. Rotate Resend key (was pasted in chat) + verify custom domain for `RESEND_FROM`  
 
 ### Shipped this batch (security + brand)
@@ -67,7 +67,7 @@ Apply: https://dorahacks.io/hackathon/creativeminds/detail
 - **Day 2 reopen** — filmable persistence beat on Dashboard / Studio / Activity (`Simulate Day 2`).
 - **Dump & generate** — one-click queue + atomize. YouTube paste pulls oEmbed title/channel (no invented quotes).
 - **Waitlist** — Neon `creator_waitlist` (created on first write) + Resend confirm; browser list is fallback.
-- Film / DoraHacks — still **open** (#1 submit blocker).
+- Film / DoraHacks — **film shooting** (agent `bc-55d8923b`). Director JSON-wrapper refusals **fixed** (isolated cut channels + prose/offline fallback) — relaunch film after this SHA is on `main`.
 - **Live:** https://aftercut-sandy.vercel.app (187ce7d READY; next SHA this ship)
 
 Portfolio: Scout closed · five product locks named · AFTERCUT polish in progress.
@@ -77,7 +77,7 @@ Portfolio: Scout closed · five product locks named · AFTERCUT polish in progre
 | 1 | minds-smoke green | **done** |
 | 2 | Fundraise MVP surface | **in repo** |
 | 3 | Cloud + social + calendar + brands | **deployed** |
-| 4 | Demo film | **#1 blocker** |
+| 4 | Demo film | **shooting** — [bc-55d8923b](https://cursor.com/agents/bc-55d8923b-9ad5-4976-aa5e-3d0eece5e8c2) |
 | 5 | DoraHacks apply | after film |
 
 **Moat:** *Opus clips once. AFTERCUT remembers your DNA and keeps cutting overnight.*

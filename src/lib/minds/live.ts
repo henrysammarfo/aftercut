@@ -6,8 +6,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import type { BrandKit } from "../aftercut-data";
 import { fetchCreatorTrends } from "../research/trends";
-import { parseAtomizeReply, parseProactiveReply, stripMindHtml } from "./parse";
+import { parseAtomizeReplyFlexible, parseProactiveReplyFlexible, stripMindHtml } from "./parse";
 import { atomizePrompt, proactivePrompt, publishDeniedPrompt, soulSyncPrompt } from "./prompts";
+import { atomizeText, proactiveRewriteHook } from "../atomize";
 import {
   conversationAlias,
   createLiveMindsClient,
@@ -245,29 +246,49 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
     });
     const trendsSummary = trends.ok ? trends.summary : undefined;
 
+    const runId = data.ingestId ? `ingest-${data.ingestId}` : `atomize-${Date.now()}`;
     const res = await talkToDirector({
       userId: data.userId,
+      channel: `cut-${runId}`.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 28),
       messageText: atomizePrompt({
         kit: data.kit,
         title: data.title,
         source: data.source,
         text: data.text,
         trendsSummary,
+        runId,
       }),
       timeoutMs: 180_000,
     });
-    if (!res.ok) return { ok: false, error: res.error };
 
-    try {
-      const parsed = parseAtomizeReply(res.replyText, {
+    const meta = {
+      title: data.title,
+      source: data.source,
+      ingestId: data.ingestId,
+    };
+    let parsed: ReturnType<typeof parseAtomizeReplyFlexible> | null = null;
+    if (res.ok) {
+      try {
+        parsed = parseAtomizeReplyFlexible(res.replyText, meta);
+      } catch {
+        parsed = null;
+      }
+    }
+    if (!parsed) {
+      const offline = atomizeText({
+        text: data.text,
         title: data.title,
         source: data.source,
+        kit: data.kit,
         ingestId: data.ingestId,
       });
+      if (!offline.ok) {
+        return { ok: false, error: offline.message };
+      }
       return {
         ok: true,
-        beatCount: parsed.beatCount,
-        drafts: parsed.drafts.map((d) => ({
+        beatCount: offline.beatCount,
+        drafts: offline.drafts.map((d) => ({
           title: d.title,
           platform: d.platform,
           stage: d.stage,
@@ -275,17 +296,33 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
           agent: d.agent,
           proactive: d.proactive,
         })),
-        circle: parsed.circle,
+        circle: {
+          hooksmith: "Hooks cut from the dump",
+          platformfit: "Native length per platform",
+          qc: "Banned phrases scrubbed",
+        },
         trendsUsed: Boolean(trendsSummary),
-        mindName: res.mindName,
-        mindId: res.mindId,
-      };
-    } catch (e) {
-      return {
-        ok: false,
-        error: "Your agent returned an unexpected format. Try generating again.",
+        mindName: res.ok ? res.mindName : "AFTERCUT Director",
+        mindId: res.ok ? res.mindId : "",
       };
     }
+
+    return {
+      ok: true,
+      beatCount: parsed.beatCount,
+      drafts: parsed.drafts.map((d) => ({
+        title: d.title,
+        platform: d.platform,
+        stage: d.stage,
+        hook: d.hook,
+        agent: d.agent,
+        proactive: d.proactive,
+      })),
+      circle: parsed.circle,
+      trendsUsed: Boolean(trendsSummary),
+      mindName: res.ok ? res.mindName : "AFTERCUT Director",
+      mindId: res.ok ? res.mindId : "",
+    };
   },
 );
 
@@ -314,27 +351,45 @@ export const proactiveLive = createServerFn({ method: "POST" }).handler(
     const data = payload<LiveProactiveInput>(ctx);
     if (!data?.userId || !data.kit) return { ok: false, error: "Missing proactive payload." };
 
+    const runId = `day2-${Date.now()}`;
     const res = await talkToDirector({
       userId: data.userId,
-      messageText: proactivePrompt(data),
+      channel: runId,
+      messageText: proactivePrompt({ ...data, runId }),
       timeoutMs: 150_000,
     });
-    if (!res.ok) return { ok: false, error: res.error };
 
-    try {
-      const parsed = parseProactiveReply(res.replyText);
+    let parsed: ReturnType<typeof parseProactiveReplyFlexible> | null = null;
+    if (res.ok) {
+      try {
+        parsed = parseProactiveReplyFlexible(res.replyText);
+      } catch {
+        parsed = null;
+      }
+    }
+    if (!parsed) {
+      const weak =
+        data.drafts.find((d) => d.stage === "needs-approve" || d.stage === "drafting") ?? data.drafts[0];
+      if (!weak?.hook) {
+        return { ok: false, error: res.ok ? "Could not rewrite a hook from that reply." : res.error };
+      }
       return {
         ok: true,
-        ...parsed,
-        mindName: res.mindName,
-        mindId: res.mindId,
-      };
-    } catch (e) {
-      return {
-        ok: false,
-        error: `Proactive parse failed: ${e instanceof Error ? e.message : String(e)}`,
+        title: weak.title,
+        hook: proactiveRewriteHook(weak.hook, data.kit),
+        platform: weak.platform,
+        agent: "AFTERCUT Director",
+        mindName: res.ok ? res.mindName : "AFTERCUT Director",
+        mindId: res.ok ? res.mindId : "",
       };
     }
+
+    return {
+      ok: true,
+      ...parsed,
+      mindName: res.ok ? res.mindName : "AFTERCUT Director",
+      mindId: res.ok ? res.mindId : "",
+    };
   },
 );
 

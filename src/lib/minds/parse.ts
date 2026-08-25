@@ -151,6 +151,141 @@ export function parseAtomizeReply(
   };
 }
 
+/** Director meta-chat after repeated JSON-template traffic. */
+export function looksLikeJsonRefusal(text: string): boolean {
+  const t = stripMindHtml(text);
+  if (/"drafts"\s*:/.test(t) || /"hook"\s*:/.test(t)) return false;
+  return /refus(e|ing|al).{0,48}json|json.{0,48}refus|duplicate (prompt|job|request|ingest)|won'?t (output|return) json|cannot output (only )?json|not going to (output|wrap|repeat)|json wrapper|wrapper (test|refusal|prompt|template)/i.test(
+    t,
+  );
+}
+
+function platformFromLabel(label: string): Platform | null {
+  const t = label.toLowerCase();
+  if (t.includes("short")) return "shorts";
+  if (t === "x" || t.startsWith("x ") || t.includes("twitter")) return "x";
+  if (t.includes("linkedin")) return "linkedin";
+  if (t.includes("newsletter")) return "newsletter";
+  return null;
+}
+
+function draftRow(
+  platform: Platform,
+  hook: string,
+  idx: number,
+  meta: { title: string; ingestId?: string },
+): Omit<Draft, "id"> {
+  const row: Omit<Draft, "id"> = {
+    title: `${platform} · cut ${idx + 1}`,
+    platform,
+    stage: idx === 0 ? "ingested" : "needs-approve",
+    source: meta.title,
+    hook,
+    agent: "AFTERCUT Director",
+  };
+  if (meta.ingestId) row.ingestId = meta.ingestId;
+  return row;
+}
+
+/** Conversational / labeled cuts when JSON is refused. */
+export function parseProseAtomizeReply(
+  replyText: string,
+  meta: { title: string; source: string; ingestId?: string },
+): ParsedAtomize {
+  if (looksLikeJsonRefusal(replyText)) {
+    throw new Error("Mind refused JSON template");
+  }
+  const text = stripMindHtml(replyText);
+  const drafts: Omit<Draft, "id">[] = [];
+  const seen = new Set<string>();
+
+  const quotedBlock =
+    /(?:^|\n)\s*(Shorts|YouTube Shorts|X|Twitter|LinkedIn|Newsletter)\b[^\n]*\n(?:"([^"]+)"(?:\s*\(\d+\s*chars?\))?|Subject:\s*"([^"]+)"[^\n]*\nPreview:\s*"([^"]+)")/gi;
+  let match: RegExpExecArray | null;
+  while ((match = quotedBlock.exec(text)) !== null) {
+    const platform = platformFromLabel(match[1] ?? "");
+    if (!platform) continue;
+    const hook =
+      match[3] && match[4]
+        ? `Subject: ${match[3]} · Preview: ${match[4]}`
+        : (match[2] ?? "").trim();
+    if (!hook) continue;
+    const key = `${platform}:${hook.slice(0, 40)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    drafts.push(draftRow(platform, hook, drafts.length, meta));
+  }
+
+  const lineRe =
+    /(?:^|\n)\s*(?:\d+[.)]\s*)?(?:\*\*)?(Shorts|YouTube Shorts|X|Twitter|LinkedIn|Newsletter)(?:\*\*)?\s*[:\-–]\s*[“"]?(.+?)[”"]?(?=\n|$)/gi;
+  while ((match = lineRe.exec(text)) !== null) {
+    const platform = platformFromLabel(match[1] ?? "");
+    const hook = (match[2] ?? "").trim().replace(/^["“]|["”]$/g, "");
+    if (!platform || hook.length < 8) continue;
+    const key = `${platform}:${hook.slice(0, 40)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    drafts.push(draftRow(platform, hook, drafts.length, meta));
+  }
+
+  if (drafts.length === 0) {
+    throw new Error("No platform drafts found in Mind prose reply");
+  }
+
+  return {
+    beatCount: drafts.length,
+    drafts,
+    rawExcerpt: replyText.slice(0, 280),
+  };
+}
+
+export function parseAtomizeReplyFlexible(
+  replyText: string,
+  meta: { title: string; source: string; ingestId?: string },
+): ParsedAtomize {
+  if (!looksLikeJsonRefusal(replyText)) {
+    try {
+      return parseAtomizeReply(replyText, meta);
+    } catch {
+      /* prose */
+    }
+  }
+  return parseProseAtomizeReply(replyText, meta);
+}
+
+export function parseProactiveReplyFlexible(replyText: string): {
+  title: string;
+  hook: string;
+  platform: Platform;
+  agent: string;
+} {
+  if (!looksLikeJsonRefusal(replyText)) {
+    try {
+      return parseProactiveReply(replyText);
+    } catch {
+      /* prose */
+    }
+  }
+  const text = stripMindHtml(replyText);
+  if (looksLikeJsonRefusal(text)) {
+    throw new Error("Mind refused JSON template");
+  }
+  const labeled = text.match(
+    /(?:Shorts|X|Twitter|LinkedIn|Newsletter)\s*[:\-–]\s*[“"]?(.{12,280}?)[”"]?(?:\n|$)/i,
+  );
+  const quoted = text.match(/"([^"]{12,280})"/);
+  const hookLine = text.match(/(?:hook|rewrite|new line)\s*[:\-]\s*(.+)/i);
+  const hook = (labeled?.[1] || quoted?.[1] || hookLine?.[1] || "").trim();
+  if (!hook) throw new Error("Mind proactive reply missing hook");
+  const platform = platformFromLabel(labeled?.[0] ?? "") ?? "x";
+  return {
+    title: "Proactive rewrite",
+    hook,
+    platform,
+    agent: "AFTERCUT Director",
+  };
+}
+
 export function parseProactiveReply(replyText: string): {
   title: string;
   hook: string;
