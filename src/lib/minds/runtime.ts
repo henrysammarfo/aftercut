@@ -83,16 +83,35 @@ export function createLiveMindsClient(): MindsClient {
   return createMindsClient({ builderApiKey: key });
 }
 
+/**
+ * Resolve Director Mind for a tenant.
+ * Prefer per-user `mindId` (Settings → link Mind). Env `MINDS_DIRECTOR_MIND_ID` is jam demo fallback only.
+ */
 export async function resolveDirectorMind(
   client: MindsClient,
+  opts?: { mindId?: string | null },
 ): Promise<BuilderMind> {
-  const forced = getConfiguredDirectorMindId();
   const minds = await client.listMinds();
   if (!minds.length) {
     throw new Error(
-      "No Minds on this Builder account. Awaken AFTERCUT Director on hellominds.ai first.",
+      "No Minds on this Builder account. Awaken a Mind on hellominds.ai, then paste its ID in Settings.",
     );
   }
+
+  const preferred = opts?.mindId?.trim() || null;
+  if (preferred) {
+    const hit = minds.find((m) => m.mindId === preferred);
+    if (!hit) {
+      throw new Error(
+        `Linked Mind ${preferred} not found on this Builder key. Relink in Settings. Available: ${minds
+          .map((m) => m.mindId)
+          .join(", ")}`,
+      );
+    }
+    return hit;
+  }
+
+  const forced = getConfiguredDirectorMindId();
   if (forced) {
     const hit = minds.find((m) => m.mindId === forced);
     if (!hit) {
@@ -104,7 +123,7 @@ export async function resolveDirectorMind(
     }
     return hit;
   }
-  // Prefer name match AFTERCUT / Director, else first enabled, else first
+
   const byName =
     minds.find((m) => /aftercut|director/i.test(m.name ?? "")) ??
     minds.find((m) => m.isEnabled !== false) ??
@@ -131,11 +150,13 @@ export async function talkToDirector(input: {
   timeoutMs?: number;
   /** Isolate atomize/Day-2 from the soul thread so JSON-template refusals don't poison memory. */
   channel?: string;
+  /** Per-tenant Mind id from Settings. */
+  mindId?: string | null;
 }): Promise<MindTalkResult> {
   return withRetry(
     async () => {
       const client = createLiveMindsClient();
-      const director = await resolveDirectorMind(client);
+      const director = await resolveDirectorMind(client, { mindId: input.mindId });
       const alias = conversationAlias(input.userId, input.channel);
       await client.ensureConversation(alias, director.mindId);
 

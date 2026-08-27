@@ -50,10 +50,23 @@ Official **`resend` Node SDK** (`src/lib/email.ts`). Paths:
 3. Without Resend, reset links print to server logs (dev only)
 4. **Rotate** any key pasted in chat before going fully public
 
-### Tavily — trend context (`TAVILY_API_KEY`, optional)
+### AgentRouter — live LLM + images (`AGENT_ROUTER_API_KEY`)
+
+1. [https://agentrouter.org/console/token](https://agentrouter.org/console/token) → copy key
+2. Set `AGENT_ROUTER_API_KEY` (and optional `ANTHROPIC_AUTH_TOKEN` same value)
+3. OpenAI-compatible base: `https://agentrouter.org/v1` · Anthropic: `https://agentrouter.org`
+4. Used for: cut/Day-2 second live path when Mind JSON fails · Studio **Generate still**
+5. **No offline/deterministic atomize fallback** — fail loud if Mind + AgentRouter both fail
+
+### TinyFish — research scrape (`TINYFISH_API_KEY`)
+
+1. Agent dashboard → API key → `TINYFISH_API_KEY`
+2. Used for creator-pain / jam research scripts (with Tavily)
+
+### Tavily — trend context (`TAVILY_API_KEY`)
 
 1. [https://tavily.com](https://tavily.com) → sign up → copy API key
-2. Injected into atomize when present; app works without it.
+2. Injected into atomize when present.
 
 ---
 

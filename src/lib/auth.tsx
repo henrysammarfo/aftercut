@@ -28,6 +28,7 @@ import {
   markSoulSyncedLive,
   rejectDraft as storeRejectDraft,
   saveBrandKit as storeSaveBrandKit,
+  saveIntegrations as storeSaveIntegrations,
   setCognitionNote as storeSetCognitionNote,
   setDraftStage as storeSetDraftStage,
   tenantHealth,
@@ -46,6 +47,7 @@ import {
   cloudMarkSoulSynced,
   cloudRejectDraft,
   cloudSaveBrandKit,
+  cloudSaveIntegrations,
   cloudSetCognitionNote,
   cloudSetDraftStage,
   cloudSwitchBrand,
@@ -53,7 +55,7 @@ import {
   fetchCloudTenant,
   fetchProductConfig,
 } from "./tenant-cloud";
-import type { BrandKit, Stage } from "./aftercut-data";
+import type { BrandKit, Stage, TenantIntegrations } from "./aftercut-data";
 import { friendlyError } from "./display";
 import {
   atomizeLive,
@@ -100,6 +102,7 @@ type AuthContextValue = {
   switchBrand: (brandId: string) => AsyncOp;
   createBrand: (name: string) => AsyncOp;
   saveBrandKit: (kit: BrandKit) => AsyncOp;
+  saveIntegrations: (patch: TenantIntegrations) => AsyncOp;
   setCognitionNote: (note: string) => void;
   addIngest: (input: {
     title?: string;
@@ -339,6 +342,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         void refreshMindStatus();
         return { ok: true };
+      },
+      saveIntegrations: async (patch) => {
+        if (!session) return { ok: false, error: "Sign in first." };
+        try {
+          const res = cloudStorage
+            ? await cloudSaveIntegrations({
+                data: { ...patch, brandId: activeBrandId ?? undefined },
+              })
+            : storeSaveIntegrations(session.userId, patch);
+          if (!res.ok) {
+            return {
+              ok: false,
+              error: friendlyError("message" in res ? res.message : "Save failed"),
+            };
+          }
+          setTenant(res.state);
+          void refreshMindStatus();
+          return { ok: true };
+        } catch (e) {
+          return { ok: false, error: friendlyError(e instanceof Error ? e.message : String(e)) };
+        }
       },
       setCognitionNote: (note) => {
         if (!session) return;

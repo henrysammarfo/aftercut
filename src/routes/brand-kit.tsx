@@ -55,7 +55,6 @@ function BrandKitPage() {
   const update = (patch: Partial<BrandKit>) => {
     setKit((k) => ({ ...k, ...patch }));
     setSaved(false);
-    setErr(null);
   };
 
   return (
@@ -199,6 +198,98 @@ function BrandKitPage() {
           </form>
         </GlassCard>
       </div>
+
+      <GlassCard className="mt-4">
+        <h2 className="text-sm font-semibold">Visual DNA</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Logo, colors, and fonts — used for Soul sync and post image generation.
+        </p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <label className="flex flex-col gap-2 text-xs text-muted-foreground sm:col-span-2 lg:col-span-3">
+            Logo
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/svg+xml"
+              className="text-xs"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                if (file.size > 400_000) {
+                  notifyWarn("Logo under 400KB works best — compress and retry.");
+                  return;
+                }
+                const reader = new FileReader();
+                reader.onload = () => {
+                  update({ logoDataUrl: String(reader.result || "") });
+                };
+                reader.readAsDataURL(file);
+              }}
+            />
+            {kit.logoDataUrl ? (
+              <img
+                src={kit.logoDataUrl}
+                alt="Brand logo"
+                className="mt-2 h-16 w-16 rounded-lg object-contain bg-white/5"
+              />
+            ) : null}
+          </label>
+          <label className="flex flex-col gap-2 text-xs text-muted-foreground">
+            Primary color
+            <input
+              className={field}
+              value={kit.primaryColor ?? ""}
+              onChange={(e) => update({ primaryColor: e.target.value })}
+              placeholder="#111111"
+            />
+          </label>
+          <label className="flex flex-col gap-2 text-xs text-muted-foreground">
+            Secondary color
+            <input
+              className={field}
+              value={kit.secondaryColor ?? ""}
+              onChange={(e) => update({ secondaryColor: e.target.value })}
+              placeholder="#F5F5F5"
+            />
+          </label>
+          <label className="flex flex-col gap-2 text-xs text-muted-foreground">
+            Accent color
+            <input
+              className={field}
+              value={kit.accentColor ?? ""}
+              onChange={(e) => update({ accentColor: e.target.value })}
+              placeholder="#E8A838"
+            />
+          </label>
+          <label className="flex flex-col gap-2 text-xs text-muted-foreground">
+            Heading font
+            <input
+              className={field}
+              value={kit.fontHeading ?? ""}
+              onChange={(e) => update({ fontHeading: e.target.value })}
+              placeholder="Space Grotesk"
+            />
+          </label>
+          <label className="flex flex-col gap-2 text-xs text-muted-foreground">
+            Body font
+            <input
+              className={field}
+              value={kit.fontBody ?? ""}
+              onChange={(e) => update({ fontBody: e.target.value })}
+              placeholder="IBM Plex Sans"
+            />
+          </label>
+          <label className="sm:col-span-2 lg:col-span-3 flex flex-col gap-2 text-xs text-muted-foreground">
+            Visual notes
+            <textarea
+              rows={2}
+              className={field}
+              value={kit.visualNotes ?? ""}
+              onChange={(e) => update({ visualNotes: e.target.value })}
+              placeholder="High contrast stills, no neon glow, leave room for captions…"
+            />
+          </label>
+        </div>
+      </GlassCard>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-3">
         {[0, 1, 2].map((i) => (

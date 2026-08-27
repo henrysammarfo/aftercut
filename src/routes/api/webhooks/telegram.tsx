@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { eq } from "drizzle-orm";
 
-import { hasDatabase } from "@/db";
-import { getAuth } from "@/lib/auth-server";
+import { getDb, hasDatabase, schema } from "@/db";
 import { addIngest } from "@/lib/tenant-store";
 import { ensureDefaultBrand, loadBrandTenant, saveBrandTenant } from "@/lib/tenant-db";
 import { primeServerTenant, takeServerTenant } from "@/lib/tenant-store";
@@ -13,10 +13,37 @@ type TgMessage = {
   text?: string;
   caption?: string;
   photo?: TgPhoto[];
-  video?: { file_name?: string; mime_type?: string; duration?: number; file_size?: number; width?: number; height?: number };
+  video?: {
+    file_name?: string;
+    mime_type?: string;
+    duration?: number;
+    file_size?: number;
+    width?: number;
+    height?: number;
+  };
   document?: { file_name?: string; mime_type?: string; file_size?: number };
-  chat?: { id?: number };
+  chat?: { id?: number; username?: string };
+  from?: { id?: number; username?: string };
 };
+
+/** Resolve tenant by linked Telegram chat id (multi-tenant). */
+async function resolveUserIdForTelegram(chatId: string): Promise<string | null> {
+  const db = getDb();
+  const brands = await db.select().from(schema.brand).limit(500);
+  for (const row of brands) {
+    const data = row.data as { integrations?: { telegramChatId?: string } } | null;
+    if (data?.integrations?.telegramChatId === chatId) return row.userId;
+  }
+  const linked = await db
+    .select()
+    .from(schema.connectedAccount)
+    .where(eq(schema.connectedAccount.provider, "telegram"))
+    .limit(200);
+  for (const row of linked) {
+    if (row.providerAccountId === chatId) return row.userId;
+  }
+  return process.env.TELEGRAM_DEFAULT_USER_ID?.trim() || null;
+}
 
 export const Route = createFileRoute("/api/webhooks/telegram")({
   server: {
@@ -34,17 +61,6 @@ export const Route = createFileRoute("/api/webhooks/telegram")({
           return Response.json({ ok: false, error: "Cloud storage required." }, { status: 503 });
         }
 
-        const userId = process.env.TELEGRAM_DEFAULT_USER_ID?.trim();
-        if (!userId) {
-          return Response.json(
-            { ok: false, error: "TELEGRAM_DEFAULT_USER_ID not configured." },
-            { status: 503 },
-          );
-        }
-
-        const session = await getAuth().api.getSession({ headers: request.headers });
-        void session;
-
         let body: { message?: TgMessage };
         try {
           body = (await request.json()) as typeof body;
@@ -53,6 +69,23 @@ export const Route = createFileRoute("/api/webhooks/telegram")({
         }
 
         const msg = body.message;
+        const chatId = msg?.chat?.id != null ? String(msg.chat.id) : "";
+        if (!chatId) {
+          return Response.json({ ok: false, error: "Missing chat id" }, { status: 400 });
+        }
+
+        const userId = await resolveUserIdForTelegram(chatId);
+        if (!userId) {
+          return Response.json(
+            {
+              ok: false,
+              error:
+                "No AFTERCUT account linked to this Telegram chat. Sign up → Settings → link Telegram chat id.",
+            },
+            { status: 404 },
+          );
+        }
+
         const caption = (msg?.text || msg?.caption || "").trim();
         const photos = Array.isArray(msg?.photo) ? msg.photo : [];
         const biggest = photos.length ? photos[photos.length - 1] : undefined;
@@ -102,7 +135,11 @@ export const Route = createFileRoute("/api/webhooks/telegram")({
         const res = addIngest(userId, {
           title: media ? media.filename : "Telegram import",
           text,
-          source: media ? (media.kind === "video" ? "Telegram video" : "Telegram photo") : "From Telegram",
+          source: media
+            ? media.kind === "video"
+              ? "Telegram video"
+              : "Telegram photo"
+            : "From Telegram",
           media,
         });
         const state = takeServerTenant(userId);
@@ -110,7 +147,7 @@ export const Route = createFileRoute("/api/webhooks/telegram")({
           await saveBrandTenant(userId, loaded.brandId, state);
         }
 
-        return Response.json({ ok: res.ok, ingestId: res.ok ? res.ingestId : null });
+        return Response.json({ ok: res.ok, ingestId: res.ok ? res.ingestId : null, userId });
       },
     },
   },

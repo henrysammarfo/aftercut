@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell, GlassCard, PrimaryButton } from "@/components/app/AppShell";
 import { authClient } from "@/lib/auth-client";
+import { useAuth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
 import { fetchPublishAnalytics, saveConnectedAccount } from "@/lib/social/publish";
 import {
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/settings")({
 });
 
 function SettingsPage() {
+  const { tenant, saveIntegrations } = useAuth();
   const flash = (text: string, isErr = false) => {
     if (isErr) notifyError(text);
     else notifySuccess(text);
@@ -30,6 +32,9 @@ function SettingsPage() {
   const [xToken, setXToken] = useState("");
   const [liToken, setLiToken] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
+  const [mindId, setMindId] = useState("");
+  const [tgChat, setTgChat] = useState("");
+  const [tgUser, setTgUser] = useState("");
   const [resendOk, setResendOk] = useState<boolean | null>(null);
   const [invites, setInvites] = useState<
     Array<{ id: string; email: string; role: string; status: string }>
@@ -46,6 +51,12 @@ function SettingsPage() {
       .then(setInvites)
       .catch(() => setInvites([]));
   }, []);
+
+  useEffect(() => {
+    setMindId(tenant?.integrations?.mindId ?? "");
+    setTgChat(tenant?.integrations?.telegramChatId ?? "");
+    setTgUser(tenant?.integrations?.telegramUsername ?? "");
+  }, [tenant?.integrations]);
 
   return (
     <AppShell
@@ -211,12 +222,62 @@ function SettingsPage() {
         </GlassCard>
 
         <GlassCard>
-          <h2 className="text-sm font-semibold">Telegram ingest</h2>
+          <h2 className="text-sm font-semibold">Link your Mind</h2>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Each creator links their own hellominds Mind UUID (from build.hellominds.ai). Judges demo:
+            signup → paste Mind ID → cuts run on that Mind.
+          </p>
+          <input
+            className="mt-3 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs"
+            placeholder="Mind UUID"
+            value={mindId}
+            onChange={(e) => setMindId(e.target.value)}
+          />
+          <button
+            type="button"
+            className="mt-2 rounded-full bg-white/10 px-4 py-2 text-xs hover:bg-white/15"
+            onClick={async () => {
+              const res = await saveIntegrations({ mindId: mindId.trim() });
+              flash(res.ok ? "Mind linked." : res.error || "Could not link Mind.", !res.ok);
+            }}
+          >
+            Save Mind link
+          </button>
+        </GlassCard>
+
+        <GlassCard>
+          <h2 className="text-sm font-semibold">Link Telegram</h2>
           <p className="mt-2 text-xs text-muted-foreground">
             Webhook:{" "}
-            <code className="rounded bg-white/10 px-1">/api/webhooks/telegram</code>. Messages ≥48
-            chars auto-import after signup + TELEGRAM_DEFAULT_USER_ID.
+            <code className="rounded bg-white/10 px-1">/api/webhooks/telegram</code>. Paste your
+            Telegram chat id (message the bot, then copy chat id). Ingests land in your workspace
+            only.
           </p>
+          <input
+            className="mt-3 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs"
+            placeholder="Telegram chat id"
+            value={tgChat}
+            onChange={(e) => setTgChat(e.target.value)}
+          />
+          <input
+            className="mt-2 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs"
+            placeholder="Telegram username (optional)"
+            value={tgUser}
+            onChange={(e) => setTgUser(e.target.value)}
+          />
+          <button
+            type="button"
+            className="mt-2 rounded-full bg-white/10 px-4 py-2 text-xs hover:bg-white/15"
+            onClick={async () => {
+              const res = await saveIntegrations({
+                telegramChatId: tgChat.trim(),
+                telegramUsername: tgUser.trim() || undefined,
+              });
+              flash(res.ok ? "Telegram linked." : res.error || "Could not link Telegram.", !res.ok);
+            }}
+          >
+            Save Telegram link
+          </button>
           <Link to="/ingest" className="mt-4 inline-block text-xs underline">
             Open Import →
           </Link>

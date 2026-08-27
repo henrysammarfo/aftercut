@@ -16,6 +16,7 @@ import {
   type MemoryEvent,
   type ShipEntry,
   type Stage,
+  type TenantIntegrations,
 } from "./aftercut-data";
 import {
   captionFingerprint,
@@ -39,6 +40,8 @@ export type TenantState = {
   shipLedger: ShipEntry[];
   ingests: IngestRecord[];
   cognitionNote: string;
+  /** Per-creator Mind + Telegram links (multi-tenant). */
+  integrations: TenantIntegrations;
   updatedAt: string;
 };
 
@@ -91,6 +94,7 @@ function empty(userId: string): TenantState {
     shipLedger: emptyShipLedger(),
     ingests: emptyIngests(),
     cognitionNote: "",
+    integrations: {},
     updatedAt: new Date().toISOString(),
   };
 }
@@ -116,6 +120,7 @@ export function loadTenant(userId: string): TenantState {
       shipLedger: Array.isArray(parsed.shipLedger) ? parsed.shipLedger : [],
       ingests: Array.isArray(parsed.ingests) ? parsed.ingests : [],
       cognitionNote: parsed.cognitionNote ?? "",
+      integrations: { ...(parsed.integrations ?? {}) },
       updatedAt: parsed.updatedAt ?? new Date().toISOString(),
     };
     if (!v2 && v1) saveTenant(state);
@@ -192,6 +197,13 @@ export function saveBrandKit(userId: string, kit: BrandKit): SaveKitResult {
     ctas: kit.ctas.map((c) => c.trim()).filter(Boolean).slice(0, 8),
     doNotSay: kit.doNotSay.map((d) => d.trim()).filter(Boolean).slice(0, 16),
     primaryPlatform: kit.primaryPlatform?.trim() || "",
+    logoDataUrl: (kit.logoDataUrl ?? "").trim().slice(0, 900_000),
+    primaryColor: (kit.primaryColor ?? "").trim().slice(0, 32),
+    secondaryColor: (kit.secondaryColor ?? "").trim().slice(0, 32),
+    accentColor: (kit.accentColor ?? "").trim().slice(0, 32),
+    fontHeading: (kit.fontHeading ?? "").trim().slice(0, 80),
+    fontBody: (kit.fontBody ?? "").trim().slice(0, 80),
+    visualNotes: (kit.visualNotes ?? "").trim().slice(0, 800),
   };
 
   const next = persist({
@@ -202,8 +214,49 @@ export function saveBrandKit(userId: string, kit: BrandKit): SaveKitResult {
       event(
         "Setup",
         "AFTERCUT Director",
-        "Brand voice saved",
-        `Stored for ${cleaned.name}: tone, examples, CTAs, and banned phrases.`,
+        "Brand DNA saved",
+        `Stored for ${cleaned.name}: voice + visual kit (logo/colors/fonts).`,
+        "memory",
+      ),
+    ),
+  });
+  return { ok: true, state: next };
+}
+
+export function saveIntegrations(
+  userId: string,
+  patch: TenantIntegrations,
+): { ok: true; state: TenantState } | { ok: false; message: string } {
+  const state = loadTenant(userId);
+  const mindId = patch.mindId?.trim() || state.integrations.mindId || "";
+  const telegramChatId =
+    patch.telegramChatId?.trim() || state.integrations.telegramChatId || "";
+  const telegramUsername =
+    patch.telegramUsername?.trim() || state.integrations.telegramUsername || "";
+
+  if (patch.mindId !== undefined && mindId && mindId.length < 8) {
+    return { ok: false, message: "Mind ID looks too short." };
+  }
+
+  const integrations: TenantIntegrations = {
+    mindId: mindId || undefined,
+    telegramChatId: telegramChatId || undefined,
+    telegramUsername: telegramUsername || undefined,
+  };
+
+  const next = persist({
+    ...state,
+    integrations,
+    timeline: pushEvents(
+      state.timeline,
+      event(
+        "Setup",
+        "AFTERCUT Director",
+        "Integrations linked",
+        [
+          mindId ? `Mind ${mindId.slice(0, 8)}…` : "Mind unset",
+          telegramChatId ? `Telegram chat ${telegramChatId}` : "Telegram unset",
+        ].join(" · "),
         "memory",
       ),
     ),
@@ -470,6 +523,7 @@ export function importTenantJson(
       timeline: Array.isArray(parsed.timeline) ? parsed.timeline : [],
       shipLedger: Array.isArray(parsed.shipLedger) ? parsed.shipLedger : [],
       ingests: Array.isArray(parsed.ingests) ? parsed.ingests : [],
+      integrations: { ...(parsed.integrations ?? {}) },
     });
     return { ok: true, state };
   } catch {

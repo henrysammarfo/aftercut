@@ -13,6 +13,7 @@ function emptyTenant(userId: string): TenantState {
     shipLedger: emptyShipLedger(),
     ingests: emptyIngests(),
     cognitionNote: "",
+    integrations: {},
     updatedAt: new Date().toISOString(),
   };
 }
@@ -31,6 +32,7 @@ function parseTenant(userId: string, raw: unknown): TenantState {
     shipLedger: Array.isArray(parsed.shipLedger) ? parsed.shipLedger : [],
     ingests: Array.isArray(parsed.ingests) ? parsed.ingests : [],
     cognitionNote: parsed.cognitionNote ?? "",
+    integrations: { ...(parsed.integrations ?? {}) },
     updatedAt: parsed.updatedAt ?? new Date().toISOString(),
   };
 }

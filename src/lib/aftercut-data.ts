@@ -52,6 +52,22 @@ export type BrandKit = {
   ctas: string[];
   doNotSay: string[];
   primaryPlatform?: string;
+  /** Visual DNA — logo data URL (compressed), hex colors, fonts */
+  logoDataUrl?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  accentColor?: string;
+  fontHeading?: string;
+  fontBody?: string;
+  visualNotes?: string;
+};
+
+export type TenantIntegrations = {
+  /** hellominds Mind UUID linked to this creator */
+  mindId?: string;
+  /** Telegram chat id string for webhook routing */
+  telegramChatId?: string;
+  telegramUsername?: string;
 };
 
 export type ShipEntry = {
@@ -95,6 +111,13 @@ export function emptyBrandKit(): BrandKit {
     ctas: [],
     doNotSay: [],
     primaryPlatform: "",
+    logoDataUrl: "",
+    primaryColor: "",
+    secondaryColor: "",
+    accentColor: "",
+    fontHeading: "",
+    fontBody: "",
+    visualNotes: "",
   };
 }
 

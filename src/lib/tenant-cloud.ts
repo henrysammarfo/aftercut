@@ -24,8 +24,10 @@ import {
   setCognitionNote,
   setDraftStage,
   takeServerTenant,
+  saveIntegrations,
   type TenantState,
 } from "@/lib/tenant-store";
+import type { TenantIntegrations } from "@/lib/aftercut-data";
 import { persistCreatorWaitlist } from "@/lib/waitlist-db";
 import { extractYoutubeUrl, formatYoutubeBrief } from "@/lib/media-ingest";
 import { fetchYoutubeOembed } from "@/lib/youtube-oembed";
@@ -86,6 +88,49 @@ export const cloudSaveBrandKit = createServerFn({ method: "POST" }).handler(asyn
   const { result, state } = await withBrandMutation(userId, brandId, (uid) =>
     saveBrandKit(uid, kit),
   );
+  return { ...result, state };
+});
+
+export const cloudSaveIntegrations = createServerFn({ method: "POST" }).handler(async (ctx) => {
+  const userId = await requireUserId();
+  const raw = (ctx.data ?? ctx) as TenantIntegrations & { brandId?: string };
+  const { brandId, ...patch } = raw;
+  const { result, state } = await withBrandMutation(userId, brandId, (uid) =>
+    saveIntegrations(uid, patch),
+  );
+  if (result.ok && patch.telegramChatId?.trim() && hasDatabase()) {
+    const db = (await import("@/db")).getDb();
+    const schema = (await import("@/db")).schema;
+    const { and, eq } = await import("drizzle-orm");
+    const chatId = patch.telegramChatId.trim();
+    const existing = await db
+      .select()
+      .from(schema.connectedAccount)
+      .where(
+        and(
+          eq(schema.connectedAccount.userId, userId),
+          eq(schema.connectedAccount.provider, "telegram"),
+        ),
+      )
+      .limit(1);
+    if (existing[0]) {
+      await db
+        .update(schema.connectedAccount)
+        .set({
+          providerAccountId: chatId,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.connectedAccount.id, existing[0].id));
+    } else {
+      await db.insert(schema.connectedAccount).values({
+        id: `conn_${crypto.randomUUID().slice(0, 12)}`,
+        userId,
+        provider: "telegram",
+        providerAccountId: chatId,
+        accessToken: null,
+      });
+    }
+  }
   return { ...result, state };
 });
 

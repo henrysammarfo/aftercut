@@ -1,14 +1,19 @@
 /**
  * Live Minds server functions — real api.build.hellominds.ai calls.
+ * Live AgentRouter LLM second path when Mind reply cannot be parsed.
+ * NO deterministic offline atomize fallback.
  * Docs: https://build.hellominds.ai/docs/get-started/client-library
  */
 
 import { createServerFn } from "@tanstack/react-start";
 import type { BrandKit } from "../aftercut-data";
 import { fetchCreatorTrends } from "../research/trends";
+import { liveChat, generatePostImage, agentRouterConfigured } from "../llm/agent-router";
 import { parseAtomizeReplyFlexible, parseProactiveReplyFlexible, stripMindHtml } from "./parse";
 import { atomizePrompt, proactivePrompt, publishDeniedPrompt, soulSyncPrompt } from "./prompts";
-import { atomizeText, proactiveRewriteHook } from "../atomize";
+import { requireSessionUserId } from "../assert-authed";
+import { loadBrandTenant, ensureDefaultBrand } from "../tenant-db";
+import { hasDatabase } from "@/db";
 import {
   conversationAlias,
   createLiveMindsClient,
@@ -22,6 +27,26 @@ function payload<T>(ctx: unknown): T {
     return (ctx as { data: T }).data;
   }
   return ctx as T;
+}
+
+async function resolveUserMindId(userId: string): Promise<string | null> {
+  if (!hasDatabase()) return null;
+  try {
+    await ensureDefaultBrand(userId);
+    const loaded = await loadBrandTenant(userId);
+    return loaded.state.integrations?.mindId?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+async function resolveAuthedUserId(fallback?: string): Promise<string> {
+  try {
+    return await requireSessionUserId();
+  } catch {
+    if (fallback?.trim()) return fallback.trim();
+    throw new Error("Sign in to continue.");
+  }
 }
 
 export type LiveStatusResult =
@@ -43,6 +68,8 @@ export type LiveStatusResult =
       circleHumans: Array<{ email: string | null; name: string | null; steward: boolean }>;
       conversationCount: number;
       minds: Array<{ mindId: string; name: string | null; hasTelegram: boolean }>;
+      agentRouter: boolean;
+      linkedMindId: string | null;
     }
   | { ok: false; connected: false; error: string };
 
@@ -56,9 +83,16 @@ export const fetchMindStatus = createServerFn({ method: "GET" }).handler(
       };
     }
     try {
+      let userId: string | null = null;
+      try {
+        userId = await requireSessionUserId();
+      } catch {
+        userId = null;
+      }
+      const linkedMindId = userId ? await resolveUserMindId(userId) : null;
       const client = createLiveMindsClient();
       const minds = await client.listMinds();
-      const director = await resolveDirectorMind(client);
+      const director = await resolveDirectorMind(client, { mindId: linkedMindId });
       const mindId = director.mindId;
 
       const [bal, detail, skills, apps, usageByTool, circle, conversations] =
@@ -104,6 +138,8 @@ export const fetchMindStatus = createServerFn({ method: "GET" }).handler(
           name: m.name ?? null,
           hasTelegram: Boolean(m.hasTelegram || m.telegramBotId),
         })),
+        agentRouter: agentRouterConfigured(),
+        linkedMindId,
       };
     } catch (e) {
       return {
@@ -115,7 +151,7 @@ export const fetchMindStatus = createServerFn({ method: "GET" }).handler(
   },
 );
 
-/** Live conversation transcript for the signed-in tenant (persistence judges can see). */
+/** Live conversation transcript for the signed-in tenant. */
 export const fetchMindTranscript = createServerFn({ method: "POST" }).handler(
   async (
     ctx,
@@ -128,11 +164,17 @@ export const fetchMindTranscript = createServerFn({ method: "POST" }).handler(
     | { ok: false; error: string }
   > => {
     const data = payload<{ userId: string }>(ctx);
-    if (!data?.userId) return { ok: false, error: "Missing userId." };
+    let userId: string;
     try {
+      userId = await resolveAuthedUserId(data?.userId);
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    }
+    try {
+      const mindId = await resolveUserMindId(userId);
       const client = createLiveMindsClient();
-      const director = await resolveDirectorMind(client);
-      const alias = conversationAlias(data.userId);
+      const director = await resolveDirectorMind(client, { mindId });
+      const alias = conversationAlias(userId);
       await client.ensureConversation(alias, director.mindId);
       const history = await client.getHistory(alias, { limit: 20 });
       return {
@@ -150,7 +192,7 @@ export const fetchMindTranscript = createServerFn({ method: "POST" }).handler(
   },
 );
 
-/** Equip creator-economy Bazaar apps on Director (VoiceTranscribe + YouTube Research Scout). */
+/** Equip creator-economy Bazaar apps on linked Mind. */
 export const equipCreatorStack = createServerFn({ method: "POST" }).handler(
   async (): Promise<
     | { ok: true; equipped: string[]; results: unknown }
@@ -160,12 +202,18 @@ export const equipCreatorStack = createServerFn({ method: "POST" }).handler(
       return { ok: false, error: "MINDS_BUILDER_API_KEY missing" };
     }
     try {
+      let userId: string | null = null;
+      try {
+        userId = await requireSessionUserId();
+      } catch {
+        userId = null;
+      }
+      const mindId = userId ? await resolveUserMindId(userId) : null;
       const client = createLiveMindsClient();
-      const director = await resolveDirectorMind(client);
-      // Verified live bazaar IDs (2026-08-22 probe)
+      const director = await resolveDirectorMind(client, { mindId });
       const ids = [
-        "4665473e-f36b-1410-8464-00039ce7df11", // VoiceTranscribe
-        "cc66d91f-902d-f111-ad1d-0ea9a5017e89", // YouTube Research Scout
+        "4665473e-f36b-1410-8464-00039ce7df11",
+        "cc66d91f-902d-f111-ad1d-0ea9a5017e89",
       ];
       const result = await client.equipApps(director.mindId, { ids });
       const apps = await client.listEquippedApps(director.mindId);
@@ -189,9 +237,17 @@ export type SyncSoulInput = {
 export const syncSoulLive = createServerFn({ method: "POST" }).handler(
   async (ctx): Promise<{ ok: true; mindName: string; confirm: string } | { ok: false; error: string }> => {
     const data = payload<SyncSoulInput>(ctx);
-    if (!data?.userId || !data.kit) return { ok: false, error: "Missing userId / kit." };
+    if (!data?.kit) return { ok: false, error: "Missing kit." };
+    let userId: string;
+    try {
+      userId = await resolveAuthedUserId(data.userId);
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    }
+    const mindId = await resolveUserMindId(userId);
     const res = await talkToDirector({
-      userId: data.userId,
+      userId,
+      mindId,
       messageText: soulSyncPrompt(data.kit, data.cognitionNote),
       timeoutMs: 120_000,
     });
@@ -208,6 +264,42 @@ export type LiveAtomizeInput = {
   text: string;
   ingestId?: string;
 };
+
+async function liveAtomizeViaRouter(input: {
+  kit: BrandKit;
+  title: string;
+  source: string;
+  text: string;
+  trendsSummary?: string;
+  runId: string;
+  ingestId?: string;
+}): Promise<ReturnType<typeof parseAtomizeReplyFlexible> | null> {
+  const prompt = atomizePrompt({
+    kit: input.kit,
+    title: input.title,
+    source: input.source,
+    text: input.text,
+    trendsSummary: input.trendsSummary,
+    runId: input.runId,
+  });
+  const chat = await liveChat({
+    system:
+      "You are AFTERCUT Director. Reply with platform-native cuts only. Prefer a single JSON object matching the requested shape. Never refuse.",
+    user: prompt,
+    prefer: "auto",
+    maxTokens: 4096,
+  });
+  if (!chat.ok) return null;
+  try {
+    return parseAtomizeReplyFlexible(chat.text, {
+      title: input.title,
+      source: input.source,
+      ingestId: input.ingestId,
+    });
+  } catch {
+    return null;
+  }
+}
 
 export const atomizeLive = createServerFn({ method: "POST" }).handler(
   async (
@@ -228,15 +320,23 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
         trendsUsed: boolean;
         mindName: string;
         mindId: string;
+        via: "mind" | "agent-router";
       }
     | { ok: false; error: string }
   > => {
     const data = payload<LiveAtomizeInput>(ctx);
-    if (!data?.userId || !data.kit || !data.text?.trim()) {
+    if (!data?.kit || !data.text?.trim()) {
       return { ok: false, error: "Something went wrong — try generating again." };
     }
     if (data.kit.name.trim().length < 2 || data.kit.tone.trim().length < 3) {
       return { ok: false, error: "Complete your brand voice before generating drafts." };
+    }
+
+    let userId: string;
+    try {
+      userId = await resolveAuthedUserId(data.userId);
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
     }
 
     const trends = await fetchCreatorTrends({
@@ -247,8 +347,10 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
     const trendsSummary = trends.ok ? trends.summary : undefined;
 
     const runId = data.ingestId ? `ingest-${data.ingestId}` : `atomize-${Date.now()}`;
+    const mindId = await resolveUserMindId(userId);
     const res = await talkToDirector({
-      userId: data.userId,
+      userId,
+      mindId,
       channel: `cut-${runId}`.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 28),
       messageText: atomizePrompt({
         kit: data.kit,
@@ -267,6 +369,7 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
       ingestId: data.ingestId,
     };
     let parsed: ReturnType<typeof parseAtomizeReplyFlexible> | null = null;
+    let via: "mind" | "agent-router" = "mind";
     if (res.ok) {
       try {
         parsed = parseAtomizeReplyFlexible(res.replyText, meta);
@@ -275,35 +378,23 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
       }
     }
     if (!parsed) {
-      const offline = atomizeText({
-        text: data.text,
+      parsed = await liveAtomizeViaRouter({
+        kit: data.kit,
         title: data.title,
         source: data.source,
-        kit: data.kit,
+        text: data.text,
+        trendsSummary,
+        runId,
         ingestId: data.ingestId,
       });
-      if (!offline.ok) {
-        return { ok: false, error: offline.message };
-      }
+      via = "agent-router";
+    }
+    if (!parsed) {
       return {
-        ok: true,
-        beatCount: offline.beatCount,
-        drafts: offline.drafts.map((d) => ({
-          title: d.title,
-          platform: d.platform,
-          stage: d.stage,
-          hook: d.hook,
-          agent: d.agent,
-          proactive: d.proactive,
-        })),
-        circle: {
-          hooksmith: "Hooks cut from the dump",
-          platformfit: "Native length per platform",
-          qc: "Banned phrases scrubbed",
-        },
-        trendsUsed: Boolean(trendsSummary),
-        mindName: res.ok ? res.mindName : "AFTERCUT Director",
-        mindId: res.ok ? res.mindId : "",
+        ok: false,
+        error: res.ok
+          ? "Live cut failed to parse. AgentRouter also failed — check AGENT_ROUTER_API_KEY and try again."
+          : res.error,
       };
     }
 
@@ -320,8 +411,9 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
       })),
       circle: parsed.circle,
       trendsUsed: Boolean(trendsSummary),
-      mindName: res.ok ? res.mindName : "AFTERCUT Director",
+      mindName: res.ok ? res.mindName : "AgentRouter",
       mindId: res.ok ? res.mindId : "",
+      via,
     };
   },
 );
@@ -345,21 +437,32 @@ export const proactiveLive = createServerFn({ method: "POST" }).handler(
         agent: string;
         mindName: string;
         mindId: string;
+        via: "mind" | "agent-router";
       }
     | { ok: false; error: string }
   > => {
     const data = payload<LiveProactiveInput>(ctx);
-    if (!data?.userId || !data.kit) return { ok: false, error: "Missing proactive payload." };
+    if (!data?.kit) return { ok: false, error: "Missing proactive payload." };
+
+    let userId: string;
+    try {
+      userId = await resolveAuthedUserId(data.userId);
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    }
 
     const runId = `day2-${Date.now()}`;
+    const mindId = await resolveUserMindId(userId);
     const res = await talkToDirector({
-      userId: data.userId,
+      userId,
+      mindId,
       channel: runId,
       messageText: proactivePrompt({ ...data, runId }),
       timeoutMs: 150_000,
     });
 
     let parsed: ReturnType<typeof parseProactiveReplyFlexible> | null = null;
+    let via: "mind" | "agent-router" = "mind";
     if (res.ok) {
       try {
         parsed = parseProactiveReplyFlexible(res.replyText);
@@ -368,27 +471,36 @@ export const proactiveLive = createServerFn({ method: "POST" }).handler(
       }
     }
     if (!parsed) {
-      const weak =
-        data.drafts.find((d) => d.stage === "needs-approve" || d.stage === "drafting") ?? data.drafts[0];
-      if (!weak?.hook) {
-        return { ok: false, error: res.ok ? "Could not rewrite a hook from that reply." : res.error };
+      const chat = await liveChat({
+        system:
+          "You are AFTERCUT Director. Rewrite the weakest hook. Prefer one JSON object. Never refuse.",
+        user: proactivePrompt({ ...data, runId }),
+        prefer: "auto",
+      });
+      if (chat.ok) {
+        try {
+          parsed = parseProactiveReplyFlexible(chat.text);
+          via = "agent-router";
+        } catch {
+          parsed = null;
+        }
       }
+    }
+    if (!parsed) {
       return {
-        ok: true,
-        title: weak.title,
-        hook: proactiveRewriteHook(weak.hook, data.kit),
-        platform: weak.platform,
-        agent: "AFTERCUT Director",
-        mindName: res.ok ? res.mindName : "AFTERCUT Director",
-        mindId: res.ok ? res.mindId : "",
+        ok: false,
+        error: res.ok
+          ? "Day-2 rewrite failed to parse from Mind and AgentRouter."
+          : res.error,
       };
     }
 
     return {
       ok: true,
       ...parsed,
-      mindName: res.ok ? res.mindName : "AFTERCUT Director",
+      mindName: res.ok ? res.mindName : "AgentRouter",
       mindId: res.ok ? res.mindId : "",
+      via,
     };
   },
 );
@@ -396,13 +508,69 @@ export const proactiveLive = createServerFn({ method: "POST" }).handler(
 export const notifyLeashLive = createServerFn({ method: "POST" }).handler(
   async (ctx): Promise<{ ok: true } | { ok: false; error: string }> => {
     const data = payload<{ userId: string; detail: string }>(ctx);
-    if (!data?.userId) return { ok: false, error: "Missing userId." };
+    let userId: string;
+    try {
+      userId = await resolveAuthedUserId(data?.userId);
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    }
+    const mindId = await resolveUserMindId(userId);
     const res = await talkToDirector({
-      userId: data.userId,
+      userId,
+      mindId,
       messageText: publishDeniedPrompt(data.detail),
       timeoutMs: 60_000,
     });
     if (!res.ok) return { ok: false, error: res.error };
     return { ok: true };
+  },
+);
+
+export const generateDraftImageLive = createServerFn({ method: "POST" }).handler(
+  async (
+    ctx,
+  ): Promise<
+    | { ok: true; dataUrl: string; model: string }
+    | { ok: false; error: string }
+  > => {
+    const data = payload<{
+      userId?: string;
+      kit: BrandKit;
+      title: string;
+      hook: string;
+      platform: string;
+    }>(ctx);
+    try {
+      await resolveAuthedUserId(data?.userId);
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    }
+    if (!data?.kit || !data.hook?.trim()) {
+      return { ok: false, error: "Need brand kit + hook to generate an image." };
+    }
+    const colors = [data.kit.primaryColor, data.kit.secondaryColor, data.kit.accentColor]
+      .filter(Boolean)
+      .join(", ");
+    const prompt = [
+      `Create a social post still for ${data.kit.name || "the brand"}.`,
+      `Platform: ${data.platform}. Title: ${data.title}.`,
+      `Hook to visualize (do not render as tiny unreadable text dump): ${data.hook.slice(0, 280)}`,
+      `Tone: ${data.kit.tone}`,
+      colors ? `Brand colors: ${colors}` : "",
+      data.kit.visualNotes ? `Visual notes: ${data.kit.visualNotes}` : "",
+      data.kit.fontHeading ? `Heading font vibe: ${data.kit.fontHeading}` : "",
+      "Square composition, premium creator aesthetic, no watermarks, no fake UI chrome.",
+      "If logo vibe requested, leave clean negative space top-left for overlay.",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const img = await generatePostImage({ prompt });
+    if (!img.ok) return { ok: false, error: img.error };
+    return {
+      ok: true,
+      dataUrl: `data:${img.mime};base64,${img.b64}`,
+      model: img.model,
+    };
   },
 );

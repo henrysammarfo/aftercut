@@ -1,13 +1,11 @@
 import { redirect } from "@tanstack/react-router";
 import { getSession } from "./auth-store";
 import { getBridgeSession } from "./session-bridge";
+import { assertAuthedServer } from "./assert-authed";
 
 /**
- * Client-safe route gate. Do NOT import `@tanstack/react-start/server` or
- * `auth-server` here — Vite import-protection will break the client bundle
- * (film/demo crash on /onboarding).
- *
- * Server mutations already enforce session via createServerFn handlers.
+ * Dual gate: server Better Auth (cloud) + client bridge/localStorage.
+ * Do NOT import `auth-server` here directly — use assertAuthedServer createServerFn.
  */
 
 const APP_PREFIXES = [
@@ -32,16 +30,30 @@ function safeNext(nextPath?: string): string {
   return "/onboarding";
 }
 
-/** Gate app routes on the client (and no-op during SSR). */
+/** Gate app routes — server session in cloud, client session always. */
 export async function requireAuth(nextPath?: string): Promise<void> {
+  const next = safeNext(nextPath);
+  try {
+    await assertAuthedServer({ data: { next } });
+  } catch (e) {
+    // redirect throws; rethrow. Other errors fall through to client gate.
+    if (e && typeof e === "object" && "to" in e) throw e;
+  }
   if (typeof window === "undefined") return;
   const session = getBridgeSession() ?? getSession();
   if (!session) {
     throw redirect({
       to: "/login",
-      search: { next: safeNext(nextPath) },
+      search: { next },
     });
   }
+}
+
+/** Marketing auth pages — bounce signed-in users into the app. */
+export async function redirectIfAuthed(to: "/onboarding" | "/dashboard" = "/onboarding"): Promise<void> {
+  if (typeof window === "undefined") return;
+  const session = getBridgeSession() ?? getSession();
+  if (session) throw redirect({ to });
 }
 
 /** Marketing auth pages — bounce signed-in users into the app. */

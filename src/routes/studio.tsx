@@ -9,6 +9,7 @@ import { agentLabel, friendlyError } from "@/lib/display";
 import { notifyError, notifySuccess, notifyWarn, notifyBusy, notifyIdle } from "@/lib/notify";
 import { scheduleToGoogleCalendar, fetchConnectionStatus } from "@/lib/social/calendar";
 import { publishToLinkedIn, publishToX } from "@/lib/social/publish";
+import { generateDraftImageLive } from "@/lib/minds/live";
 import {
   Check,
   X,
@@ -19,6 +20,7 @@ import {
   Download,
   Calendar,
   Send,
+  ImagePlus,
 } from "lucide-react";
 
 export const Route = createFileRoute("/studio")({
@@ -64,6 +66,7 @@ function Studio() {
   const [busy, setBusy] = useState(false);
   const [busyDraft, setBusyDraft] = useState<string | null>(null);
   const [connections, setConnections] = useState<Connections | null>(null);
+  const [imageByDraft, setImageByDraft] = useState<Record<string, string>>({});
   const items = tenant?.drafts ?? [];
 
   useEffect(() => {
@@ -332,6 +335,47 @@ function Studio() {
                     <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
                       &ldquo;{d.hook}&rdquo;
                     </p>
+                    {imageByDraft[d.id] ? (
+                      <img
+                        src={imageByDraft[d.id]}
+                        alt="Generated still"
+                        className="mt-2 max-h-40 w-full rounded-lg object-cover"
+                      />
+                    ) : null}
+                    <button
+                      type="button"
+                      disabled={busyDraft === d.id || !tenant?.brandKit}
+                      onClick={async () => {
+                        if (!tenant?.brandKit) return;
+                        setBusyDraft(d.id);
+                        const tid = notifyBusy("Generating post still…");
+                        try {
+                          const res = await generateDraftImageLive({
+                            data: {
+                              kit: tenant.brandKit,
+                              title: d.title,
+                              hook: d.hook,
+                              platform: d.platform,
+                            },
+                          });
+                          if (!res.ok) {
+                            flash(friendlyError(res.error), "err");
+                            return;
+                          }
+                          setImageByDraft((m) => ({ ...m, [d.id]: res.dataUrl }));
+                          flash(`Still ready (${res.model})`);
+                        } catch (e) {
+                          flash(friendlyError(e instanceof Error ? e.message : String(e)), "err");
+                        } finally {
+                          notifyIdle(tid);
+                          setBusyDraft(null);
+                        }
+                      }}
+                      className="mt-2 flex w-full items-center justify-center gap-1 rounded-full bg-white/5 py-1.5 text-xs hover:bg-white/10 disabled:opacity-50"
+                    >
+                      <ImagePlus className="h-3.5 w-3.5" />
+                      Generate still
+                    </button>
                     <p className="mt-2 text-[11px] text-muted-foreground">{d.source}</p>
 
                     {d.stage === "needs-approve" ? (

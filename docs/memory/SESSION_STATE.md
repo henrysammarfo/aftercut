@@ -21,6 +21,23 @@
 
 Apply: https://dorahacks.io/hackathon/creativeminds/detail  
 
+## Honest harden pass (2026-08-27) — Henry lock-in
+
+| Check | Result |
+|---|---|
+| Production | https://aftercut-sandy.vercel.app |
+| Traffic | Unknown until Vercel Web Analytics enabled |
+| Offline fallback | **REMOVED** — Mind → native/AgentRouter LLM → fail loud (no `atomizeText`) |
+| Auth gate | `requireAuth` → `assertAuthedServer` + client bridge |
+| Mind tenancy | Settings → per-user `integrations.mindId` |
+| Telegram | Per-user chat id + connected_account (env default last resort) |
+| Brand kit | Voice + logo / colors / fonts / visual notes |
+| Image gen | Studio **Generate still** (needs native `OPENAI_API_KEY`) |
+| Vercel env | Tavily + TinyFish + AGENT_ROUTER_* on production+preview |
+| AgentRouter key | **401 unauthorized client** on server HTTP — paste native OpenAI + Anthropic |
+
+Creator pain research: [`research-raw/creator-pain-2026-08-27.md`](research-raw/creator-pain-2026-08-27.md)
+
 ## Live smoke (2026-08-23)
 
 | Check | Result |

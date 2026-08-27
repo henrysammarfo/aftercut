@@ -1,6 +1,6 @@
 /**
- * Production offline atomizer — pure functions, no network.
- * Mind / hellominds bridge is separate (ops); this powers Studio cut quality offline.
+ * Offline helpers kept for kit validation / caption scrub only.
+ * Studio cuts are live Mind + AgentRouter only — never call atomizeText from product paths.
  */
 
 import {
