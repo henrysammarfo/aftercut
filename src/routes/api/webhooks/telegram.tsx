@@ -42,7 +42,7 @@ async function resolveUserIdForTelegram(chatId: string): Promise<string | null> 
   for (const row of linked) {
     if (row.providerAccountId === chatId) return row.userId;
   }
-  return process.env.TELEGRAM_DEFAULT_USER_ID?.trim() || null;
+  return null;
 }
 
 export const Route = createFileRoute("/api/webhooks/telegram")({

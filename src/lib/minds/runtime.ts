@@ -84,8 +84,7 @@ export function createLiveMindsClient(): MindsClient {
 }
 
 /**
- * Resolve Director Mind for a tenant.
- * Prefer per-user `mindId` (Settings → link Mind). Env `MINDS_DIRECTOR_MIND_ID` is jam demo fallback only.
+ * Resolve Director Mind for a tenant — linked Mind ID required (no shared env fallback).
  */
 export async function resolveDirectorMind(
   client: MindsClient,
@@ -99,36 +98,20 @@ export async function resolveDirectorMind(
   }
 
   const preferred = opts?.mindId?.trim() || null;
-  if (preferred) {
-    const hit = minds.find((m) => m.mindId === preferred);
-    if (!hit) {
-      throw new Error(
-        `Linked Mind ${preferred} not found on this Builder key. Relink in Settings. Available: ${minds
-          .map((m) => m.mindId)
-          .join(", ")}`,
-      );
-    }
-    return hit;
+  if (!preferred) {
+    throw new Error(
+      "Link your Mind in Settings first — paste your hellominds Mind UUID.",
+    );
   }
-
-  const forced = getConfiguredDirectorMindId();
-  if (forced) {
-    const hit = minds.find((m) => m.mindId === forced);
-    if (!hit) {
-      throw new Error(
-        `${DIRECTOR_ENV}=${forced} not found on account. Available: ${minds
-          .map((m) => m.mindId)
-          .join(", ")}`,
-      );
-    }
-    return hit;
+  const hit = minds.find((m) => m.mindId === preferred);
+  if (!hit) {
+    throw new Error(
+      `Linked Mind ${preferred} not found on this Builder key. Relink in Settings. Available: ${minds
+        .map((m) => m.mindId)
+        .join(", ")}`,
+    );
   }
-
-  const byName =
-    minds.find((m) => /aftercut|director/i.test(m.name ?? "")) ??
-    minds.find((m) => m.isEnabled !== false) ??
-    minds[0]!;
-  return byName;
+  return hit;
 }
 
 /** Main thread (soul / transcript / leash). Pass `channel` to isolate JSON-cut jobs. */

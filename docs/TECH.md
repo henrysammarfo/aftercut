@@ -28,7 +28,7 @@ Honest fundraise scope: [`docs/MVP_FREEZE.md`](MVP_FREEZE.md).
 
 ```
 MINDS_BUILDER_API_KEY=   # X-Api-Key · required
-MINDS_DIRECTOR_MIND_ID=  # optional UUID
+MINDS_DIRECTOR_MIND_ID=  # smoke scripts only — product uses Settings-linked Mind
 TAVILY_API_KEY=          # optional · trends into atomize
 ```
 

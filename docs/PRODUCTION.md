@@ -25,14 +25,17 @@
 - [x] `RESEND_API_KEY` + `RESEND_FROM` (SDK: reset · welcome · invite · overnight · ship · cognition)
 - [x] `GOOGLE_CLIENT_ID` / `SECRET`
 - [x] `TELEGRAM_WEBHOOK_SECRET` (webhook set)
-- [ ] `TELEGRAM_DEFAULT_USER_ID` (after first signup)
+- [ ] `TOKEN_ENCRYPTION_KEY` (required for OAuth token AES)
+- [ ] `TELEGRAM_BOT_TOKEN` + `TELEGRAM_WEBHOOK_SECRET`
+- [ ] Sign up on live → Settings → link Mind UUID + Telegram chat id
+- [ ] Settings: X / LinkedIn / Google tokens as needed for publish demo
 - [ ] `VITE_GUMROAD_URL` (optional merch)
 - [ ] `TAVILY_API_KEY` (optional)
 
 ## Remaining
 
 ### P0 — you / ops
-- [ ] Sign up on live → set `TELEGRAM_DEFAULT_USER_ID` → redeploy
+- [ ] Sign up on live → Settings → link Mind UUID + Telegram chat id
 - [ ] Paste X (+ LinkedIn) tokens in Settings; Connect Google
 - [x] Resend keys on Vercel + official SDK wired (6 email paths)
 - [ ] Smoke: import → generate → publish / calendar

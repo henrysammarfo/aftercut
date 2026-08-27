@@ -60,7 +60,7 @@ npm run minds-smoke
 | Cloud auth / Neon / Better Auth | **Live** on Vercel |
 | Studio publish X + LinkedIn | **In product** — needs user tokens in Settings |
 | Google Calendar | **In product** — Connect Google in Settings |
-| Telegram → Studio ingest | Webhook **set** on production URL; **blocked** until signup + `TELEGRAM_DEFAULT_USER_ID` |
+| Telegram → Studio ingest | Webhook **set** on production URL; routes by linked chat id only (Settings) — **no** default-user fallback |
 | Multi-brand switcher | **Shipped** (sidebar) |
 | Agency email invites | **Shipped** (Settings + Resend SDK) |
 | Password reset | `/forgot-password` + `/reset-password` — Resend SDK live (smoke id `96cbd50b-…`) |
@@ -71,7 +71,7 @@ npm run minds-smoke
 | Image / video ingest | **Live 2026-08-25** — dropzone + poster still; full VOD not stored in tenant JSON |
 | First 100 creators waitlist | **Live** — Neon `creator_waitlist` (created on first write if missing) + browser fallback. Not a hard cap of 100. |
 | Day 2 persistence demo | **In product** — Simulate Day 2 writes a memory receipt then rewrites the weakest hook |
-| Director JSON wrapper refusals | **Fixed in repo** — unique cut/Day-2 Mind channels · prose parser · offline atomize fallback so Studio still fills |
+| Director JSON wrapper refusals | **Fixed in repo** — unique cut/Day-2 Mind channels · prose parser · AgentRouter live second path (no offline atomize) |
 
 ## Bug found + fix
 

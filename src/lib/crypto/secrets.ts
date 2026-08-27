@@ -1,6 +1,6 @@
 /**
  * AES-256-GCM for OAuth tokens at rest in connected_account.
- * Uses TOKEN_ENCRYPTION_KEY or derives from BETTER_AUTH_SECRET.
+ * Requires TOKEN_ENCRYPTION_KEY — no secret fallbacks.
  */
 
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:crypto";
@@ -8,10 +8,10 @@ import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:
 const PREFIX = "v1:";
 
 function encryptionKey(): Buffer {
-  const secret =
-    process.env.TOKEN_ENCRYPTION_KEY?.trim() ||
-    process.env.BETTER_AUTH_SECRET?.trim() ||
-    "dev-only-change-me";
+  const secret = process.env["TOKEN_ENCRYPTION_KEY"]?.trim();
+  if (!secret) {
+    throw new Error("TOKEN_ENCRYPTION_KEY is required for OAuth token encryption.");
+  }
   return scryptSync(secret, "aftercut-token-v1", 32);
 }
 
@@ -40,7 +40,5 @@ export function decryptSecret(stored: string | null | undefined): string | null 
 }
 
 export function secretsEncryptionEnabled(): boolean {
-  return Boolean(
-    process.env.TOKEN_ENCRYPTION_KEY?.trim() || process.env.BETTER_AUTH_SECRET?.trim(),
-  );
+  return Boolean(process.env["TOKEN_ENCRYPTION_KEY"]?.trim());
 }

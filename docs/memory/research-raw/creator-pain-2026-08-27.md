@@ -27,7 +27,7 @@
 3. **Approval gate** — publish leash matches creator fear of auto-blast.
 4. **Overnight employee** — Day-2 proactive matches “I don’t have 6h to cut every dump.”
 5. **Image for a post** — not in product; creators need stills for X/LinkedIn/newsletter.
-6. **Per-creator Mind + Telegram** — judges/demo users cannot truly own the agent yet (single `MINDS_DIRECTOR_MIND_ID` + `TELEGRAM_DEFAULT_USER_ID`).
+6. **Per-creator Mind + Telegram** — ~~shared env Director / default Telegram user~~ **fixed** — Settings link per-tenant Mind UUID + chat id.
 
 ## Jam deadline (prior FACT_CHECK)
 

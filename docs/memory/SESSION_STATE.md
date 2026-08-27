@@ -29,11 +29,11 @@ Apply: https://dorahacks.io/hackathon/creativeminds/detail
 | Traffic | Unknown until Vercel Web Analytics enabled |
 | Offline fallback | **REMOVED** — Mind → AgentRouter (`claude-opus-5` / `gpt-5.6-sol`) → fail loud |
 | Auth gate | `requireAuth` → `assertAuthedServer` + client bridge |
-| Mind tenancy | **Required** linked `integrations.mindId` for cuts / Soul / images / cognition |
-| Telegram | Per-user chat id (+ connected_account) |
-| Brand kit | Voice + visual DNA; Soul prompts lock evidence (GooseWorks-style, no deviate) |
-| Image gen | Mind directs brief → AgentRouter Images (SVG Claude fallback) |
-| AgentRouter | Claude Code wire headers · models: `claude-opus-5`, `gpt-5.6-sol`, `deepseek-v4-flash` |
+| Mind tenancy | Linked `integrations.mindId` required — **no** shared env Director fallback |
+| Telegram | Linked chat id only — **no** `TELEGRAM_DEFAULT_USER_ID` |
+| Image gen | Mind brief → AgentRouter Images only — **no** SVG/template substitute |
+| Token crypto | `TOKEN_ENCRYPTION_KEY` required — **no** Better Auth secret fallback |
+| Auth secret | `BETTER_AUTH_SECRET` required — **no** `dev-only-change-me` |
 
 Creator pain research: [`research-raw/creator-pain-2026-08-27.md`](research-raw/creator-pain-2026-08-27.md)
 
@@ -60,10 +60,10 @@ Creator pain research: [`research-raw/creator-pain-2026-08-27.md`](research-raw/
 
 ### Ops still open
 
-1. Signup on live → set `TELEGRAM_DEFAULT_USER_ID` + redeploy  
+1. Signup on live → Settings link Mind + Telegram chat id  
 2. Settings: X token · LinkedIn · Connect Google  
 3. Optional `VITE_GUMROAD_URL`  
-4. **Demo film** → Cloud Agent launched 2026-08-25: https://cursor.com/agents/bc-55d8923b-9ad5-4976-aa5e-3d0eece5e8c2 — watch **Artifacts** for the mp4. Rotate `CURSOR_API_KEY` (pasted in chat).  
+4. **Demo film** → Cloud Agent / relaunch — watch **Artifacts** for the mp4. Rotate `CURSOR_API_KEY` (pasted in chat).  
 5. Rotate Resend key (was pasted in chat) + verify custom domain for `RESEND_FROM`  
 
 ### Shipped this batch (security + brand)
@@ -83,7 +83,7 @@ Creator pain research: [`research-raw/creator-pain-2026-08-27.md`](research-raw/
 - **Day 2 reopen** — filmable persistence beat on Dashboard / Studio / Activity (`Simulate Day 2`).
 - **Dump & generate** — one-click queue + atomize. YouTube paste pulls oEmbed title/channel (no invented quotes).
 - **Waitlist** — Neon `creator_waitlist` (created on first write) + Resend confirm; browser list is fallback.
-- Film / DoraHacks — **film shooting** (agent `bc-55d8923b`). Director JSON-wrapper refusals **fixed** (isolated cut channels + prose/offline fallback) — relaunch film after this SHA is on `main`.
+- Film / DoraHacks — **film shooting** (agent `bc-55d8923b`). Director JSON-wrapper refusals **fixed** (isolated cut channels + AgentRouter live path) — relaunch film after this SHA is on `main`.
 - **Live:** https://aftercut-sandy.vercel.app (187ce7d READY; next SHA this ship)
 
 Portfolio: Scout closed · five product locks named · AFTERCUT polish in progress.

@@ -62,13 +62,9 @@ async function requireLinkedMindId(userId: string): Promise<string> {
   return id;
 }
 
-async function resolveAuthedUserId(fallback?: string): Promise<string> {
-  try {
-    return await requireSessionUserId();
-  } catch {
-    if (fallback?.trim()) return fallback.trim();
-    throw new Error("Sign in to continue.");
-  }
+/** Session only — never trust client-passed userId. */
+async function resolveAuthedUserId(_ignored?: string): Promise<string> {
+  return requireSessionUserId();
 }
 
 export type LiveStatusResult =
@@ -606,7 +602,7 @@ export const generateDraftImageLive = createServerFn({ method: "POST" }).handler
   async (
     ctx,
   ): Promise<
-    | { ok: true; dataUrl: string; model: string; via: "mind+router" | "router" }
+    | { ok: true; dataUrl: string; model: string; via: "mind+router" }
     | { ok: false; error: string }
   > => {
     const data = payload<{
@@ -648,7 +644,13 @@ export const generateDraftImageLive = createServerFn({ method: "POST" }).handler
     });
 
     let directedPrompt = "";
-    if (briefRes.ok) {
+    if (!briefRes.ok) {
+      return {
+        ok: false,
+        error: `Mind brief failed: ${briefRes.error}`,
+      };
+    }
+    {
       const raw = briefRes.replyText;
       const jsonMatch = raw.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
@@ -674,57 +676,22 @@ export const generateDraftImageLive = createServerFn({ method: "POST" }).handler
         directedPrompt = raw.slice(0, 2000);
       }
     }
+    if (!directedPrompt.trim()) {
+      return { ok: false, error: "Mind returned an empty creative brief." };
+    }
 
-    const colors = [data.kit.primaryColor, data.kit.secondaryColor, data.kit.accentColor]
-      .filter(Boolean)
-      .join(", ");
-    const fallbackPrompt = [
-      `Create a social post still for ${data.kit.name || "the brand"}.`,
-      `Platform: ${data.platform}. Title: ${data.title}.`,
-      `Hook to visualize: ${data.hook.slice(0, 280)}`,
-      `Tone: ${data.kit.tone}`,
-      colors ? `Brand colors: ${colors}` : "",
-      data.kit.visualNotes ? `Visual notes: ${data.kit.visualNotes}` : "",
-      data.kit.fontHeading ? `Heading font vibe: ${data.kit.fontHeading}` : "",
-      "Square composition, premium creator aesthetic, no watermarks, no fake UI chrome.",
-      "Leave clean negative space top-left for logo overlay.",
-    ]
-      .filter(Boolean)
-      .join("\n");
+    const prompt = directedPrompt.trim();
 
-    const prompt = directedPrompt.trim() || fallbackPrompt;
-
-    // 2) AgentRouter Images (same credits gateway) renders the Mind-directed brief.
+    // AgentRouter Images renders the Mind-directed brief — no SVG/template substitute.
     const img = await generatePostImage({ prompt });
     if (!img.ok) {
-      // 3) Ask AgentRouter Claude to emit an SVG still if Images channel is down.
-      const svgChat = await liveChat({
-        system:
-          "Return ONLY a complete SVG document (viewBox 0 0 1024 1024) for a social post still. No markdown. Match brand colors. No tiny unreadable text walls.",
-        user: prompt.slice(0, 3000),
-        family: "claude",
-        maxTokens: 4096,
-      });
-      if (svgChat.ok && /<svg[\s\S]*<\/svg>/i.test(svgChat.text)) {
-        const svg = svgChat.text.match(/<svg[\s\S]*<\/svg>/i)![0];
-        const b64 = Buffer.from(svg, "utf8").toString("base64");
-        return {
-          ok: true,
-          dataUrl: `data:image/svg+xml;base64,${b64}`,
-          model: svgChat.model,
-          via: briefRes.ok ? "mind+router" : "router",
-        };
-      }
-      return {
-        ok: false,
-        error: img.error + (svgChat.ok ? "" : ` · SVG fallback: ${svgChat.error}`),
-      };
+      return { ok: false, error: img.error };
     }
     return {
       ok: true,
       dataUrl: `data:${img.mime};base64,${img.b64}`,
       model: img.model,
-      via: briefRes.ok ? "mind+router" : "router",
+      via: "mind+router",
     };
   },
 );

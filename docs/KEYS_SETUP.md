@@ -24,12 +24,13 @@ Accurate steps for every integration AFTERCUT uses. No Stripe. No GitHub Actions
 
 Cloud mode activates when **both** `DATABASE_URL` and `BETTER_AUTH_SECRET` are set.
 
-### Minds Builder API (`MINDS_BUILDER_API_KEY`, optional `MINDS_DIRECTOR_MIND_ID`)
+### Minds Builder API (`MINDS_BUILDER_API_KEY`)
 
 1. Sign in at [https://build.hellominds.ai](https://build.hellominds.ai)
 2. **Builder console** → create / copy **API key** → `MINDS_BUILDER_API_KEY`
 3. Awaken **AFTERCUT Director** on [https://www.hellominds.ai](https://www.hellominds.ai)
-4. Optional: `minds list` or smoke script → pin UUID as `MINDS_DIRECTOR_MIND_ID`
+4. In product: each user pastes **their** Mind UUID in Settings (no shared env Director)
+5. Optional for local smoke only: `MINDS_DIRECTOR_MIND_ID` (scripts/minds-smoke — not used by Studio)
 5. Verify: `npm run minds-smoke`
 
 ### Resend — transactional email (`RESEND_API_KEY`, `RESEND_FROM`)
@@ -155,8 +156,7 @@ Per-user: Settings → paste Telegram chat id. Webhook routes by linked chat (an
 3. Set env on Vercel:
    - `TELEGRAM_BOT_TOKEN` — BotFather token
    - `TELEGRAM_WEBHOOK_SECRET` — random string you choose
-   - `TOKEN_ENCRYPTION_KEY` — random 32-byte base64 (OAuth token AES; else falls back to `BETTER_AUTH_SECRET`)
-   - Optional jam fallback: `TELEGRAM_DEFAULT_USER_ID` = your `user.id` after first signup (Settings shows it)
+   - `TOKEN_ENCRYPTION_KEY` — random 32-byte base64 (required for OAuth token AES)
 4. Register webhook (replace values):
 
 ```bash
@@ -191,11 +191,10 @@ Or push to `main` via Lovable sync if connected.
 | `BETTER_AUTH_SECRET` | Production | Session signing |
 | `BETTER_AUTH_URL` | Production | OAuth callbacks |
 | `MINDS_BUILDER_API_KEY` | Yes | Agent atomize/proactive |
-| `MINDS_DIRECTOR_MIND_ID` | Optional | Pin Director |
+| `MINDS_DIRECTOR_MIND_ID` | Smoke only | Not used by product paths |
 | `RESEND_API_KEY` | Recommended | Reset · welcome · invite · overnight · ship · cognition |
-| `TOKEN_ENCRYPTION_KEY` | **Prod+Preview set** | AES for OAuth tokens (scrypt); else `BETTER_AUTH_SECRET` |
+| `TOKEN_ENCRYPTION_KEY` | **Required (prod)** | AES for OAuth tokens — no secret fallback |
 | `TELEGRAM_BOT_TOKEN` | **Prod+Preview set** | BotFather token |
-| `TELEGRAM_DEFAULT_USER_ID` | Optional jam fallback | After first signup — Settings shows your user id |
 | `CURSOR_API_KEY` | Film only | Cloud Agent demo video — `npm run cloud:film` |
 | `GOOGLE_CLIENT_ID/SECRET` | For Calendar | Google OAuth |
 | `TAVILY_API_KEY` | Optional | Trend context |

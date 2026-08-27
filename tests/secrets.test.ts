@@ -1,6 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { decryptSecret, encryptSecret } from "@/lib/crypto/secrets";
+
+beforeAll(() => {
+  if (!process.env.TOKEN_ENCRYPTION_KEY) {
+    process.env.TOKEN_ENCRYPTION_KEY = "test-token-encryption-key-aftercut";
+  }
+});
 
 describe("token encryption", () => {
   it("round-trips OAuth tokens", () => {

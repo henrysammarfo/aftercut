@@ -20,8 +20,12 @@ export function getAuth() {
     throw new Error("Cloud auth requires DATABASE_URL.");
   }
   if (!_auth) {
+    const secret = process.env.BETTER_AUTH_SECRET?.trim();
+    if (!secret) {
+      throw new Error("BETTER_AUTH_SECRET is required for cloud auth.");
+    }
     _auth = betterAuth({
-      secret: process.env.BETTER_AUTH_SECRET ?? "dev-only-change-me",
+      secret,
       baseURL: baseUrl(),
       trustedOrigins: [
         baseUrl(),
