@@ -148,13 +148,15 @@ Token lifetime ~60 days — repeat OAuth when expired.
 
 ## 4. Telegram — auto-import webhook
 
-Director bot is linked on Minds; AFTERCUT webhook imports long messages into Import queue.
+Per-user: Settings → paste Telegram chat id. Webhook routes by linked chat (and `connected_account`).
 
-1. Create bot via [@BotFather](https://t.me/BotFather) → `/newbot` → copy token
-2. Link bot to your Minds Director on hellominds.ai (already done if `telegramBotId` shows in Circle)
+1. Create bot via [@BotFather](https://t.me/BotFather) → `/newbot` → copy token → `TELEGRAM_BOT_TOKEN`
+2. Link bot to your Mind on hellominds.ai (optional; Circle shows Telegram flag)
 3. Set env on Vercel:
+   - `TELEGRAM_BOT_TOKEN` — BotFather token
    - `TELEGRAM_WEBHOOK_SECRET` — random string you choose
-   - `TELEGRAM_DEFAULT_USER_ID` — your AFTERCUT user id from cloud DB (`user.id` after signup)
+   - `TOKEN_ENCRYPTION_KEY` — random 32-byte base64 (OAuth token AES; else falls back to `BETTER_AUTH_SECRET`)
+   - Optional jam fallback: `TELEGRAM_DEFAULT_USER_ID` = your `user.id` after first signup (Settings shows it)
 4. Register webhook (replace values):
 
 ```bash
@@ -191,7 +193,9 @@ Or push to `main` via Lovable sync if connected.
 | `MINDS_BUILDER_API_KEY` | Yes | Agent atomize/proactive |
 | `MINDS_DIRECTOR_MIND_ID` | Optional | Pin Director |
 | `RESEND_API_KEY` | Recommended | Reset · welcome · invite · overnight · ship · cognition |
-| `TOKEN_ENCRYPTION_KEY` | Optional | Extra layer for OAuth tokens at rest (falls back to `BETTER_AUTH_SECRET`) |
+| `TOKEN_ENCRYPTION_KEY` | **Prod+Preview set** | AES for OAuth tokens (scrypt); else `BETTER_AUTH_SECRET` |
+| `TELEGRAM_BOT_TOKEN` | **Prod+Preview set** | BotFather token |
+| `TELEGRAM_DEFAULT_USER_ID` | Optional jam fallback | Only if chat id not linked yet — set after first signup (Settings shows user id) |
 | `CURSOR_API_KEY` | Film only | Cloud Agent demo video — `npm run cloud:film` |
 | `GOOGLE_CLIENT_ID/SECRET` | For Calendar | Google OAuth |
 | `TAVILY_API_KEY` | Optional | Trend context |

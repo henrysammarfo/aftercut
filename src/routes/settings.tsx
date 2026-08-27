@@ -24,7 +24,7 @@ export const Route = createFileRoute("/settings")({
 });
 
 function SettingsPage() {
-  const { tenant, saveIntegrations } = useAuth();
+  const { session, tenant, saveIntegrations } = useAuth();
   const flash = (text: string, isErr = false) => {
     if (isErr) notifyError(text);
     else notifySuccess(text);
@@ -251,8 +251,13 @@ function SettingsPage() {
             Webhook:{" "}
             <code className="rounded bg-white/10 px-1">/api/webhooks/telegram</code>. Paste your
             Telegram chat id (message the bot, then copy chat id). Ingests land in your workspace
-            only.
+            only — no shared default user required.
           </p>
+          {session?.userId ? (
+            <p className="mt-2 break-all text-[10px] text-muted-foreground">
+              Your AFTERCUT user id: <code className="rounded bg-white/10 px-1">{session.userId}</code>
+            </p>
+          ) : null}
           <input
             className="mt-3 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs"
             placeholder="Telegram chat id"
