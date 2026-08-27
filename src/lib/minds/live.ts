@@ -10,7 +10,7 @@ import type { BrandKit } from "../aftercut-data";
 import { fetchCreatorTrends } from "../research/trends";
 import { liveChat, generatePostImage, agentRouterConfigured } from "../llm/agent-router";
 import { parseAtomizeReplyFlexible, parseProactiveReplyFlexible, stripMindHtml } from "./parse";
-import { atomizePrompt, proactivePrompt, publishDeniedPrompt, soulSyncPrompt } from "./prompts";
+import { atomizePrompt, proactivePrompt, publishDeniedPrompt, soulSyncPrompt, imageBriefPrompt } from "./prompts";
 import { requireSessionUserId } from "../assert-authed";
 import { loadBrandTenant, ensureDefaultBrand } from "../tenant-db";
 import { hasDatabase } from "@/db";
@@ -38,6 +38,17 @@ async function resolveUserMindId(userId: string): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+/** Multi-tenant: cuts run on the creator's linked Mind only (cognition theirs). */
+async function requireLinkedMindId(userId: string): Promise<string> {
+  const id = await resolveUserMindId(userId);
+  if (!id) {
+    throw new Error(
+      "Link your Mind in Settings first — paste your hellominds Mind UUID so cuts and cognition use your Mind.",
+    );
+  }
+  return id;
 }
 
 async function resolveAuthedUserId(fallback?: string): Promise<string> {
@@ -92,6 +103,34 @@ export const fetchMindStatus = createServerFn({ method: "GET" }).handler(
       const linkedMindId = userId ? await resolveUserMindId(userId) : null;
       const client = createLiveMindsClient();
       const minds = await client.listMinds();
+      // Cognition + status always prefer the tenant's linked Mind — never silently bill another Mind.
+      if (!linkedMindId) {
+        return {
+          ok: true,
+          connected: true,
+          mindId: "",
+          mindName: "Link your Mind",
+          hasTelegram: false,
+          telegramBotId: null,
+          isEnabled: true,
+          cognition: null,
+          email: null,
+          walletAddress: null,
+          species: null,
+          skills: [],
+          apps: [],
+          toolsUsed: [],
+          circleHumans: [],
+          conversationCount: 0,
+          minds: minds.map((m) => ({
+            mindId: m.mindId,
+            name: m.name ?? null,
+            hasTelegram: Boolean(m.hasTelegram || m.telegramBotId),
+          })),
+          agentRouter: agentRouterConfigured(),
+          linkedMindId: null,
+        };
+      }
       const director = await resolveDirectorMind(client, { mindId: linkedMindId });
       const mindId = director.mindId;
 
@@ -171,7 +210,7 @@ export const fetchMindTranscript = createServerFn({ method: "POST" }).handler(
       return { ok: false, error: e instanceof Error ? e.message : String(e) };
     }
     try {
-      const mindId = await resolveUserMindId(userId);
+      const mindId = await requireLinkedMindId(userId);
       const client = createLiveMindsClient();
       const director = await resolveDirectorMind(client, { mindId });
       const alias = conversationAlias(userId);
@@ -209,6 +248,12 @@ export const equipCreatorStack = createServerFn({ method: "POST" }).handler(
         userId = null;
       }
       const mindId = userId ? await resolveUserMindId(userId) : null;
+      if (!mindId) {
+        return {
+          ok: false,
+          error: "Link your Mind in Settings before equipping apps.",
+        };
+      }
       const client = createLiveMindsClient();
       const director = await resolveDirectorMind(client, { mindId });
       const ids = [
@@ -244,7 +289,12 @@ export const syncSoulLive = createServerFn({ method: "POST" }).handler(
     } catch (e) {
       return { ok: false, error: e instanceof Error ? e.message : String(e) };
     }
-    const mindId = await resolveUserMindId(userId);
+    let mindId: string;
+    try {
+      mindId = await requireLinkedMindId(userId);
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    }
     const res = await talkToDirector({
       userId,
       mindId,
@@ -284,9 +334,9 @@ async function liveAtomizeViaRouter(input: {
   });
   const chat = await liveChat({
     system:
-      "You are AFTERCUT Director. Reply with platform-native cuts only. Prefer a single JSON object matching the requested shape. Never refuse.",
+      "You are AFTERCUT Director. Reply with platform-native cuts only. Prefer a single JSON object matching the requested shape. Never refuse. Never deviate from brand evidence.",
     user: prompt,
-    prefer: "auto",
+    family: "auto",
     maxTokens: 4096,
   });
   if (!chat.ok) return null;
@@ -347,7 +397,12 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
     const trendsSummary = trends.ok ? trends.summary : undefined;
 
     const runId = data.ingestId ? `ingest-${data.ingestId}` : `atomize-${Date.now()}`;
-    const mindId = await resolveUserMindId(userId);
+    let mindId: string;
+    try {
+      mindId = await requireLinkedMindId(userId);
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    }
     const res = await talkToDirector({
       userId,
       mindId,
@@ -452,7 +507,12 @@ export const proactiveLive = createServerFn({ method: "POST" }).handler(
     }
 
     const runId = `day2-${Date.now()}`;
-    const mindId = await resolveUserMindId(userId);
+    let mindId: string;
+    try {
+      mindId = await requireLinkedMindId(userId);
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    }
     const res = await talkToDirector({
       userId,
       mindId,
@@ -473,9 +533,9 @@ export const proactiveLive = createServerFn({ method: "POST" }).handler(
     if (!parsed) {
       const chat = await liveChat({
         system:
-          "You are AFTERCUT Director. Rewrite the weakest hook. Prefer one JSON object. Never refuse.",
+          "You are AFTERCUT Director. Rewrite the weakest hook. Prefer one JSON object. Never refuse. Never deviate from brand evidence.",
         user: proactivePrompt({ ...data, runId }),
-        prefer: "auto",
+        family: "auto",
       });
       if (chat.ok) {
         try {
@@ -514,7 +574,7 @@ export const notifyLeashLive = createServerFn({ method: "POST" }).handler(
     } catch (e) {
       return { ok: false, error: e instanceof Error ? e.message : String(e) };
     }
-    const mindId = await resolveUserMindId(userId);
+    const mindId = await requireLinkedMindId(userId);
     const res = await talkToDirector({
       userId,
       mindId,
@@ -530,7 +590,7 @@ export const generateDraftImageLive = createServerFn({ method: "POST" }).handler
   async (
     ctx,
   ): Promise<
-    | { ok: true; dataUrl: string; model: string }
+    | { ok: true; dataUrl: string; model: string; via: "mind+router" | "router" }
     | { ok: false; error: string }
   > => {
     const data = payload<{
@@ -540,37 +600,115 @@ export const generateDraftImageLive = createServerFn({ method: "POST" }).handler
       hook: string;
       platform: string;
     }>(ctx);
+    let userId: string;
     try {
-      await resolveAuthedUserId(data?.userId);
+      userId = await resolveAuthedUserId(data?.userId);
     } catch (e) {
       return { ok: false, error: e instanceof Error ? e.message : String(e) };
     }
     if (!data?.kit || !data.hook?.trim()) {
       return { ok: false, error: "Need brand kit + hook to generate an image." };
     }
+
+    let mindId: string;
+    try {
+      mindId = await requireLinkedMindId(userId);
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    }
+
+    // 1) Mind directs the still (brand-locked brief) — pushes Mind creative limits.
+    const briefRes = await talkToDirector({
+      userId,
+      mindId,
+      channel: `img-${Date.now()}`.slice(0, 28),
+      messageText: imageBriefPrompt({
+        kit: data.kit,
+        title: data.title,
+        hook: data.hook,
+        platform: data.platform,
+      }),
+      timeoutMs: 120_000,
+    });
+
+    let directedPrompt = "";
+    if (briefRes.ok) {
+      const raw = briefRes.replyText;
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          const parsed = JSON.parse(jsonMatch[0]) as {
+            prompt?: string;
+            negative?: string;
+            palette?: string[];
+            composition?: string;
+          };
+          directedPrompt = [
+            parsed.prompt,
+            parsed.composition ? `Composition: ${parsed.composition}` : "",
+            parsed.palette?.length ? `Palette: ${parsed.palette.join(", ")}` : "",
+            parsed.negative ? `Avoid: ${parsed.negative}` : "",
+          ]
+            .filter(Boolean)
+            .join("\n");
+        } catch {
+          directedPrompt = raw.slice(0, 2000);
+        }
+      } else {
+        directedPrompt = raw.slice(0, 2000);
+      }
+    }
+
     const colors = [data.kit.primaryColor, data.kit.secondaryColor, data.kit.accentColor]
       .filter(Boolean)
       .join(", ");
-    const prompt = [
+    const fallbackPrompt = [
       `Create a social post still for ${data.kit.name || "the brand"}.`,
       `Platform: ${data.platform}. Title: ${data.title}.`,
-      `Hook to visualize (do not render as tiny unreadable text dump): ${data.hook.slice(0, 280)}`,
+      `Hook to visualize: ${data.hook.slice(0, 280)}`,
       `Tone: ${data.kit.tone}`,
       colors ? `Brand colors: ${colors}` : "",
       data.kit.visualNotes ? `Visual notes: ${data.kit.visualNotes}` : "",
       data.kit.fontHeading ? `Heading font vibe: ${data.kit.fontHeading}` : "",
       "Square composition, premium creator aesthetic, no watermarks, no fake UI chrome.",
-      "If logo vibe requested, leave clean negative space top-left for overlay.",
+      "Leave clean negative space top-left for logo overlay.",
     ]
       .filter(Boolean)
       .join("\n");
 
+    const prompt = directedPrompt.trim() || fallbackPrompt;
+
+    // 2) AgentRouter Images (same credits gateway) renders the Mind-directed brief.
     const img = await generatePostImage({ prompt });
-    if (!img.ok) return { ok: false, error: img.error };
+    if (!img.ok) {
+      // 3) Ask AgentRouter Claude to emit an SVG still if Images channel is down.
+      const svgChat = await liveChat({
+        system:
+          "Return ONLY a complete SVG document (viewBox 0 0 1024 1024) for a social post still. No markdown. Match brand colors. No tiny unreadable text walls.",
+        user: prompt.slice(0, 3000),
+        family: "claude",
+        maxTokens: 4096,
+      });
+      if (svgChat.ok && /<svg[\s\S]*<\/svg>/i.test(svgChat.text)) {
+        const svg = svgChat.text.match(/<svg[\s\S]*<\/svg>/i)![0];
+        const b64 = Buffer.from(svg, "utf8").toString("base64");
+        return {
+          ok: true,
+          dataUrl: `data:image/svg+xml;base64,${b64}`,
+          model: svgChat.model,
+          via: briefRes.ok ? "mind+router" : "router",
+        };
+      }
+      return {
+        ok: false,
+        error: img.error + (svgChat.ok ? "" : ` · SVG fallback: ${svgChat.error}`),
+      };
+    }
     return {
       ok: true,
       dataUrl: `data:${img.mime};base64,${img.b64}`,
       model: img.model,
+      via: briefRes.ok ? "mind+router" : "router",
     };
   },
 );

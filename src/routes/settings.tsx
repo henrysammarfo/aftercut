@@ -224,8 +224,8 @@ function SettingsPage() {
         <GlassCard>
           <h2 className="text-sm font-semibold">Link your Mind</h2>
           <p className="mt-2 text-xs text-muted-foreground">
-            Each creator links their own hellominds Mind UUID (from build.hellominds.ai). Judges demo:
-            signup → paste Mind ID → cuts run on that Mind.
+            Required. Paste your hellominds Mind UUID from build.hellominds.ai. Cuts, Soul memory,
+            cognition, and stills run on <em>your</em> Mind — not a shared demo agent.
           </p>
           <input
             className="mt-3 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs"

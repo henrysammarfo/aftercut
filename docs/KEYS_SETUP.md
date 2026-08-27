@@ -52,11 +52,14 @@ Official **`resend` Node SDK** (`src/lib/email.ts`). Paths:
 
 ### AgentRouter — live LLM + images (`AGENT_ROUTER_API_KEY`)
 
-1. [https://agentrouter.org/console/token](https://agentrouter.org/console/token) → copy key
-2. Set `AGENT_ROUTER_API_KEY` (and optional `ANTHROPIC_AUTH_TOKEN` same value)
-3. OpenAI-compatible base: `https://agentrouter.org/v1` · Anthropic: `https://agentrouter.org`
-4. Used for: cut/Day-2 second live path when Mind JSON fails · Studio **Generate still**
-5. **No offline/deterministic atomize fallback** — fail loud if Mind + AgentRouter both fail
+One key → Claude / GPT / DeepSeek credits (model switch). No separate OpenAI/Anthropic keys.
+
+1. [https://agentrouter.org/console/token](https://agentrouter.org/console/token) → `AGENT_ROUTER_API_KEY`
+2. Base: `https://agentrouter.org` (Anthropic Messages + Claude Code wire headers)
+3. Live model IDs on this account: `claude-opus-5`, `claude-opus-4-8`, `gpt-5.6-sol`, `deepseek-v4-flash`, `glm-5.3`
+4. Optional: `AGENT_ROUTER_ANTHROPIC_MODEL=claude-opus-5` · `AGENT_ROUTER_OPENAI_MODEL=gpt-5.6-sol`
+5. Used for: cut/Day-2 second path when Mind JSON fails · Studio still render after Mind brief
+6. **Mind is primary** — AgentRouter is the gateway helper, not a native-key replacement ask
 
 ### TinyFish — research scrape (`TINYFISH_API_KEY`)
 

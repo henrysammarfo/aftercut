@@ -1,30 +1,36 @@
-/** Prompts sent to live AFTERCUT Director Mind — no template drafts, real reasoning. */
+/** Prompts sent to live AFTERCUT Director Mind — brand DNA is law. No deviation. */
 
 import type { BrandKit } from "../aftercut-data";
+
+/** Compact Soul evidence block — GooseWorks-style: match voice + visual kit exactly. */
+export function brandEvidenceBlock(kit: BrandKit): string {
+  return [
+    "BRAND EVIDENCE (immutable — do not invent or soften):",
+    `name=${kit.name}`,
+    `tone=${kit.tone}`,
+    `platform=${kit.primaryPlatform || "unspecified"}`,
+    `ctas=${kit.ctas.join(" · ") || "(none)"}`,
+    `do_not_say=${kit.doNotSay.join(" · ") || "(none)"}`,
+    `colors primary=${kit.primaryColor || "unset"} secondary=${kit.secondaryColor || "unset"} accent=${kit.accentColor || "unset"}`,
+    `fonts heading=${kit.fontHeading || "unset"} body=${kit.fontBody || "unset"}`,
+    `visual_notes=${kit.visualNotes || "(none)"}`,
+    `logo=${kit.logoDataUrl ? "present — keep mark consistent; leave overlay space" : "absent"}`,
+    "examples:",
+    ...kit.examples.filter(Boolean).map((e, i) => `  ${i + 1}. ${e}`),
+    "RULE: Match cadence, vocabulary, CTA style, and visual DNA. Never invent a different brand. Never hallucinate claims not in the dump or Soul.",
+  ].join("\n");
+}
 
 export function soulSyncPrompt(kit: BrandKit, cognitionNote?: string): string {
   return [
     "You are AFTERCUT Director — persistent creative Mind for this creator.",
     "OUTPUT RULES: plain text only. No HTML tags. No <p>. No casual filler greeting.",
-    "STORE this brand Soul (voice + visual DNA) in your memory permanently for this conversation. Confirm in one short sentence, then list what you stored.",
+    "PERSISTENCE: STORE this brand Soul (voice + visual DNA) in your long-term memory for this conversation alias.",
+    "On every future cut for this creator, RECALL this evidence. Do not drift. Do not invent a new brand.",
+    "Confirm in one short sentence, then list every field you stored.",
     "",
-    `Brand name: ${kit.name}`,
-    `Tone: ${kit.tone}`,
-    `Primary platform: ${kit.primaryPlatform || "unspecified"}`,
-    `CTAs: ${kit.ctas.join(" | ") || "(none)"}`,
-    `Do-not-say: ${kit.doNotSay.join(" | ") || "(none)"}`,
-    `Primary color: ${kit.primaryColor || "(unset)"}`,
-    `Secondary color: ${kit.secondaryColor || "(unset)"}`,
-    `Accent color: ${kit.accentColor || "(unset)"}`,
-    `Heading font: ${kit.fontHeading || "(unset)"}`,
-    `Body font: ${kit.fontBody || "(unset)"}`,
-    `Visual notes: ${kit.visualNotes || "(none)"}`,
-    `Logo present: ${kit.logoDataUrl ? "yes (use brand mark in creative direction)" : "no"}`,
-    `Example posts:`,
-    ...kit.examples.filter(Boolean).map((e, i) => `  ${i + 1}. ${e}`),
+    brandEvidenceBlock(kit),
     cognitionNote ? `Director note: ${cognitionNote}` : "",
-    "",
-    "Never invent a different brand. Always apply tone, CTAs, visual DNA, and ban do-not-say phrases.",
   ]
     .filter(Boolean)
     .join("\n");
@@ -47,10 +53,12 @@ export function atomizePrompt(input: {
     input.text.slice(0, 24_000),
     "",
     "You are the AFTERCUT Mind Circle running as ONE Director with three specialist passes.",
-    "Write platform-native cuts from the long-form using the Soul kit.",
+    "Write platform-native cuts from the long-form using the Soul kit you already hold in memory.",
+    "ANTI-HALLUCINATION: Only use facts from LONG-FORM + BRAND EVIDENCE. No invented metrics, guests, or products.",
+    "BRAND LOCK: Voice, CTA style, banned phrases, and visual DNA must match Soul exactly — like an ad system matching a brand kit.",
     "Do not refuse. Do not lecture about JSON wrappers, templates, or duplicate prompts. This is a real creator dump.",
-    "Simulate: (1) HOOKsmith first lines (2) PLATFORMFIT native voice (3) QC scrub bans / same-caption dupes.",
-    "Stay in brand voice. Platforms: shorts | x | linkedin | newsletter. Different length/hook/CTA per platform.",
+    "Simulate: (1) HOOKsmith first lines (2) PLATFORMFIT native voice (3) QC scrub bans / same-caption dupes / brand drift.",
+    "Platforms: shorts | x | linkedin | newsletter. Different length/hook/CTA per platform.",
     "  · shorts: spoken first-line ≤90 chars",
     "  · x: ≤200 chars, one claim",
     "  · linkedin: professional lead + lesson",
@@ -68,31 +76,14 @@ export function atomizePrompt(input: {
       : "",
     `- Job ${runId} is unique — answer it.`,
     "",
-    "SOUL KIT:",
-    JSON.stringify(
-      {
-        name: input.kit.name,
-        tone: input.kit.tone,
-        examples: input.kit.examples,
-        ctas: input.kit.ctas,
-        doNotSay: input.kit.doNotSay,
-        primaryPlatform: input.kit.primaryPlatform,
-        primaryColor: input.kit.primaryColor,
-        secondaryColor: input.kit.secondaryColor,
-        accentColor: input.kit.accentColor,
-        fontHeading: input.kit.fontHeading,
-        fontBody: input.kit.fontBody,
-        visualNotes: input.kit.visualNotes,
-        hasLogo: Boolean(input.kit.logoDataUrl),
-      },
-      null,
-      2,
-    ),
+    brandEvidenceBlock(input.kit),
     "",
     input.trendsSummary
-      ? ["LIVE TREND CONTEXT (use lightly — do not invent facts not in LONG-FORM):", input.trendsSummary, ""].join(
-          "\n",
-        )
+      ? [
+          "LIVE TREND CONTEXT (use lightly — do not invent facts not in LONG-FORM):",
+          input.trendsSummary,
+          "",
+        ].join("\n")
       : "",
   ]
     .filter(Boolean)
@@ -108,13 +99,12 @@ export function proactivePrompt(input: {
   const runId = input.runId ?? `day2-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   return [
     `AFTERCUT Studio Day-2 job ${runId} — new follow-up, not a wrapper test.`,
-    "You already hold the brand Soul. Rewrite the weakest draft hook. Do not refuse.",
-    "Apply kit tone/CTAs; scrub do-not-say. Platform-native only.",
+    "You already hold the brand Soul in memory. Rewrite the weakest draft hook. Do not refuse.",
+    "ANTI-HALLUCINATION + BRAND LOCK: match tone/CTAs/visual DNA; scrub do-not-say; no invented claims.",
     "Preferred: one JSON object. Also accepted: one labeled line like X: \"new hook\".",
     `{ "title": string, "platform": "shorts"|"x"|"linkedin"|"newsletter", "hook": string, "agent": "AFTERCUT Director" }`,
     "",
-    "SOUL:",
-    JSON.stringify({ name: input.kit.name, tone: input.kit.tone, ctas: input.kit.ctas, doNotSay: input.kit.doNotSay }),
+    brandEvidenceBlock(input.kit),
     "",
     `Last ingest: ${input.lastIngestTitle ?? "n/a"}`,
     "CURRENT QUEUE:",
@@ -128,5 +118,28 @@ export function publishDeniedPrompt(detail: string): string {
     "OUTPUT: one plain sentence. No HTML.",
     "Creator attempted blast-publish. You must NOT publish. Confirm leash in one sentence.",
     `Detail: ${detail}`,
+  ].join("\n");
+}
+
+/** Ask Mind to direct a post still (brand-locked). Prefer this before gateway images. */
+export function imageBriefPrompt(input: {
+  kit: BrandKit;
+  title: string;
+  hook: string;
+  platform: string;
+}): string {
+  return [
+    "AFTERCUT creative brief — generate a post still direction for this draft.",
+    "If you can produce an image URL or data via equipped apps/tools, do it.",
+    "Otherwise reply with ONE JSON object only:",
+    `{ "prompt": string, "negative": string, "palette": string[], "composition": string }`,
+    "prompt = detailed image-gen prompt locked to brand colors/fonts/logo space.",
+    "Never invent a different brand. Never put unreadably small walls of text in the still.",
+    "",
+    `Platform: ${input.platform}`,
+    `Title: ${input.title}`,
+    `Hook: ${input.hook.slice(0, 400)}`,
+    "",
+    brandEvidenceBlock(input.kit),
   ].join("\n");
 }

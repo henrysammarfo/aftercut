@@ -59,6 +59,7 @@ describe("atomize prompt", () => {
     expect(text).toMatch(/cut job ingest-test1/);
     expect(text).not.toMatch(/ONLY one JSON object/);
     expect(text).toMatch(/labeled lines/);
+    expect(text).toMatch(/BRAND EVIDENCE/);
+    expect(text).toMatch(/ANTI-HALLUCINATION/);
   });
 });
-

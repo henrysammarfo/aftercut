@@ -27,14 +27,13 @@ Apply: https://dorahacks.io/hackathon/creativeminds/detail
 |---|---|
 | Production | https://aftercut-sandy.vercel.app |
 | Traffic | Unknown until Vercel Web Analytics enabled |
-| Offline fallback | **REMOVED** — Mind → native/AgentRouter LLM → fail loud (no `atomizeText`) |
+| Offline fallback | **REMOVED** — Mind → AgentRouter (`claude-opus-5` / `gpt-5.6-sol`) → fail loud |
 | Auth gate | `requireAuth` → `assertAuthedServer` + client bridge |
-| Mind tenancy | Settings → per-user `integrations.mindId` |
-| Telegram | Per-user chat id + connected_account (env default last resort) |
-| Brand kit | Voice + logo / colors / fonts / visual notes |
-| Image gen | Studio **Generate still** (needs native `OPENAI_API_KEY`) |
-| Vercel env | Tavily + TinyFish + AGENT_ROUTER_* on production+preview |
-| AgentRouter key | **401 unauthorized client** on server HTTP — paste native OpenAI + Anthropic |
+| Mind tenancy | **Required** linked `integrations.mindId` for cuts / Soul / images / cognition |
+| Telegram | Per-user chat id (+ connected_account) |
+| Brand kit | Voice + visual DNA; Soul prompts lock evidence (GooseWorks-style, no deviate) |
+| Image gen | Mind directs brief → AgentRouter Images (SVG Claude fallback) |
+| AgentRouter | Claude Code wire headers · models: `claude-opus-5`, `gpt-5.6-sol`, `deepseek-v4-flash` |
 
 Creator pain research: [`research-raw/creator-pain-2026-08-27.md`](research-raw/creator-pain-2026-08-27.md)
 
