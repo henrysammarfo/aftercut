@@ -25,7 +25,7 @@ Apply: https://dorahacks.io/hackathon/creativeminds/detail
 
 | Check | Result |
 |---|---|
-| Production | https://aftercut-sandy.vercel.app · **READY** `47a3089` (no soft fallbacks) |
+| Production | https://aftercut-sandy.vercel.app · **READY** `b9397c1` (shell/marketing/favicon + Connect Mind) |
 | Marketing vs app | `/pitch` + `/privacy` use **MarketingShell** (SiteNav) — not AppShell · First 100 removed from app sidebar |
 | Sidebar | Scrollable · Connect Mind CTA · Signed-in only when session exists |
 | Favicon / OG | Regenerated `favicon.ico` from AFTERCUT mark · `site.webmanifest` name AFTERCUT |
