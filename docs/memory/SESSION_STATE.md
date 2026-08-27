@@ -37,6 +37,18 @@ Apply: https://dorahacks.io/hackathon/creativeminds/detail
 
 Creator pain research: [`research-raw/creator-pain-2026-08-27.md`](research-raw/creator-pain-2026-08-27.md)
 
+## DevRel lock (2026-08-27 Discord — Daniel Lin)
+
+| Claim | Action for AFTERCUT |
+|---|---|
+| Custom **Apps** too late for jam submit | **Don't** build an App |
+| Skills = describe to Mind (enough cognition) · no authenticated outbound API in skill | Build **AFTERCUT Cut** Skill — [`research-raw/MINDS_SKILL_AFTERCUT.md`](research-raw/MINDS_SKILL_AFTERCUT.md) |
+| Guide: building-skills.md + Minds CLI | https://build.hellominds.ai/agent-md/en/docs/guides/building-skills.md |
+| Latest `minds-client-lib` | Bump to **0.1.4** (was 0.1.3) |
+| Peer (GreenRoom): `sendMessage` can hang >180s | Keep async UX · AgentRouter live parse path · optional QStash for overnight |
+
+Competitor note: GreenRoom (decision intel) asking same Mind-integral question — our moat stays DNA overnight cuts, not identity-only.
+
 ## Live smoke (2026-08-23)
 
 | Check | Result |
