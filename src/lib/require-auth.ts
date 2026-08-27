@@ -55,10 +55,3 @@ export async function redirectIfAuthed(to: "/onboarding" | "/dashboard" = "/onbo
   const session = getBridgeSession() ?? getSession();
   if (session) throw redirect({ to });
 }
-
-/** Marketing auth pages — bounce signed-in users into the app. */
-export async function redirectIfAuthed(to: "/onboarding" | "/dashboard" = "/onboarding"): Promise<void> {
-  if (typeof window === "undefined") return;
-  const session = getBridgeSession() ?? getSession();
-  if (session) throw redirect({ to });
-}

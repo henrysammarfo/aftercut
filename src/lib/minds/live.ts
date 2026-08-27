@@ -11,9 +11,10 @@ import { fetchCreatorTrends } from "../research/trends";
 import { liveChat, generatePostImage, agentRouterConfigured } from "../llm/agent-router";
 import { parseAtomizeReplyFlexible, parseProactiveReplyFlexible, stripMindHtml } from "./parse";
 import { atomizePrompt, proactivePrompt, publishDeniedPrompt, soulSyncPrompt, imageBriefPrompt } from "./prompts";
-import { requireSessionUserId } from "../assert-authed";
 import { loadBrandTenant, ensureDefaultBrand } from "../tenant-db";
 import { hasDatabase } from "@/db";
+import { getAuth } from "@/lib/auth-server";
+import { getRequestHeaders } from "@tanstack/react-start/server";
 import {
   conversationAlias,
   createLiveMindsClient,
@@ -27,6 +28,16 @@ function payload<T>(ctx: unknown): T {
     return (ctx as { data: T }).data;
   }
   return ctx as T;
+}
+
+/** Only call from createServerFn handlers. */
+async function requireSessionUserId(): Promise<string> {
+  if (!hasDatabase() || !process.env["BETTER_AUTH_SECRET"]?.trim()) {
+    throw new Error("Cloud auth required.");
+  }
+  const session = await getAuth().api.getSession({ headers: getRequestHeaders() });
+  if (!session?.user?.id) throw new Error("Sign in to continue.");
+  return session.user.id;
 }
 
 async function resolveUserMindId(userId: string): Promise<string | null> {

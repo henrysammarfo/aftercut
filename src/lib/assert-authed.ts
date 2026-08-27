@@ -1,5 +1,6 @@
 /**
- * Session-gated route assert — safe to call from route beforeLoad.
+ * Session-gated route assert — createServerFn only (safe for route beforeLoad).
+ * Do not export plain helpers that call getRequestHeaders from this file.
  */
 
 import { createServerFn } from "@tanstack/react-start";
@@ -45,13 +46,3 @@ export const assertAuthedServer = createServerFn({ method: "GET" })
       name: session.user.name ?? null,
     };
   });
-
-/** Resolve signed-in user id for Mind / LLM server fns. Throws if unsigned in cloud. */
-export async function requireSessionUserId(): Promise<string> {
-  if (!hasDatabase() || !process.env["BETTER_AUTH_SECRET"]?.trim()) {
-    throw new Error("Cloud auth required.");
-  }
-  const session = await getAuth().api.getSession({ headers: getRequestHeaders() });
-  if (!session?.user?.id) throw new Error("Sign in to continue.");
-  return session.user.id;
-}
