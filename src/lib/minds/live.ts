@@ -574,7 +574,12 @@ export const notifyLeashLive = createServerFn({ method: "POST" }).handler(
     } catch (e) {
       return { ok: false, error: e instanceof Error ? e.message : String(e) };
     }
-    const mindId = await requireLinkedMindId(userId);
+    let mindId: string;
+    try {
+      mindId = await requireLinkedMindId(userId);
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    }
     const res = await talkToDirector({
       userId,
       mindId,
