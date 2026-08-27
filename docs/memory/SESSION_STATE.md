@@ -25,7 +25,7 @@ Apply: https://dorahacks.io/hackathon/creativeminds/detail
 
 | Check | Result |
 |---|---|
-| Production | https://aftercut-sandy.vercel.app · **READY** `08f6d1f` (Mind-first harden live) |
+| Production | https://aftercut-sandy.vercel.app · **READY** `47a3089` (no soft fallbacks) |
 | Traffic | Unknown until Vercel Web Analytics enabled |
 | Offline fallback | **REMOVED** — Mind → AgentRouter (`claude-opus-5` / `gpt-5.6-sol`) → fail loud |
 | Auth gate | `requireAuth` → `assertAuthedServer` + client bridge |
