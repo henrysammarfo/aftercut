@@ -25,7 +25,7 @@ Apply: https://dorahacks.io/hackathon/creativeminds/detail
 
 | Check | Result |
 |---|---|
-| Production | https://aftercut-sandy.vercel.app — harden deploys ERROR'd until `redirectIfAuthed` dup fixed |
+| Production | https://aftercut-sandy.vercel.app · **READY** `08f6d1f` (Mind-first harden live) |
 | Traffic | Unknown until Vercel Web Analytics enabled |
 | Offline fallback | **REMOVED** — Mind → AgentRouter (`claude-opus-5` / `gpt-5.6-sol`) → fail loud |
 | Auth gate | `requireAuth` → `assertAuthedServer` + client bridge |
