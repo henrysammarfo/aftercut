@@ -59,17 +59,26 @@ Show me what this Skill can do, what it reads, and what it can change. Flag anyt
 Publish this Skill to the Bazaar as "AFTERCUT Cut" so creators can equip it.
 ```
 
-## CLI assist (agent)
+## Status (2026-08-27) — **LIVE on AFTERCUT.Director**
 
-```bash
-npx @animocabrands/minds-cli@latest doctor --pretty
-npx @animocabrands/minds-cli@latest list
-# chat / send with Builder key — guide Mind through Describe → Build it
+| Field | Value |
+|---|---|
+| Mind | `AFTERCUT.Director` · `6bf0483e-…df11` |
+| Skill name | **`creator-repurpose`** (Mind renamed from “AFTERCUT Cut”) |
+| skillId | `F287513E-F36B-1410-8466-00039CE7DF11` |
+| Equipped | `2026-08-27T12:11:57Z` · source=`mind` |
+| Build transcript | `docs/memory/research-raw/skill-build/` |
+| Alias | `aftercut-skill-build` |
+
+Invoke shape Mind confirmed:
+
+```text
+REPURPOSE
+Source: …
+Voice: …
+Examples: …
+Primary platform: …
+Live context: …
 ```
 
-## AFTERCUT app wiring after Skill ships
-
-1. Equip Skill on linked tenant Mind (Bazaar / `equip` APIs we already probe).
-2. Atomize path: talkToDirector with dump + DNA — Skill should fire as Mind ability (not a sync App invoke).
-3. Keep AgentRouter only when Mind reply won't parse — live gateway, not a fake cut.
-4. Background cycles: AFTERCUT cron/QStash OK to enqueue dumps; Mind Skill does reasoning when messaged — don't block UI 180s on one `waitForReply`.
+Studio atomize prompts now call this Skill by name, then map into Studio JSON.

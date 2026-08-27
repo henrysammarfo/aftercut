@@ -1,0 +1,9 @@
+{
+  "ok": false,
+  "status": 2,
+  "parsed": {
+    "raw": "{\n  \"ok\": false,\n  \"error\": \"user_error\",\n  \"message\": \"error: too many arguments for 'search'. Expected 1 argument but got 2.\"\n}\n"
+  },
+  "stdout": "{\n  \"ok\": false,\n  \"error\": \"user_error\",\n  \"message\": \"error: too many arguments for 'search'. Expected 1 argument but got 2.\"\n}\n",
+  "stderr": "npm warn Unknown env config \"devdir\". This will stop working in the next major version of npm.\n"
+}

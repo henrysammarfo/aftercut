@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "status": 0,
+  "parsed": {
+    "ok": true,
+    "conversation": {
+      "conversationId": "6b87513e-f36b-1410-8466-00039ce7df11",
+      "alias": "aftercut-skill-build"
+    }
+  },
+  "stdout": "{\"ok\":true,\"conversation\":{\"conversationId\":\"6b87513e-f36b-1410-8466-00039ce7df11\",\"alias\":\"aftercut-skill-build\"}}\n",
+  "stderr": "npm warn Unknown env config \"devdir\". This will stop working in the next major version of npm.\n"
+}

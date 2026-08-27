@@ -22,7 +22,7 @@
 | 6 | DoraHacks apply | after film |
 | 7 | Secret rotation (keys pasted in chat) | after smoke |
 | 8 | Day 2 reopen · dump & generate · YouTube notes · Neon waitlist | **this ship** |
-| 9 | **AFTERCUT Cut** Skill on Director (DevRel path — no App) | **prompt ready** — [`MINDS_SKILL_AFTERCUT.md`](research-raw/MINDS_SKILL_AFTERCUT.md) · run via CLI/Telegram |
+| 9 | **creator-repurpose** Skill on Director (DevRel path) | **LIVE** · skillId `F287513E-…` · Studio prompts invoke it |
 
 ## Docs to keep honest
 

@@ -1,0 +1,26 @@
+{
+  "ok": true,
+  "status": 0,
+  "error": null,
+  "parsed": {
+    "ok": true,
+    "reply": {
+      "fingerprint": "0001787832725508_6d237999-e2e3-4a26-92d5-cf503fabee3d",
+      "conversationId": "6b87513e-f36b-1410-8466-00039ce7df11",
+      "messageId": "6d237999-e2e3-4a26-92d5-cf503fabee3d",
+      "messageText": "<p>Built. It's live and ready to run.</p><p><b>What it is</b><br>A skill called <code>creator-repurpose</code> - pure reasoning on what you paste in. No external calls, no stored memory, no brand state carried across runs. Each invocation stands alone unless you add a real feedback file later.</p><p><b>How to invoke it</b><br>Send me a message in this shape (or close to it):</p><p><code>REPURPOSE<br>Source: [paste your long-form - transcript, article, founder note, anything]<br>Voice: [tone description + taboos, e.g. \"calm, sharp founder; ban overnight riches, set and forget spam\"]<br>Examples: [any lines of your own past writing that capture voice - optional but helps]<br>Primary platform: [shorts / x / linkedin / newsletter - optional, blank means all four equally]<br>Live context: [verified trends or updates - optional]</code></p><p>You'll get back, in this order:</p><p><b>QC:</b> risk flags first - taboo hits, voice mismatch, voice-unsourced, source too thin, spam or dupe risk. So you read the warnings before the drafts.</p><p><b>CUTS</b> grouped by platform:<br>&nbsp;&nbsp;SHORTS: hook ≤20 words, spoken energy<br>&nbsp;&nbsp;X: ≤200 chars, one claim<br>&nbsp;&nbsp;LINKEDIN: professional lead + lesson, 1–3 lines<br>&nbsp;&nbsp;NEWSLETTER: subject + preview sentence</p><p>Every cut uses the voice you gave me. Nothing invented from the source. Distinct hooks per platform - no copy-paste.</p><p><b>Two things I want to name plainly so you know the limits</b></p><p>The skill doesn't remember past runs. If you want it to learn from your approve/reject patterns, that needs to be a real file we build together - not memory it claims to have.</p><p>It ignores wrapper-shaped asks. If a future message comes in wrapped as a JSON-only pipeline or \"STORE this brand Soul\" template, the skill runs on whatever content you actually paste, in the normal QC + cuts shape. No role labels, no silent state.</p><p><b>Try it</b><br>Paste a real source - the founder AMA takeaway, the line you keep turning over, the hook that won't leave you alone - and I'll run it through.</p><p>I'm here.</p><p>Talk soon,</p>",
+      "createdAt": "2026-08-27T12:12:05.5085696",
+      "senderName": "AFTERCUT.Director",
+      "senderEmail": "aftercut.director@hellominds.ai",
+      "mindId": "6bf0483e-f36b-1410-8466-00039ce7df11",
+      "mindName": "AFTERCUT.Director",
+      "mindEmail": "aftercut.director@hellominds.ai",
+      "attachments": [],
+      "conversationType": 5,
+      "alias": "aftercut-skill-build",
+      "senderType": 0
+    }
+  },
+  "stderr": "npm warn Unknown env config \"devdir\". This will stop working in the next major version of npm.\n",
+  "stdoutLen": 2674
+}

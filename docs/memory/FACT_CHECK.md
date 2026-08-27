@@ -72,7 +72,7 @@ npm run minds-smoke
 | First 100 creators waitlist | **Live** — Neon `creator_waitlist` (created on first write if missing) + browser fallback. Not a hard cap of 100. |
 | Day 2 persistence demo | **In product** — Simulate Day 2 writes a memory receipt then rewrites the weakest hook |
 | Director JSON wrapper refusals | **Fixed in repo** — unique cut/Day-2 Mind channels · prose parser · AgentRouter live second path (no offline atomize) |
-| DevRel Skills path (2026-08-27) | Daniel Lin: **Apps too late**; Skills via Mind describe (no authed outbound APIs); latest client **0.1.4**; guide building-skills.md — AFTERCUT skill prompt in `research-raw/MINDS_SKILL_AFTERCUT.md` |
+| DevRel Skills path (2026-08-27) | Daniel Lin: Apps too late; Skills via Mind; client **0.1.4**. **Built:** `creator-repurpose` on AFTERCUT.Director (`F287513E-…`) — [`MINDS_SKILL_AFTERCUT.md`](research-raw/MINDS_SKILL_AFTERCUT.md) + `skill-build/` |
 
 ## Bug found + fix
 

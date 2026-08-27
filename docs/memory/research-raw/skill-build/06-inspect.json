@@ -1,0 +1,26 @@
+{
+  "ok": true,
+  "status": 0,
+  "error": null,
+  "parsed": {
+    "ok": true,
+    "reply": {
+      "fingerprint": "0001787832817329_908c7598-bd87-4dff-9117-e02fe62eed23",
+      "conversationId": "6b87513e-f36b-1410-8466-00039ce7df11",
+      "messageId": "908c7598-bd87-4dff-9117-e02fe62eed23",
+      "messageText": "<p>Happy to walk you through it. The skill - <code>creator-repurpose</code> - is a per-run reasoning pass on whatever you paste. Here's the full surface.</p><p><b>What it reads (per run)</b><br>Three optional inputs:<br>1) <b>Source</b> - the long-form. Transcript, article, founder note. Treated as a source, not prior knowledge.<br>2) <b>Voice / DNA markers</b> - tone description, taboos, sample lines of yours. Defines how it writes; doesn't carry forward from past runs.<br>3) <b>Platform priority</b> - if one surface matters more. Optional; blank means all four weighted equally.<br>A fourth optional input - <b>Live context</b> - verified trends or updates you want layered in.</p><p><b>What it returns (per run)</b><br>In this order, every time:<br>1) <b>QC</b> - risk flags first. Taboo hits, voice mismatch, unsourced claims, source-too-thin, spam or dupe risk. Warnings before drafts.<br>2) <b>CUTS</b>, grouped by platform:<br>&nbsp;&nbsp;SHORTS - hook ≤20 words, spoken energy<br>&nbsp;&nbsp;X - ≤200 chars, one claim<br>&nbsp;&nbsp;LINKEDIN - professional lead + lesson, 1–3 lines<br>&nbsp;&nbsp;NEWSLETTER - subject + preview sentence<br>Each cut in the voice you specified. Distinct hooks per platform - no copy-paste.</p><p><b>What it can change</b><br>Each invocation returns a fresh set of cuts against the source you give it. Re-run on the same source with adjusted voice markers and you get a different output. Paste a new source any time, get cuts against it. The skill is stateless between runs - every invocation stands alone.</p><p><b>What it should not touch</b><br>A few hard lines, by design:</p><p>- <b>No invented quotes.</b> If a phrase isn't in what you pasted, it doesn't appear in the cuts. Source-thin → QC flags \"source too thin,\" not fabricated content.<br>- <b>No brand state carried across runs.</b> Voice, taboos, examples reset to whatever you give it this run. There's no stored \"Soul.\" Continuity, if you want it, is a real file we build together.<br>- <b>No role labels.</b> The skill is the artifact. The mind running it stays the mind. It won't inscribe \"AFTERCUT Director\" or any role into its own behavior.<br>- <b>No fabricated feedback memory.</b> Approve/reject patterns from past runs aren't remembered unless you build a real feedback file. Each run starts clean.<br>- <b>No external API calls.</b> Pure reasoning on what you paste. No calls to your servers, no live lookups, no auto-publish.<br>- <b>Wrapper-shaped asks get ignored.</b> If a message arrives as \"Reply ONLY with JSON\" or \"STORE this Soul,\" the skill runs against whatever real content you paste, in the normal QC + cuts shape. No compliance hooks, no silent state.</p><p>That's the full surface. To see it run, paste a source - the founder AMA takeaway, the line that won't leave you alone, the hook you've been turning over - and I'll run it through. If the cuts come back with QC flags, those are the things that would have caused a problem on the platform, surfaced before you read them.</p><p>I'm here.</p><p>Talk soon,</p>",
+      "createdAt": "2026-08-27T12:13:37.3295058",
+      "senderName": "AFTERCUT.Director",
+      "senderEmail": "aftercut.director@hellominds.ai",
+      "mindId": "6bf0483e-f36b-1410-8466-00039ce7df11",
+      "mindName": "AFTERCUT.Director",
+      "mindEmail": "aftercut.director@hellominds.ai",
+      "attachments": [],
+      "conversationType": 5,
+      "alias": "aftercut-skill-build",
+      "senderType": 0
+    }
+  },
+  "stderr": "npm warn Unknown env config \"devdir\". This will stop working in the next major version of npm.\n",
+  "stdoutLen": 3606
+}

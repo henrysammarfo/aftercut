@@ -1,0 +1,22 @@
+{
+  "status": 0,
+  "parsed": {
+    "ok": true,
+    "reply": {
+      "fingerprint": "0001787833534110_a180e5db-25de-4c8a-8fde-1bde13afad71",
+      "conversationId": "6b87513e-f36b-1410-8466-00039ce7df11",
+      "messageId": "a180e5db-25de-4c8a-8fde-1bde13afad71",
+      "messageText": "<p>First real run. Here's the output shape - QC first, then cuts grouped by platform, Shorts leading since that's your primary.</p><p><b>QC:</b><br>&nbsp;&nbsp;• Taboo hits: none. The source beat doesn't include \"overnight riches,\" \"set-and-forget spam,\" or \"guaranteed virality.\" Live context (\"Creative Minds Jam judges want Mind-integral persistence, not identity-only wrappers\") doesn't trigger any bans either.<br>&nbsp;&nbsp;• Voice mismatch: none detected. The voice markers (\"calm, sharp founder\") and example cadence (\"Ship the cut. Skip the fluff.\") line up with short, imperative, two-clause sentences. Matched.<br>&nbsp;&nbsp;• Source thinness: low. Three clean beats survive - (1) the labor problem (re-cutting the same VOD across four surfaces burns hours), (2) the memory gap (tools clip once and forget the brand), (3) overnight follow-up as the real opportunity. Enough for four cuts.<br>&nbsp;&nbsp;• Dupe risk across platforms: addressed below - each cut uses a different hook shape and length envelope.<br>&nbsp;&nbsp;• Voice unsourced: no. You gave voice, taboos, and examples.<br>&nbsp;&nbsp;• Spam risk: low. No \"set and forget\" framing, no virality promise, no identical captions.</p><p><b>CUTS</b></p><p>SHORTS (primary):<br>&nbsp;&nbsp;Hook: <i>\"You don't have a content problem. You have a memory problem. Ship the cut, remember the brand.\"</i> - 18 words, spoken energy, lands on the contrast.</p><p>X:<br>&nbsp;&nbsp;<i>One VOD, four surfaces, zero copy-paste. Tools that clip once and forget your DNA aren't tools - they're clipboards with attitude.</i> (178 chars, one claim about the gap, no padding)</p><p>LINKEDIN:<br>&nbsp;&nbsp;<i>Most creator tools solve the wrong problem. They clip your long-form once and call it done - but they forget your brand the moment the file's exported.<br><br>The real gap isn't the cut. It's the overnight follow-up: does the next draft still sound like you, or does it sound like a template?<br><br>Memory is the moat. Not speed.</i></p><p>NEWSLETTER:<br>&nbsp;&nbsp;Subject: <i>You don't have a content problem. You have a memory problem.</i><br>&nbsp;&nbsp;Preview: <i>One founder AMA, four native surfaces, and the part no clipper gets right - what stays the same between them.</i></p><p><b>Notes on what I changed and why</b><br>- Shorts leads because you marked it primary. The 18-word hook contrasts \"content problem\" vs \"memory problem\" - closer to your voice than a generic \"three lessons\" opener.<br>- The LinkedIn post is the longest by design - that surface reads at length, and the lesson is the actual claim. Three short lines, no TikTok slang.<br>- The X post is two sentences, one beat (the clip-once-and-forget gap), 178 chars.<br>- The newsletter subject matches the Shorts hook deliberately - same line, different surface read as a deliberate echo, not a copy-paste. If you want it distinct from Shorts, swap one and I'll re-run.<br>- I did <b>not</b> use the live context in the cuts themselves - \"Creative Minds Jam judges want Mind-integral persistence\" is meta-context about judging criteria, not a beat the audience reads in a Shorts caption. Flag if you want it surfaced somewhere; default was to leave it out.</p><p><b>Distinctness check:</b> Shorts and Newsletter share the opening line intentionally (see note). X and LinkedIn open differently. Length envelopes are distinct: 18 words / 178 chars / ~70 words / subject + preview. No verbatim cross-platform duplicates outside the deliberate Shorts↔Newsletter echo.</p><p>Try it - paste the next source when you have one, or tell me which of these to push on and what feels off.</p><p>Talk soon,</p>",
+      "createdAt": "2026-08-27T12:25:34.1102614",
+      "senderName": "AFTERCUT.Director",
+      "senderEmail": "aftercut.director@hellominds.ai",
+      "mindId": "6bf0483e-f36b-1410-8466-00039ce7df11",
+      "mindName": "AFTERCUT.Director",
+      "mindEmail": "aftercut.director@hellominds.ai",
+      "attachments": [],
+      "conversationType": 5,
+      "alias": "aftercut-skill-build",
+      "senderType": 0
+    }
+  }
+}

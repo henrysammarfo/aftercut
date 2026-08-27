@@ -1,0 +1,26 @@
+{
+  "ok": true,
+  "status": 0,
+  "error": null,
+  "parsed": {
+    "ok": true,
+    "reply": {
+      "fingerprint": "0001787832604197_9ef52ca7-6b88-4fe2-a67b-94151cca2351",
+      "conversationId": "6b87513e-f36b-1410-8466-00039ce7df11",
+      "messageId": "9ef52ca7-6b88-4fe2-a67b-94151cca2351",
+      "messageText": "<p>Clean adjustments - all three land.</p><p><b>Group cuts by platform</b> means moving from a flat list to platform-grouped structure: Shorts together, X together, LinkedIn together, newsletter together. Easier to scan per surface, easier to approve one platform at a time.</p><p><b>Shorts hook under 20 words</b> is the more native metric anyway - TikTok and Reels are spoken, and word count is how creators actually think about them. Roughly the same energy envelope as ≤90 chars, just counted in words instead of characters.</p><p><b>Flag taboo hits before the cuts</b> moves QC to the top of the output. Anything risky surfaces before you read the drafts - saves the back-and-forth of scrolling past cuts to find a flag at the bottom.</p><p>Updated output shape:</p><p>QC: [one line - taboo hits, spam risk, dupe risk, voice mismatch]<br><br>CUTS:<br>&nbsp;&nbsp;SHORTS:<br>&nbsp;&nbsp;&nbsp;&nbsp;- Hook (≤20 words, spoken energy)<br>&nbsp;&nbsp;X:<br>&nbsp;&nbsp;&nbsp;&nbsp;- Post (≤200 chars, one claim)<br>&nbsp;&nbsp;LINKEDIN:<br>&nbsp;&nbsp;&nbsp;&nbsp;- Post (professional lead + lesson)<br>&nbsp;&nbsp;NEWSLETTER:<br>&nbsp;&nbsp;&nbsp;&nbsp;- Subject + preview line</p><p>I still have the two open questions from my last note - name (working name \"creator-repurpose,\" or pick together?) and reference tone (use the six CD18493E drafts as voice default, or start clean with no carryover from unconfirmed brand state?).</p><p>If you want me to start building now with my proposed working defaults, say the word - I'll use \"creator-repurpose\" as the working name and a clean voice default, and we can rename and retune once you've seen it run on real input.</p><p>Talk soon,</p>",
+      "createdAt": "2026-08-27T12:10:04.1979474",
+      "senderName": "AFTERCUT.Director",
+      "senderEmail": "aftercut.director@hellominds.ai",
+      "mindId": "6bf0483e-f36b-1410-8466-00039ce7df11",
+      "mindName": "AFTERCUT.Director",
+      "mindEmail": "aftercut.director@hellominds.ai",
+      "attachments": [],
+      "conversationType": 5,
+      "alias": "aftercut-skill-build",
+      "senderType": 0
+    }
+  },
+  "stderr": "npm warn Unknown env config \"devdir\". This will stop working in the next major version of npm.\n",
+  "stdoutLen": 2241
+}
