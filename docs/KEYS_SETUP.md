@@ -195,12 +195,11 @@ Or push to `main` via Lovable sync if connected.
 | `RESEND_API_KEY` | Recommended | Reset · welcome · invite · overnight · ship · cognition |
 | `TOKEN_ENCRYPTION_KEY` | **Prod+Preview set** | AES for OAuth tokens (scrypt); else `BETTER_AUTH_SECRET` |
 | `TELEGRAM_BOT_TOKEN` | **Prod+Preview set** | BotFather token |
-| `TELEGRAM_DEFAULT_USER_ID` | Optional jam fallback | Only if chat id not linked yet — set after first signup (Settings shows user id) |
+| `TELEGRAM_DEFAULT_USER_ID` | Optional jam fallback | After first signup — Settings shows your user id |
 | `CURSOR_API_KEY` | Film only | Cloud Agent demo video — `npm run cloud:film` |
 | `GOOGLE_CLIENT_ID/SECRET` | For Calendar | Google OAuth |
 | `TAVILY_API_KEY` | Optional | Trend context |
 | `TELEGRAM_WEBHOOK_SECRET` | For TG import | Webhook auth |
-| `TELEGRAM_DEFAULT_USER_ID` | For TG import | Map bot → user |
 
 ---
 
