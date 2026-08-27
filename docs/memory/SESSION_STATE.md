@@ -26,6 +26,9 @@ Apply: https://dorahacks.io/hackathon/creativeminds/detail
 | Check | Result |
 |---|---|
 | Production | https://aftercut-sandy.vercel.app · **READY** `47a3089` (no soft fallbacks) |
+| Marketing vs app | `/pitch` + `/privacy` use **MarketingShell** (SiteNav) — not AppShell · First 100 removed from app sidebar |
+| Sidebar | Scrollable · Connect Mind CTA · Signed-in only when session exists |
+| Favicon / OG | Regenerated `favicon.ico` from AFTERCUT mark · `site.webmanifest` name AFTERCUT |
 | Traffic | Unknown until Vercel Web Analytics enabled |
 | Offline fallback | **REMOVED** — Mind → AgentRouter (`claude-opus-5` / `gpt-5.6-sol`) → fail loud |
 | Auth gate | `requireAuth` → `assertAuthedServer` + client bridge |
@@ -46,7 +49,7 @@ Creator pain research: [`research-raw/creator-pain-2026-08-27.md`](research-raw/
 | Guide: building-skills.md + Minds CLI | https://build.hellominds.ai/agent-md/en/docs/guides/building-skills.md |
 | Latest `minds-client-lib` | **0.1.4** live |
 | Peer (GreenRoom): `sendMessage` can hang >180s | Keep async UX · AgentRouter live parse path · optional QStash for overnight |
-| **Skill built** | **`creator-repurpose`** equipped on AFTERCUT.Director · skillId `F287513E-…DF11` · transcript `research-raw/skill-build/` |
+| **Skill built** | **`creator-repurpose`** equipped + **Bazaar listed** · skillId `F287513E-…DF11` · transcript `research-raw/skill-build/` |
 
 Competitor note: GreenRoom (decision intel) asking same Mind-integral question — our moat stays DNA overnight cuts, not identity-only.
 

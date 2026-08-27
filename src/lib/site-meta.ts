@@ -34,8 +34,9 @@ export function defaultHeadMeta(): Array<
     { title: `${SITE_NAME} — ${SITE_TAGLINE}` },
     { name: "description", content: DEFAULT_DESCRIPTION },
     { name: "author", content: SITE_NAME },
-    { property: "og:type", content: "website" },
-    { property: "og:site_name", content: SITE_NAME },
+    { name: "application-name", content: SITE_NAME },
+    { name: "apple-mobile-web-app-title", content: SITE_NAME },
+    { property: "og:type", content: "website" },    { property: "og:site_name", content: SITE_NAME },
     { property: "og:url", content: siteUrl },
     { property: "og:title", content: `${SITE_NAME} — the editor that never forgets` },
     { property: "og:description", content: DEFAULT_DESCRIPTION },
@@ -53,8 +54,9 @@ export function defaultHeadMeta(): Array<
 export function defaultHeadLinks() {
   return [
     { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
-    { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+    { rel: "icon", href: "/favicon.ico", type: "image/x-icon", sizes: "any" },
     { rel: "icon", href: "/brand/aftercut-logo-200.png", type: "image/png", sizes: "200x200" },
     { rel: "apple-touch-icon", href: "/brand/aftercut-logo-512.png", sizes: "512x512" },
+    { rel: "manifest", href: "/site.webmanifest" },
   ];
 }

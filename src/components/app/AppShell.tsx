@@ -6,12 +6,13 @@ import {
   Inbox,
   KanbanSquare,
   History,
-  Sparkles,
   Shirt,
   LogOut,
   Users,
   ListChecks,
   Settings,
+  LogIn,
+  Brain,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { BrandSwitcher } from "@/components/app/BrandSwitcher";
@@ -21,6 +22,7 @@ import { friendlyError, mindLabel } from "@/lib/display";
 import { cognitionWarningLevel } from "@/lib/minds/retry";
 import { notifyCognitionLow } from "@/lib/tenant-cloud";
 
+/** App routes only — marketing (First 100 / pricing) stays on SiteNav. */
 const nav = [
   { to: "/onboarding" as const, label: "Get started", icon: ListChecks },
   { to: "/dashboard" as const, label: "Dashboard", icon: LayoutDashboard },
@@ -31,7 +33,6 @@ const nav = [
   { to: "/circle" as const, label: "Agent team", icon: Users },
   { to: "/settings" as const, label: "Settings", icon: Settings },
   { to: "/merch" as const, label: "Brand assets", icon: Shirt },
-      { to: "/pitch" as const, label: "First 100", icon: Sparkles },
 ];
 
 export function AppShell({
@@ -47,8 +48,7 @@ export function AppShell({
   children: ReactNode;
   showSetupProgress?: boolean;
 }) {
-  const { session, tenant, signOut, setCognitionNote, productMode, health, mindStatus, mindLoading } =
-    useAuth();
+  const { session, tenant, signOut, setCognitionNote, health, mindStatus, mindLoading } = useAuth();
   const navigate = useNavigate();
   const [note, setNote] = useState(tenant?.cognitionNote ?? "");
 
@@ -71,41 +71,60 @@ export function AppShell({
     void notifyCognitionLow({ data: { cognition: mindStatus.cognition } });
   }, [session?.email, session?.userId, mindStatus?.ok, mindStatus?.cognition]);
 
-  const mindBadge = mindStatus?.ok
-    ? `${mindLabel(mindStatus.mindName)}${mindStatus.cognition != null ? ` · ${Math.round(mindStatus.cognition)} credits` : ""}`
+  const linkedMindId = tenant?.integrations?.mindId?.trim() || mindStatus?.linkedMindId;
+  const mindReady = Boolean(mindStatus?.ok && linkedMindId);
+
+  const statusTitle = mindReady
+    ? `${mindLabel(mindStatus!.mindName)}${
+        mindStatus!.cognition != null ? ` · ${Math.round(mindStatus!.cognition)} credits` : ""
+      }${health?.kitReady ? " · brand ready" : " · finish brand voice"}`
     : mindLoading
-      ? "Connecting…"
+      ? "Connecting to Minds…"
       : mindStatus && !mindStatus.ok
-        ? "Offline"
-        : "Not connected";
+        ? friendlyError(mindStatus.error ?? "Mind offline")
+        : "Connect your Mind to cut";
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="mx-auto flex max-w-[1500px] flex-col lg:flex-row">
-        <aside className="border-b border-white/10 px-5 py-5 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r lg:px-6 lg:py-8">
-          <Link to="/" className="text-foreground">
+        <aside className="flex flex-col border-b border-white/10 px-5 py-5 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:shrink-0 lg:overflow-y-auto lg:border-b-0 lg:border-r lg:px-6 lg:py-8">
+          <Link to="/" className="shrink-0 text-foreground">
             <Logo />
           </Link>
-          <p className="mt-3 inline-flex max-w-full items-center rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground">
-            <span className="truncate">
-              Connected · {mindBadge}
-              {health?.kitReady ? " · brand ready" : " · finish brand voice"}
-            </span>
-          </p>
-          {mindStatus && !mindStatus.ok ? (
-            <p className="mt-2 text-[10px] leading-snug text-red-300/90">
-              {friendlyError(mindStatus.error ?? "Not connected")}
+
+          {mindReady ? (
+            <p
+              className="mt-3 line-clamp-2 rounded-md border border-white/10 bg-white/[0.04] px-2 py-1.5 text-[10px] leading-snug text-muted-foreground"
+              title={statusTitle}
+            >
+              {statusTitle}
             </p>
-          ) : mindStatus?.ok && cognitionWarningLevel(mindStatus.cognition) === "critical" ? (
+          ) : (
+            <Link
+              to="/settings"
+              hash="connect-mind"
+              className="mt-3 flex items-start gap-2 rounded-md border border-amber-400/25 bg-amber-400/10 px-2.5 py-2 text-[11px] leading-snug text-amber-100/90 transition-colors hover:bg-amber-400/15"
+              title={statusTitle}
+            >
+              <Brain className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <span>
+                <span className="font-medium text-amber-50">Connect Mind</span>
+                <span className="mt-0.5 block text-amber-100/70">
+                  Paste your Mind ID — your producer for overnight cuts.
+                </span>
+              </span>
+            </Link>
+          )}
+
+          {mindStatus?.ok && cognitionWarningLevel(mindStatus.cognition) === "critical" ? (
             <p className="mt-2 text-[10px] leading-snug text-amber-300/90">
               Agent credits critically low — top up on hellominds.ai
             </p>
           ) : mindStatus?.ok && cognitionWarningLevel(mindStatus.cognition) === "low" ? (
-            <p className="mt-2 text-[10px] leading-snug text-amber-200/80">
-              Agent credits running low
-            </p>
+            <p className="mt-2 text-[10px] leading-snug text-amber-200/80">Agent credits running low</p>
           ) : null}
-          <nav className="mt-6 flex gap-1 overflow-x-auto lg:mt-10 lg:flex-col lg:overflow-visible">
+
+          <nav className="mt-6 flex gap-1 overflow-x-auto lg:mt-8 lg:flex-col lg:overflow-visible">
             {nav.map(({ to, label, icon: Icon }) => (
               <Link
                 key={to}
@@ -121,55 +140,79 @@ export function AppShell({
           </nav>
 
           <div className="mt-8 hidden space-y-4 lg:block">
-            <BrandSwitcher />
-            <div className="rounded-2xl bg-white/[0.06] p-4 backdrop-blur-lg">
-              <p className="text-xs text-muted-foreground">Signed in</p>
-              <p className="mt-1 truncate text-sm font-medium">
-                {session?.name || session?.email || "Creator"}
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  signOut();
-                  void navigate({ to: "/" });
-                }}
-                className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <LogOut className="h-3.5 w-3.5" /> Sign out
-              </button>
-            </div>
+            {session ? <BrandSwitcher /> : null}
 
-            <div className="rounded-2xl bg-white/[0.06] p-4 backdrop-blur-lg">
-              <p className="text-xs text-muted-foreground">Notes for your agent</p>
-              <textarea
-                rows={3}
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                onBlur={() => {
-                  if (note !== (tenant?.cognitionNote ?? "")) setCognitionNote(note);
-                }}
-                placeholder="Optional instructions your agent should remember…"
-                className="mt-2 w-full resize-none rounded-xl border border-white/10 bg-transparent px-3 py-2 text-xs outline-none placeholder:text-muted-foreground focus:border-white/25"
-              />
-            </div>
+            {session ? (
+              <div className="rounded-2xl bg-white/[0.06] p-4 backdrop-blur-lg">
+                <p className="text-xs text-muted-foreground">Signed in</p>
+                <p className="mt-1 truncate text-sm font-medium">
+                  {session.name || session.email || "Creator"}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    signOut();
+                    void navigate({ to: "/" });
+                  }}
+                  className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <LogOut className="h-3.5 w-3.5" /> Sign out
+                </button>
+              </div>
+            ) : (
+              <div className="rounded-2xl bg-white/[0.06] p-4 backdrop-blur-lg">
+                <p className="text-xs text-muted-foreground">Account</p>
+                <p className="mt-1 text-sm font-medium">Sign in to cut</p>
+                <Link
+                  to="/login"
+                  className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <LogIn className="h-3.5 w-3.5" /> Sign in
+                </Link>
+              </div>
+            )}
+
+            {session ? (
+              <div className="rounded-2xl bg-white/[0.06] p-4 backdrop-blur-lg">
+                <p className="text-xs text-muted-foreground">Notes for your agent</p>
+                <textarea
+                  rows={3}
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  onBlur={() => {
+                    if (note !== (tenant?.cognitionNote ?? "")) setCognitionNote(note);
+                  }}
+                  placeholder="Optional instructions your agent should remember…"
+                  className="mt-2 w-full resize-none rounded-xl border border-white/10 bg-transparent px-3 py-2 text-xs outline-none placeholder:text-muted-foreground focus:border-white/25"
+                />
+              </div>
+            ) : null}
           </div>
         </aside>
 
         <main className="min-w-0 flex-1 px-5 py-8 sm:px-8 lg:px-12 lg:py-12">
           <div className="mb-6 flex items-center justify-between gap-3 lg:hidden">
-            <p className="truncate text-sm text-muted-foreground">
-              {session?.name || session?.email}
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                signOut();
-                void navigate({ to: "/" });
-              }}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground"
-            >
-              <LogOut className="h-3.5 w-3.5" /> Sign out
-            </button>
+            {session ? (
+              <>
+                <p className="truncate text-sm text-muted-foreground">
+                  {session.name || session.email}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    signOut();
+                    void navigate({ to: "/" });
+                  }}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground"
+                >
+                  <LogOut className="h-3.5 w-3.5" /> Sign out
+                </button>
+              </>
+            ) : (
+              <Link to="/login" className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <LogIn className="h-3.5 w-3.5" /> Sign in
+              </Link>
+            )}
           </div>
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
@@ -200,9 +243,7 @@ export function GlassCard({
   children: ReactNode;
 }) {
   return (
-    <div
-      className={`rounded-2xl bg-white/[0.06] p-5 backdrop-blur-lg sm:p-6 ${className ?? ""}`}
-    >
+    <div className={`rounded-2xl bg-white/[0.06] p-5 backdrop-blur-lg sm:p-6 ${className ?? ""}`}>
       {children}
     </div>
   );

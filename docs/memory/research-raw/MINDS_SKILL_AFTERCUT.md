@@ -67,6 +67,7 @@ Publish this Skill to the Bazaar as "AFTERCUT Cut" so creators can equip it.
 | Skill name | **`creator-repurpose`** (Mind renamed from “AFTERCUT Cut”) |
 | skillId | `F287513E-F36B-1410-8466-00039CE7DF11` |
 | Equipped | `2026-08-27T12:11:57Z` · source=`mind` |
+| **Bazaar** | **Listed** `isListed: true` · searchable as `creator-repurpose` · equippedCount 1 |
 | Build transcript | `docs/memory/research-raw/skill-build/` |
 | Alias | `aftercut-skill-build` |
 

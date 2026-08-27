@@ -80,6 +80,80 @@ function SettingsPage() {
       }
     >
       <div className="grid gap-4 lg:grid-cols-2">
+        <div id="connect-mind" className="scroll-mt-24 lg:col-span-2">
+          <GlassCard>
+            <h2 className="text-sm font-semibold">Connect Mind</h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Your Mind is the producer — it holds brand DNA, runs overnight cuts, and remembers
+              approve/reject feedback. Bring your own Mind from hellominds; AFTERCUT never uses a
+              shared demo agent for your work.
+            </p>
+            <ol className="mt-4 list-decimal space-y-2 pl-5 text-xs text-muted-foreground">
+              <li>
+                Don&apos;t have a Mind yet?{" "}
+                <a
+                  href="https://hellominds.ai"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-foreground underline underline-offset-2"
+                >
+                  Awaken one on hellominds.ai
+                </a>
+                , then come back here.
+              </li>
+              <li>
+                Copy your Mind UUID from{" "}
+                <a
+                  href="https://build.hellominds.ai"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-foreground underline underline-offset-2"
+                >
+                  build.hellominds.ai
+                </a>
+                .
+              </li>
+              <li>Paste it below and connect — Studio cuts run on that Mind only.</li>
+            </ol>
+            <input
+              className="mt-4 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm"
+              placeholder="Mind UUID (e.g. 6bf0483e-…)"
+              value={mindId}
+              onChange={(e) => setMindId(e.target.value)}
+            />
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                className="rounded-full px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+                style={{ background: "linear-gradient(to bottom, #2B2B2B, #101010)" }}
+                onClick={async () => {
+                  const res = await saveIntegrations({ mindId: mindId.trim() });
+                  flash(
+                    res.ok ? "Mind connected." : res.error || "Could not connect Mind.",
+                    !res.ok,
+                  );
+                }}
+              >
+                Connect Mind
+              </button>
+              <a
+                href="https://hellominds.ai"
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+              >
+                Need a Mind? Open hellominds →
+              </a>
+            </div>
+            {tenant?.integrations?.mindId ? (
+              <p className="mt-3 break-all text-[10px] text-muted-foreground">
+                Linked:{" "}
+                <code className="rounded bg-white/10 px-1">{tenant.integrations.mindId}</code>
+              </p>
+            ) : null}
+          </GlassCard>
+        </div>
+
         <GlassCard>
           <h2 className="text-sm font-semibold">Password reset email</h2>
           <p className="mt-2 text-xs text-muted-foreground">
@@ -218,30 +292,6 @@ function SettingsPage() {
             }}
           >
             Save LinkedIn token
-          </button>
-        </GlassCard>
-
-        <GlassCard>
-          <h2 className="text-sm font-semibold">Link your Mind</h2>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Required. Paste your hellominds Mind UUID from build.hellominds.ai. Cuts, Soul memory,
-            cognition, and stills run on <em>your</em> Mind — not a shared demo agent.
-          </p>
-          <input
-            className="mt-3 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs"
-            placeholder="Mind UUID"
-            value={mindId}
-            onChange={(e) => setMindId(e.target.value)}
-          />
-          <button
-            type="button"
-            className="mt-2 rounded-full bg-white/10 px-4 py-2 text-xs hover:bg-white/15"
-            onClick={async () => {
-              const res = await saveIntegrations({ mindId: mindId.trim() });
-              flash(res.ok ? "Mind linked." : res.error || "Could not link Mind.", !res.ok);
-            }}
-          >
-            Save Mind link
           </button>
         </GlassCard>
 

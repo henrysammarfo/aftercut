@@ -1,0 +1,29 @@
+{
+  "name": "AFTERCUT",
+  "short_name": "AFTERCUT",
+  "description": "The editor that never forgets your creative DNA",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0b",
+  "theme_color": "#0a0a0b",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/aftercut-logo-200.png",
+      "type": "image/png",
+      "sizes": "200x200",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/aftercut-logo-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    }
+  ]
+}
