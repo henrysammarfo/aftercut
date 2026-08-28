@@ -257,7 +257,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             name: input.name,
           });
           if (res.error) {
-            return { ok: false, error: friendlyError(res.error.message ?? "Sign up failed") };
+            const msg = res.error.message ?? "Sign up failed";
+            // User row may exist from a prior half-failed signup — try sign-in.
+            if (/already|exist/i.test(msg)) {
+              const signed = await authClient.signIn.email({
+                email: input.email,
+                password: input.password,
+              });
+              if (!signed.error) return { ok: true };
+              return {
+                ok: false,
+                error:
+                  "An account with this email already exists. Sign in with that password, or use Forgot password.",
+              };
+            }
+            return { ok: false, error: friendlyError(msg) };
           }
           return { ok: true };
         }
