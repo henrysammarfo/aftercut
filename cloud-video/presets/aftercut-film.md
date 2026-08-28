@@ -30,7 +30,7 @@ Film a **judge-ready product demo** of AFTERCUT live on the desktop browser. Vie
 2. `npm install`
 3. `npx tsx scripts/minds-smoke.ts` → must show `ok: true`, Director enabled.
 4. `npm run dev` — wait until Local URL is ready.
-5. Open Chromium/Chrome **maximized** to that URL (usually `http://localhost:5173`).
+5. Open Chromium/Chrome **maximized** to the Local URL printed by `npm run dev` (often `http://localhost:8080`, not 5173).
 6. Confirm landing hero + “aftercut” wordmark are fully visible, then **start the video Artifact**.
 
 ---
@@ -41,17 +41,17 @@ Use a unique signup: email `film+cloud{timestamp}@example.com` · password `Film
 
 | Time | Path | Action on screen |
 |---|---|---|
-| 0:00 | `/` | Hold on landing 2s. Show hero: “Ship cuts that grind while you rest”. |
-| 0:12 | Sign up | Click **Get started** / **Sign up**. Fill name `Northline`, email, password. Submit. |
-| 0:28 | `/brand-kit` or onboarding → brand | Set brand **Northline Studio**. Tone: calm, sharp founder. Ban phrases: overnight riches, set and forget spam, guaranteed virality. **Save** + **sync Soul** if button present. Wait until success/status updates. |
-| 0:48 | `/ingest` | Paste the long-form below. Queue / add. Click **Live atomize** (or generate drafts). Wait until Studio drafts appear. |
+| 0:00 | `/` | Hold on landing 2s. Show hero: “Ship cuts that grind while you rest”. Skip the waitlist form. |
+| 0:12 | Sign up | Click **Get started free** (hero) or nav **Get started**. Fill name `Northline`, email, password. Submit. |
+| 0:28 | `/onboarding` or `/brand-kit` | Brand **Northline Studio**. Tone: calm, sharp founder. Ban phrases: overnight riches, set and forget spam, guaranteed virality. Click **Save brand voice**. Wait until toast/status updates. |
+| 0:48 | `/ingest` | Paste the long-form below. Click **Dump & generate** (not only Add to queue). Wait until drafts are ready, then **Open Studio**. |
 | 1:05 | `/studio` | Show kanban cards. Advance one card stage if needed. Scroll so cards fill the frame. |
-| 1:18 | Studio | Click **Post everything now** (or bulk publish). Show **PUBLISH DENIED** / leash messaging clearly. Pause 2s on the deny state. |
-| 1:30 | Studio | Click **Live Day-2 follow-up** / proactive rewrite. Wait for improved hook in Needs approval. |
+| 1:18 | Studio | Click **Publish all now**. Show **Publishing blocked** / amber leash clearly. Pause 2s on the deny state. |
+| 1:30 | Studio | Click **Simulate Day 2**. Wait for the Day 2 banner / improved hook in Needs approval. |
 | 1:42 | `/timeline` | Open Activity; show receipts. |
 | 1:50 | `/circle` | Open Agent team; show Director / cognition if visible. Hold 2s. End. |
 
-If a button label differs slightly, choose the closest primary action that matches the beat — do not invent features.
+If a button label differs slightly, choose the closest primary action that matches the beat — do not invent features. Never fill the First 100 email form; that is not a film beat.
 
 ---
 

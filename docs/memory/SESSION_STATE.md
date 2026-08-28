@@ -62,7 +62,7 @@ Competitor note: GreenRoom (decision intel) asking same Mind-integral question �
 | Production `/` + `/privacy` | **HTTP 200** |
 | Vercel prod deploy | **cd2fa56** (Resend SDK) via GitHub |
 | Telegram webhook | set → `/api/webhooks/telegram` · bot `8840245437` |
-| Neon users | **0** until first signup → TG ingest blocked |
+| Neon users | Auth fixed 2026-08-28 — Better Auth 1.7 `account.issuer` migrated · orphan half-signups cleared · prod READY `3ffa375` |
 | Film / DoraHacks apply | **shooting now** — Cloud Agent [`bc-55d8923b…`](https://cursor.com/agents/bc-55d8923b-9ad5-4976-aa5e-3d0eece5e8c2) (composer-2.5 · Computer Use + video Artifacts) |
 
 ### Shipped this batch (repo + deploy)
