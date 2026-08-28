@@ -14,7 +14,7 @@ export function BrandSwitcher() {
     <div className="rounded-2xl bg-white/[0.06] p-3 backdrop-blur-lg">
       <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Active brand</p>
       <select
-        className="mt-2 w-full rounded-lg border border-white/10 bg-black/30 px-2 py-1.5 text-xs"
+        className="mt-2 w-full rounded-lg border border-white/10 bg-[#1a1a1a] px-2 py-1.5 text-xs text-foreground"
         value={activeBrandId ?? ""}
         disabled={busy || brands.length === 0}
         onChange={(e) => {

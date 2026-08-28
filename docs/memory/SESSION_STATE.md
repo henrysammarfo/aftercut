@@ -62,8 +62,8 @@ Competitor note: GreenRoom (decision intel) asking same Mind-integral question �
 | Production `/` + `/privacy` | **HTTP 200** |
 | Vercel prod deploy | **cd2fa56** (Resend SDK) via GitHub |
 | Telegram webhook | set → `/api/webhooks/telegram` · bot `8840245437` |
-| Neon users | Auth fixed 2026-08-28 — Better Auth 1.7 `account.issuer` migrated · orphan half-signups cleared · prod READY `3ffa375` |
-| Film / DoraHacks apply | **shooting now** — Cloud Agent [`bc-55d8923b…`](https://cursor.com/agents/bc-55d8923b-9ad5-4976-aa5e-3d0eece5e8c2) (composer-2.5 · Computer Use + video Artifacts) |
+| Neon users | Auth fixed · Dump&generate alias bug fixed 2026-08-28 (`conversationAlias` ≤64) · dark select CSS |
+| Film / DoraHacks apply | **Henry filming live** — word-for-word script [`docs/FILM_DEMO.md`](../FILM_DEMO.md) · Settings X/TG/Google · brand switcher · dump+image · Studio leash · Day 2 |
 
 ### Shipped this batch (repo + deploy)
 

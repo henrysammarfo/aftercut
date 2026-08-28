@@ -403,7 +403,10 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
     });
     const trendsSummary = trends.ok ? trends.summary : undefined;
 
-    const runId = data.ingestId ? `ingest-${data.ingestId}` : `atomize-${Date.now()}`;
+    // Short run ids — conversationAlias must stay ≤64 for Minds API.
+    const runId = data.ingestId
+      ? `i${data.ingestId.replace(/[^a-zA-Z0-9]/g, "").slice(-10)}`
+      : `a${Date.now().toString(36)}`;
     let mindId: string;
     try {
       mindId = await requireLinkedMindId(userId);
@@ -413,7 +416,7 @@ export const atomizeLive = createServerFn({ method: "POST" }).handler(
     const res = await talkToDirector({
       userId,
       mindId,
-      channel: `cut-${runId}`.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 28),
+      channel: `c${runId}`.slice(0, 12),
       messageText: atomizePrompt({
         kit: data.kit,
         title: data.title,
@@ -513,7 +516,7 @@ export const proactiveLive = createServerFn({ method: "POST" }).handler(
       return { ok: false, error: e instanceof Error ? e.message : String(e) };
     }
 
-    const runId = `day2-${Date.now()}`;
+    const runId = `d${Date.now().toString(36)}`;
     let mindId: string;
     try {
       mindId = await requireLinkedMindId(userId);
@@ -523,7 +526,7 @@ export const proactiveLive = createServerFn({ method: "POST" }).handler(
     const res = await talkToDirector({
       userId,
       mindId,
-      channel: runId,
+      channel: runId.slice(0, 12),
       messageText: proactivePrompt({ ...data, runId }),
       timeoutMs: 150_000,
     });
@@ -633,7 +636,7 @@ export const generateDraftImageLive = createServerFn({ method: "POST" }).handler
     const briefRes = await talkToDirector({
       userId,
       mindId,
-      channel: `img-${Date.now()}`.slice(0, 28),
+      channel: `img${Date.now().toString(36)}`.slice(0, 12),
       messageText: imageBriefPrompt({
         kit: data.kit,
         title: data.title,

@@ -114,12 +114,22 @@ export async function resolveDirectorMind(
   return hit;
 }
 
+/** Minds API rejects aliases longer than 64 characters. */
+const ALIAS_MAX = 64;
+
 /** Main thread (soul / transcript / leash). Pass `channel` to isolate JSON-cut jobs. */
 export function conversationAlias(userId: string, channel?: string): string {
-  const clean = userId.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40) || "user";
-  if (!channel?.trim()) return `${ALIAS_PREFIX}_${clean}`;
-  const ch = channel.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 28);
-  return `${ALIAS_PREFIX}_${clean}_${ch}`.slice(0, 90);
+  const clean = userId.replace(/[^a-zA-Z0-9_-]/g, "") || "user";
+  if (!channel?.trim()) {
+    // aftercut_ + user ≤ 64
+    return `${ALIAS_PREFIX}_${clean}`.slice(0, ALIAS_MAX);
+  }
+  // Keep channel short so long Better Auth userIds still fit under 64.
+  const ch = channel.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 12);
+  const prefix = `${ALIAS_PREFIX}_`;
+  const suffix = `_${ch}`;
+  const userBudget = Math.max(8, ALIAS_MAX - prefix.length - suffix.length);
+  return `${prefix}${clean.slice(0, userBudget)}${suffix}`.slice(0, ALIAS_MAX);
 }
 
 export type MindTalkResult =

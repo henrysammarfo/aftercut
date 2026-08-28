@@ -115,7 +115,7 @@ function BrandKitPage() {
             <label className="flex flex-col gap-2 text-xs text-muted-foreground">
               Primary platform
               <select
-                className={field}
+                className={`${field} bg-[#1a1a1a] text-foreground`}
                 value={kit.primaryPlatform ?? ""}
                 onChange={(e) => update({ primaryPlatform: e.target.value })}
               >

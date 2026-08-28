@@ -32,12 +32,20 @@ export const Route = createFileRoute("/ingest")({
 });
 
 const sources = [
-  { icon: Film, title: "Drop a video", detail: "VOD, stream export, Reel, short — we grab a still" },
-  { icon: ImageIcon, title: "Drop an image", detail: "Thumbnail, carousel still, or poster frame" },
-  { icon: FileText, title: "Paste transcript", detail: "Captions or notes alongside the file" },
-  { icon: Send, title: "From Telegram", detail: "Paste messages from your connected bot" },
-  { icon: Link2, title: "YouTube notes", detail: "Chapters or bullet notes from a URL" },
+  { icon: Film, title: "Drop a video", source: "Video upload", detail: "VOD, stream export, Reel, short — we grab a still" },
+  { icon: ImageIcon, title: "Drop an image", source: "Image upload", detail: "Thumbnail, carousel still, or poster frame" },
+  { icon: FileText, title: "Paste transcript", source: "Transcript paste", detail: "Captions or notes alongside the file" },
+  {
+    icon: Send,
+    title: "From Telegram",
+    source: "From Telegram",
+    detail: "Link chat id in Settings — bot messages land in Recent imports. Or paste a TG dump here.",
+  },
+  { icon: Link2, title: "YouTube notes", source: "YouTube notes", detail: "Paste a YouTube URL — we pull title + channel" },
 ];
+
+const selectField =
+  "mt-3 w-full rounded-xl border border-white/10 bg-[#1a1a1a] px-4 py-3 text-sm text-foreground outline-none focus:border-white/25";
 
 function Ingest() {
   const { tenant, addIngest, atomizeIngest, health, mindStatus } = useAuth();
@@ -93,7 +101,7 @@ function Ingest() {
     return { text, nextTitle: title || undefined, nextSource: source };
   };
 
-  const enqueue = async (silent: boolean) => {
+  const enqueue = async (silent: boolean, opts?: { clearForm?: boolean }) => {
     const payload = await preparePayload();
     const res = await Promise.resolve(
       addIngest({
@@ -107,10 +115,12 @@ function Ingest() {
       notifyWarn(res.error);
       return null;
     }
-    setText("");
-    setTitle("");
-    setMedia(null);
-    setStudioCta(false);
+    if (opts?.clearForm !== false) {
+      setText("");
+      setTitle("");
+      setMedia(null);
+      setStudioCta(false);
+    }
     if (!silent) notifySuccess("Added to queue. Generate drafts when ready.");
     return res.ingestId;
   };
@@ -126,20 +136,26 @@ function Ingest() {
     if (!res.ok) {
       notifyError(res.error);
       setStudioCta(false);
-      return;
+      return false;
     }
     setStudioCta(true);
     notifySuccess("Drafts ready — open Studio to review.");
+    return true;
   };
 
   const dumpAndGenerate = async () => {
-    const ingestId = await enqueue(true);
+    const ingestId = await enqueue(true, { clearForm: false });
     if (!ingestId) return;
     if (!health?.kitReady) {
       notifyWarn("Queued. Save brand voice, then generate drafts.");
       return;
     }
-    await generate(ingestId);
+    const ok = await generate(ingestId);
+    if (ok) {
+      setText("");
+      setTitle("");
+      setMedia(null);
+    }
   };
 
   return (
@@ -269,15 +285,24 @@ function Ingest() {
           <select
             value={source}
             onChange={(e) => setSource(e.target.value)}
-            className="mt-3 w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm outline-none focus:border-white/25"
+            className={selectField}
           >
-            <option>Video upload</option>
-            <option>Image upload</option>
-            <option>Transcript paste</option>
-            <option>From Telegram</option>
-            <option>YouTube notes</option>
-            <option>Stream notes</option>
+            <option value="Video upload">Video upload</option>
+            <option value="Image upload">Image upload</option>
+            <option value="Transcript paste">Transcript paste</option>
+            <option value="From Telegram">From Telegram</option>
+            <option value="YouTube notes">YouTube notes</option>
+            <option value="Stream notes">Stream notes</option>
           </select>
+          {source === "From Telegram" ? (
+            <p className="mt-2 text-[11px] text-amber-100/80">
+              Telegram selected — paste a dump below, or link your chat id in{" "}
+              <Link to="/settings" className="underline underline-offset-2">
+                Settings
+              </Link>{" "}
+              so bot messages auto-land in Recent imports.
+            </p>
+          ) : null}
           <textarea
             rows={8}
             value={text}
@@ -289,27 +314,52 @@ function Ingest() {
             placeholder={
               media
                 ? "Optional caption or transcript to go with the file…"
-                : "Paste a transcript, or a YouTube URL — we pull title + channel, not invented quotes."
+                : source === "From Telegram"
+                  ? "Paste the Telegram message dump (≥48 chars), or wait for webhook imports…"
+                  : "Paste a transcript (≥48 chars), or a YouTube URL — we pull title + channel, not invented quotes."
             }
-            className="mt-3 w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm outline-none placeholder:text-muted-foreground focus:border-white/25"
+            className="mt-3 w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-white/25"
           />
           <p className="mt-2 text-[11px] text-muted-foreground">
             {text.trim().length} chars{media ? " · file attached" : ""}
+            {!media && text.trim().length > 0 && text.trim().length < 48
+              ? " · need 48+ chars (or drop a file / YouTube URL)"
+              : ""}
           </p>
         </GlassCard>
 
         <div className="flex flex-col gap-4">
-          {sources.map(({ icon: Icon, title: t, detail }) => (
-            <GlassCard key={t}>
-              <div className="flex items-start gap-3">
-                <Icon className="mt-0.5 h-4 w-4" />
-                <div>
-                  <p className="text-sm font-medium">{t}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
+          {sources.map(({ icon: Icon, title: t, detail, source: src }) => {
+            const active = source === src;
+            return (
+              <button
+                key={t}
+                type="button"
+                onClick={() => {
+                  setSource(src);
+                  if (src === "Video upload" || src === "Image upload") {
+                    fileRef.current?.click();
+                  }
+                  if (src === "From Telegram") {
+                    notifySuccess("Source set to From Telegram. Paste a dump, or use linked bot imports.");
+                  }
+                }}
+                className={`rounded-2xl border p-4 text-left transition-colors ${
+                  active
+                    ? "border-white/30 bg-white/[0.10]"
+                    : "border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.06]"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">{t}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
+                  </div>
                 </div>
-              </div>
-            </GlassCard>
-          ))}
+              </button>
+            );
+          })}
         </div>
       </div>
 

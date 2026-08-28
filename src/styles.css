@@ -110,11 +110,25 @@
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    color-scheme: dark;
   }
 
   body {
     font-family: "Geist", -apple-system, BlinkMacSystemFont, sans-serif;
     background-color: var(--color-background);
     color: var(--color-foreground);
+  }
+
+  /* Native <select>/<option> ignore most Tailwind on Windows — force dark readable menus */
+  select {
+    color-scheme: dark;
+    background-color: oklch(0.17 0 0);
+    color: oklch(0.985 0 0);
+  }
+
+  select option,
+  select optgroup {
+    background-color: oklch(0.17 0 0);
+    color: oklch(0.985 0 0);
   }
 }
